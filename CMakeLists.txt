@@ -4,7 +4,7 @@
 # To verify your version run
 # $ cmake --version
 cmake_minimum_required(VERSION 3.22)
-
+message(STATUS "Starting CMake configuration")
 # Sets a few variables, like PROJECT_NAME
 project(WolfSoundAudioPluginTemplate)
 
@@ -18,37 +18,37 @@ endif()
 # I like to download the dependencies to the same folder as the project.
 # If you want to install them system wide, set CPM_SOURCE_CACHE with the path to the dependencies
 # either as an environment variable or pass it to the cmake script with -DCPM_SOURCE_CACHE=<path>.
-set(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
+# set(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
 
-# Downloads CPM if not already downloaded. CPM is an easy-to-use package manager nicely integrated with CMake.
-include(cmake/cpm.cmake)
+
+# message(STATUS "Installing with CPM")
+# # Downloads CPM if not already downloaded. CPM is an easy-to-use package manager nicely integrated with CMake.
+# include(external/cpm.cmake)
 
 # This commands downloads AND configures JUCE. It sets up some variables, like JUCE_SOURCE_DIR.
-CPMAddPackage(
-    NAME JUCE
-    GIT_TAG 7.0.9
-    VERSION 7.0.9
-    GITHUB_REPOSITORY juce-framework/JUCE
-    SOURCE_DIR ${LIB_DIR}/juce
-)
+# CPMAddPackage(
+#     NAME JUCE
+#     GIT_TAG 7.0.9
+#     VERSION 7.0.9
+#     GITHUB_REPOSITORY juce-framework/JUCE
+#     SOURCE_DIR ${LIB_DIR}/juce
+# )
 
-# Adds googletest.
-CPMAddPackage(
-    NAME GOOGLETEST
-    GITHUB_REPOSITORY google/googletest
-    GIT_TAG v1.13.0
-    VERSION 1.13.0
-    SOURCE_DIR ${LIB_DIR}/googletest
-    OPTIONS
-        "INSTALL_GTEST OFF"
-        "gtest_force_shared_crt ON"
-)
 
-# This command allows running tests from the "build" folder (the one where CMake generates the project to).
-enable_testing()
+message(STATUS "Installing with VCPKG")
+include(    ${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake)
+find_package(juce 7.0.12 REQUIRED)
+find_package(Boost 1.83.0 REQUIRED COMPONENTS system coroutine context)
+find_package(catch2 3.5.4 REQUIRED)
 
-# Adds all the targets configured in the "plugin" folder.
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+
+include_directories(${Boost_INCLUDE_DIRS})
+
 add_subdirectory(plugin)
 
-# Adds all the targets configured in the "test" folder.
+include(CTest)
+enable_testing()
 add_subdirectory(test)
+
+message(STATUS "Finished CMake configuration")

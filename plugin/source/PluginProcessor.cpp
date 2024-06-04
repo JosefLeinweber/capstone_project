@@ -1,166 +1,262 @@
+/*
+  ==============================================================================
+
+    This file contains the basic framework code for a JUCE plugin processor.
+
+  ==============================================================================
+*/
+
 #include "YourPluginName/PluginProcessor.h"
 #include "YourPluginName/PluginEditor.h"
+#include "YourPluginName/NetworkingThread.h" 
+#include "YourPluginName/AudioBuffer.h"
 
-namespace audio_plugin {
-AudioPluginAudioProcessor::AudioPluginAudioProcessor()
-    : AudioProcessor(
-          BusesProperties()
-#if !JucePlugin_IsMidiEffect
-#if !JucePlugin_IsSynth
-              .withInput("Input", juce::AudioChannelSet::stereo(), true)
+//==============================================================================
+LowpassHighpassFilterAudioProcessor::LowpassHighpassFilterAudioProcessor()
+#ifndef JucePlugin_PreferredChannelConfigurations
+     : AudioProcessor (BusesProperties()
+                     #if ! JucePlugin_IsMidiEffect
+                      #if ! JucePlugin_IsSynth
+                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
+                      #endif
+                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
+                     #endif
+                       ), visualiser(2), audioBufferFIFO(2, 100000), 
+      parameters(*this, nullptr, juce::Identifier("LowpassAndHighpassPlugin"),
+{std::make_unique<juce::AudioParameterFloat>(
+                      "cutoff_frequency", "Cutoff Frequency",
+                      juce::NormalisableRange{ 20.f, 20000.f, 0.1f, 0.2f, false }, 500.f),
+                    std::make_unique<juce::AudioParameterBool>("highpass", "Highpass", false)
+                })
 #endif
-              .withOutput("Output", juce::AudioChannelSet::stereo(), true)
-#endif
-      ) {
+{
+  visualiser.setRepaintRate(30);
+  visualiser.setBufferSize(256);
+
+  cutoffFrequencyParameter =
+      parameters.getRawParameterValue("cutoff_frequency");
+  highpassParameter = parameters.getRawParameterValue("highpass");
+
+
+  networkThread = std::make_unique<NetworkThread>(audioBufferFIFO);
+  networkThread->startThread();
+
+
+
+
+
+
 }
 
-AudioPluginAudioProcessor::~AudioPluginAudioProcessor() {}
-
-const juce::String AudioPluginAudioProcessor::getName() const {
-  return JucePlugin_Name;
+LowpassHighpassFilterAudioProcessor::~LowpassHighpassFilterAudioProcessor()
+{
+  networkThread->stopThreadSafely();
 }
 
-bool AudioPluginAudioProcessor::acceptsMidi() const {
-#if JucePlugin_WantsMidiInput
-  return true;
-#else
-  return false;
-#endif
+//==============================================================================
+const juce::String LowpassHighpassFilterAudioProcessor::getName() const
+{
+    return JucePlugin_Name;
 }
 
-bool AudioPluginAudioProcessor::producesMidi() const {
-#if JucePlugin_ProducesMidiOutput
-  return true;
-#else
-  return false;
-#endif
-}
-
-bool AudioPluginAudioProcessor::isMidiEffect() const {
-#if JucePlugin_IsMidiEffect
-  return true;
-#else
-  return false;
-#endif
-}
-
-double AudioPluginAudioProcessor::getTailLengthSeconds() const { return 0.0; }
-
-int AudioPluginAudioProcessor::getNumPrograms() {
-  return 1; // NB: some hosts don't cope very well if you tell them there are 0
-            // programs, so this should be at least 1, even if you're not really
-            // implementing programs.
-}
-
-int AudioPluginAudioProcessor::getCurrentProgram() { return 0; }
-
-void AudioPluginAudioProcessor::setCurrentProgram(int index) {
-  juce::ignoreUnused(index);
-}
-
-const juce::String AudioPluginAudioProcessor::getProgramName(int index) {
-  juce::ignoreUnused(index);
-  return {};
-}
-
-void AudioPluginAudioProcessor::changeProgramName(int index,
-                                                  const juce::String &newName) {
-  juce::ignoreUnused(index, newName);
-}
-
-void AudioPluginAudioProcessor::prepareToPlay(double sampleRate,
-                                              int samplesPerBlock) {
-  // Use this method as the place to do any pre-playback
-  // initialisation that you need..
-  juce::ignoreUnused(sampleRate, samplesPerBlock);
-}
-
-void AudioPluginAudioProcessor::releaseResources() {
-  // When playback stops, you can use this as an opportunity to free up any
-  // spare memory, etc.
-}
-
-bool AudioPluginAudioProcessor::isBusesLayoutSupported(
-    const BusesLayout &layouts) const {
-#if JucePlugin_IsMidiEffect
-  juce::ignoreUnused(layouts);
-  return true;
-#else
-  // This is the place where you check if the layout is supported.
-  // In this template code we only support mono or stereo.
-  // Some plugin hosts, such as certain GarageBand versions, will only
-  // load plugins that support stereo bus layouts.
-  if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono() &&
-      layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+bool LowpassHighpassFilterAudioProcessor::acceptsMidi() const
+{
+   #if JucePlugin_WantsMidiInput
+    return true;
+   #else
     return false;
+   #endif
+}
+
+bool LowpassHighpassFilterAudioProcessor::producesMidi() const
+{
+   #if JucePlugin_ProducesMidiOutput
+    return true;
+   #else
+    return false;
+   #endif
+}
+
+bool LowpassHighpassFilterAudioProcessor::isMidiEffect() const
+{
+   #if JucePlugin_IsMidiEffect
+    return true;
+   #else
+    return false;
+   #endif
+}
+
+double LowpassHighpassFilterAudioProcessor::getTailLengthSeconds() const
+{
+    return 0.0;
+}
+
+int LowpassHighpassFilterAudioProcessor::getNumPrograms()
+{
+    return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
+                // so this should be at least 1, even if you're not really implementing programs.
+}
+
+int LowpassHighpassFilterAudioProcessor::getCurrentProgram()
+{
+    return 0;
+}
+
+void LowpassHighpassFilterAudioProcessor::setCurrentProgram (int index)
+{
+  juce::ignoreUnused(index);
+}
+
+const juce::String LowpassHighpassFilterAudioProcessor::getProgramName (int index)
+{
+    juce::ignoreUnused(index);
+    return {};
+}
+
+void LowpassHighpassFilterAudioProcessor::changeProgramName (int index, const juce::String& newName)
+{
+    juce::ignoreUnused(index);
+    juce::ignoreUnused(newName);
+}
+
+//==============================================================================
+void LowpassHighpassFilterAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+{
+    // Use this method as the place to do any pre-playback
+    // initialisation that you need..
+  juce::ignoreUnused(samplesPerBlock);
+  filter.setSamplingRate(static_cast<float>(sampleRate));
+
+
+
+}
+
+void LowpassHighpassFilterAudioProcessor::releaseResources()
+{
+    // When playback stops, you can use this as an opportunity to free up any
+    // spare memory, etc.
+}
+
+#ifndef JucePlugin_PreferredChannelConfigurations
+bool LowpassHighpassFilterAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+{
+  #if JucePlugin_IsMidiEffect
+    juce::ignoreUnused (layouts);
+    return true;
+  #else
+    // This is the place where you check if the layout is supported.
+    // In this template code we only support mono or stereo.
+    // Some plugin hosts, such as certain GarageBand versions, will only
+    // load plugins that support stereo bus layouts.
+    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
+     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+        return false;
 
     // This checks if the input layout matches the output layout
-#if !JucePlugin_IsSynth
-  if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
-    return false;
+   #if ! JucePlugin_IsSynth
+    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
+        return false;
+   #endif
+
+    return true;
+  #endif
+}
 #endif
 
-  return true;
-#endif
+void LowpassHighpassFilterAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+{
+    juce::ScopedNoDenormals noDenormals;
+    auto totalNumInputChannels  = getTotalNumInputChannels();
+    auto totalNumOutputChannels = getTotalNumOutputChannels();
+
+    // In case we have more outputs than inputs, this code clears any output
+    // channels that didn't contain input data, (because these aren't
+    // guaranteed to be empty - they may contain garbage).
+    // This is here to avoid people getting screaming feedback
+    // when they first compile a plugin, but obviously you don't need to keep
+    // this code if your algorithm always overwrites all the output channels.
+    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+        buffer.clear (i, 0, buffer.getNumSamples());
+    
+    audioBufferFIFO.writeToBuffer(buffer);
+      
+
+    const auto cutoffFrequency = cutoffFrequencyParameter->load();
+    const auto highpass = *highpassParameter < 0.5f ? false : true;
+    filter.setCutoffFrequency(cutoffFrequency);
+    filter.setHighpass(highpass);
+    juce::ignoreUnused(midiMessages);
+
+    // filter.processBlock(buffer, midiMessages);
+    visualiser.pushBuffer(buffer);
+
+    
 }
 
-void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
-                                             juce::MidiBuffer &midiMessages) {
-  juce::ignoreUnused(midiMessages);
-
-  juce::ScopedNoDenormals noDenormals;
-  auto totalNumInputChannels = getTotalNumInputChannels();
-  auto totalNumOutputChannels = getTotalNumOutputChannels();
-
-  // In case we have more outputs than inputs, this code clears any output
-  // channels that didn't contain input data, (because these aren't
-  // guaranteed to be empty - they may contain garbage).
-  // This is here to avoid people getting screaming feedback
-  // when they first compile a plugin, but obviously you don't need to keep
-  // this code if your algorithm always overwrites all the output channels.
-  for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-    buffer.clear(i, 0, buffer.getNumSamples());
-
-  // This is the place where you'd normally do the guts of your plugin's
-  // audio processing...
-  // Make sure to reset the state if your inner loop is processing
-  // the samples and the outer loop is handling the channels.
-  // Alternatively, you can process the samples with the channels
-  // interleaved by keeping the same state.
-  for (int channel = 0; channel < totalNumInputChannels; ++channel) {
-    auto *channelData = buffer.getWritePointer(channel);
-    juce::ignoreUnused(channelData);
-    // ..do something to the data...
-  }
+//==============================================================================
+bool LowpassHighpassFilterAudioProcessor::hasEditor() const
+{
+    return true; // (change this to false if you choose to not supply an editor)
 }
 
-bool AudioPluginAudioProcessor::hasEditor() const {
-  return true; // (change this to false if you choose to not supply an editor)
+juce::AudioProcessorEditor* LowpassHighpassFilterAudioProcessor::createEditor()
+{
+    return new LowpassHighpassFilterAudioProcessorEditor (*this, parameters);
 }
 
-juce::AudioProcessorEditor *AudioPluginAudioProcessor::createEditor() {
-  return new AudioPluginAudioProcessorEditor(*this);
+//==============================================================================
+void LowpassHighpassFilterAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+{
+    juce::ignoreUnused(destData);
+    // You should use this method to store your parameters in the memory block.
+    // You could do that either as raw data, or use the XML or ValueTree classes
+    // as intermediaries to make it easy to save and load complex data.
 }
 
-void AudioPluginAudioProcessor::getStateInformation(
-    juce::MemoryBlock &destData) {
-  // You should use this method to store your parameters in the memory block.
-  // You could do that either as raw data, or use the XML or ValueTree classes
-  // as intermediaries to make it easy to save and load complex data.
-  juce::ignoreUnused(destData);
+void LowpassHighpassFilterAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+{
+    juce::ignoreUnused(data);
+    juce::ignoreUnused(sizeInBytes);
+    // You should use this method to restore your parameters from this memory block,
+    // whose contents will have been created by the getStateInformation() call.
 }
 
-void AudioPluginAudioProcessor::setStateInformation(const void *data,
-                                                    int sizeInBytes) {
-  // You should use this method to restore your parameters from this memory
-  // block, whose contents will have been created by the getStateInformation()
-  // call.
-  juce::ignoreUnused(data, sizeInBytes);
-}
-} // namespace audio_plugin
+// void LowpassHighpassFilterAudioProcessor::connectToClient (){
 
-// This creates new instances of the plugin.
-// This function definition must be in the global namespace.
-juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() {
-  return new audio_plugin::AudioPluginAudioProcessor();
+//   boost::asio::io_context io_context;
+//   const boost::asio::ip::udp::endpoint listen_endpoint(boost::asio::ip::udp::v4(), 8001);
+
+//   boost::asio::ip::udp::endpoint sender_endpoint;
+//   boost::system::error_code error;
+
+//   boost::asio::ip::udp::socket my_socket(io_context, listen_endpoint);
+
+  
+
+//   char data_msg[1024];
+//   size_t length = my_socket.receive_from(boost::asio::buffer(data_msg), sender_endpoint, 0, error);
+
+//   if (error && error != boost::asio::error::message_size) {
+//       throw boost::system::system_error(error);
+//   }
+
+//   juce::ignoreUnused(length);
+
+
+//   std::string send_buf = "Hello, world!";
+//   my_socket.send_to(boost::asio::buffer(send_buf), sender_endpoint, 0, error);
+
+//   boost::system::error_code ignored_error;
+
+
+
+//   my_socket.close(ignored_error);
+  
+// }
+
+//==============================================================================
+// This creates new instances of the plugin..
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+{
+    return new LowpassHighpassFilterAudioProcessor();
 }

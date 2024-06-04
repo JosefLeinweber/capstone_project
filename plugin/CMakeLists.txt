@@ -1,3 +1,5 @@
+message(STATUS "Configuring Plugin CMakeLists.txt ...")
+
 cmake_minimum_required(VERSION 3.22)
 
 # Version is needed by JUCE.
@@ -15,17 +17,30 @@ juce_add_plugin(${PROJECT_NAME}
     NEEDS_MIDI_OUTPUT FALSE # may change this
     PLUGIN_MANUFACTURER_CODE MCMP # change this
     PLUGIN_CODE EXPL # change this
-    FORMATS VST3 # may change this
+    FORMATS Standalone  # may change this
     PRODUCT_NAME "YourPluginName" # change this
+    PLUGIN_NAME "LOOOOCK"
 )
+
+juce_generate_juce_header(${PROJECT_NAME})
 
 # Sets the source files of the plugin project.
 target_sources(${PROJECT_NAME}
     PRIVATE
+        source/AudioBuffer.cpp
+        source/NetworkingThread.cpp
         source/PluginEditor.cpp
         source/PluginProcessor.cpp
+        source/LowpassHighpassFilter.cpp
+
+
+        ${INCLUDE_DIR}/AudioBuffer.h
+        ${INCLUDE_DIR}/NetworkingThread.h
         ${INCLUDE_DIR}/PluginEditor.h
         ${INCLUDE_DIR}/PluginProcessor.h
+        ${INCLUDE_DIR}/LowpassHighpassFilter.h
+
+
 )
 
 # Sets the include directories of the plugin project.
@@ -65,5 +80,6 @@ else()
     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+message(STATUS "Configuring Plugin CMakeLists.txt done")
+
 # In Visual Studio this command provides a nice grouping of source files in "filters".
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/..)
