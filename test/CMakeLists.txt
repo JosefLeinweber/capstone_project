@@ -2,14 +2,44 @@
 include(Catch)
 
 
-set(TEST_MAIN "unit_tests")
-set(TESTS_SOURCES main.cpp)
-
+set(TEST_AUDIOBUFFER "AudioBufferTests")
+set(TESTS_SOURCES test_AudioBuffer.cpp)
 set(TEST_INCLUDES "./")
 
-add_executable(${TEST_MAIN} ${TESTS_SOURCES})
-target_include_directories(${TEST_MAIN} PUBLIC ${TEST_INCLUDES})
-target_link_libraries(${TEST_MAIN} PUBLIC 
-    ${LIBRARY_NAME} Catch2::Catch2WithMain)
+add_executable(${TEST_AUDIOBUFFER} ${TESTS_SOURCES})
+target_include_directories(${TEST_AUDIOBUFFER} PUBLIC ${TEST_INCLUDES})
+target_link_libraries(${TEST_AUDIOBUFFER} PUBLIC 
+    ${LIBRARY_NAME} 
+    Catch2::Catch2WithMain
+    "AudioBuffer"
+    "NetworkingThread"
+    
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_lto_flags
+    juce::juce_recommended_warning_flags
+    PRIVATE
+    juce::juce_audio_utils
+)
 
-catch_discover_tests(${TEST_MAIN})
+set(TEST_NETWORKINGTHREAD "NetworkingThreadTests")
+set(TESTS_SOURCES test_NetworkingThread.cpp)
+set(TEST_INCLUDES "./")
+
+add_executable(${TEST_NETWORKINGTHREAD} ${TESTS_SOURCES})
+target_include_directories(${TEST_NETWORKINGTHREAD} PUBLIC ${TEST_INCLUDES})
+target_link_libraries(${TEST_NETWORKINGTHREAD} PUBLIC 
+    ${LIBRARY_NAME} 
+    Catch2::Catch2WithMain
+    "AudioBuffer"
+    "NetworkingThread"
+    
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_lto_flags
+    juce::juce_recommended_warning_flags
+    PRIVATE
+    juce::juce_audio_utils
+)
+
+catch_discover_tests(${TEST_NETWORKINGTHREAD} OUTPUT_DIR "NetworkingThreadTests" OUTPUT_PREFIX "NetworkingThread_")
+
+catch_discover_tests(${TEST_AUDIOBUFFER})

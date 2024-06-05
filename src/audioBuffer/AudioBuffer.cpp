@@ -1,4 +1,4 @@
-#include "YourPluginName/AudioBuffer.h"
+#include "AudioBuffer.h"
 
     // Constructor for the AudioBufferFIFO class
     // Initialises the FIFO and buffer

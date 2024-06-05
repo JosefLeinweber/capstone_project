@@ -27,20 +27,13 @@ juce_generate_juce_header(${PROJECT_NAME})
 # Sets the source files of the plugin project.
 target_sources(${PROJECT_NAME}
     PRIVATE
-        source/AudioBuffer.cpp
-        source/NetworkingThread.cpp
         source/PluginEditor.cpp
         source/PluginProcessor.cpp
         source/LowpassHighpassFilter.cpp
 
-
-        ${INCLUDE_DIR}/AudioBuffer.h
-        ${INCLUDE_DIR}/NetworkingThread.h
         ${INCLUDE_DIR}/PluginEditor.h
         ${INCLUDE_DIR}/PluginProcessor.h
         ${INCLUDE_DIR}/LowpassHighpassFilter.h
-
-
 )
 
 # Sets the include directories of the plugin project.
@@ -58,6 +51,8 @@ target_link_libraries(${PROJECT_NAME}
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags
+        "NetworkingThread"
+        "AudioBuffer"
 )
 
 # These definitions are recommended by JUCE.

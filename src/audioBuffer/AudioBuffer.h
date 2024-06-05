@@ -21,6 +21,8 @@ public:
     // Function to read data from the buffer
     void readFromBuffer(juce::AudioBuffer<float>& destination);
 
+    int getNumReady() const { return fifo.getNumReady(); }
+
 private:
     juce::AbstractFifo fifo;
     juce::AudioBuffer<float> buffer;

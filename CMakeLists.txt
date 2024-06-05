@@ -21,20 +21,6 @@ endif()
 # set(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
 
 
-# message(STATUS "Installing with CPM")
-# # Downloads CPM if not already downloaded. CPM is an easy-to-use package manager nicely integrated with CMake.
-# include(external/cpm.cmake)
-
-# This commands downloads AND configures JUCE. It sets up some variables, like JUCE_SOURCE_DIR.
-# CPMAddPackage(
-#     NAME JUCE
-#     GIT_TAG 7.0.9
-#     VERSION 7.0.9
-#     GITHUB_REPOSITORY juce-framework/JUCE
-#     SOURCE_DIR ${LIB_DIR}/juce
-# )
-
-
 message(STATUS "Installing with VCPKG")
 include(    ${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake)
 find_package(juce 7.0.12 REQUIRED)
@@ -45,10 +31,13 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 
 include_directories(${Boost_INCLUDE_DIRS})
 
-add_subdirectory(plugin)
+
 
 include(CTest)
 enable_testing()
+add_subdirectory(src)
+add_subdirectory(plugin)
 add_subdirectory(test)
+
 
 message(STATUS "Finished CMake configuration")

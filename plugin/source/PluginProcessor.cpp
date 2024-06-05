@@ -8,8 +8,8 @@
 
 #include "YourPluginName/PluginProcessor.h"
 #include "YourPluginName/PluginEditor.h"
-#include "YourPluginName/NetworkingThread.h" 
-#include "YourPluginName/AudioBuffer.h"
+#include "NetworkingThread.h" 
+#include "AudioBuffer.h"
 
 //==============================================================================
 LowpassHighpassFilterAudioProcessor::LowpassHighpassFilterAudioProcessor()
