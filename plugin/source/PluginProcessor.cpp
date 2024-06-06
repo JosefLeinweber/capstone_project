@@ -11,6 +11,10 @@
 #include "NetworkingThread.h" 
 #include "AudioBuffer.h"
 
+
+
+
+
 //==============================================================================
 LowpassHighpassFilterAudioProcessor::LowpassHighpassFilterAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -126,8 +130,9 @@ void LowpassHighpassFilterAudioProcessor::prepareToPlay (double sampleRate, int 
     // initialisation that you need..
   juce::ignoreUnused(samplesPerBlock);
   filter.setSamplingRate(static_cast<float>(sampleRate));
-
-
+  currentSampleRate = sampleRate;
+  auto cyclesPerSample = 150 / currentSampleRate;         // [2]
+  angleDelta = cyclesPerSample * 2.0 * juce::MathConstants<double>::pi;       
 
 }
 
@@ -178,7 +183,7 @@ void LowpassHighpassFilterAudioProcessor::processBlock (juce::AudioBuffer<float>
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
     
-    audioBufferFIFO.writeToBuffer(buffer);
+    
       
 
     const auto cutoffFrequency = cutoffFrequencyParameter->load();
@@ -187,8 +192,22 @@ void LowpassHighpassFilterAudioProcessor::processBlock (juce::AudioBuffer<float>
     filter.setHighpass(highpass);
     juce::ignoreUnused(midiMessages);
 
+    auto level = 0.125f;
+    auto* leftBuffer  = buffer.getWritePointer (0);
+    auto* rightBuffer = buffer.getWritePointer (1);
+
+    for (auto sample = 0; sample < buffer.getNumSamples(); ++sample)
+    {
+        auto currentSample = (float) std::sin (currentAngle);
+        currentAngle += angleDelta;
+        leftBuffer[sample]  = currentSample * level;
+        rightBuffer[sample] = currentSample * level;
+    }
+
     // filter.processBlock(buffer, midiMessages);
     visualiser.pushBuffer(buffer);
+    audioBufferFIFO.writeToBuffer(buffer);
+
 
     
 }
@@ -220,39 +239,6 @@ void LowpassHighpassFilterAudioProcessor::setStateInformation (const void* data,
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
 }
-
-// void LowpassHighpassFilterAudioProcessor::connectToClient (){
-
-//   boost::asio::io_context io_context;
-//   const boost::asio::ip::udp::endpoint listen_endpoint(boost::asio::ip::udp::v4(), 8001);
-
-//   boost::asio::ip::udp::endpoint sender_endpoint;
-//   boost::system::error_code error;
-
-//   boost::asio::ip::udp::socket my_socket(io_context, listen_endpoint);
-
-  
-
-//   char data_msg[1024];
-//   size_t length = my_socket.receive_from(boost::asio::buffer(data_msg), sender_endpoint, 0, error);
-
-//   if (error && error != boost::asio::error::message_size) {
-//       throw boost::system::system_error(error);
-//   }
-
-//   juce::ignoreUnused(length);
-
-
-//   std::string send_buf = "Hello, world!";
-//   my_socket.send_to(boost::asio::buffer(send_buf), sender_endpoint, 0, error);
-
-//   boost::system::error_code ignored_error;
-
-
-
-//   my_socket.close(ignored_error);
-  
-// }
 
 //==============================================================================
 // This creates new instances of the plugin..

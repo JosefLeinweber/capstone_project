@@ -5,6 +5,18 @@
     // bufferSize: the size of the buffer
     // numChannels: the number of channels in the buffer
 
+void printBuffer(auto& buffer) {
+    std::string debugString = "";
+  for (int channel = 0; channel < buffer.getNumChannels(); channel++) {
+    debugString.append("Channel " + std::to_string(channel) + ": ");
+    for (int i = 0; i < buffer.getNumSamples(); i++) {
+      debugString.append(std::to_string(buffer.getSample(channel, i)) + " ");
+    }
+    debugString.append("\n");
+    OutputDebugString(debugString.c_str());
+  }
+}
+
 AudioBufferFIFO::AudioBufferFIFO(int numChannels, int bufferSize) : fifo(bufferSize), buffer(numChannels, bufferSize)
     {
         if (numChannels <= 0 || bufferSize <= 0)
@@ -28,7 +40,8 @@ void AudioBufferFIFO::writeToBuffer(const juce::AudioBuffer<float>& source)
         }
 
     }
-};
+    printBuffer(source);
+    };
 
     // Function to read data from the buffer
 void AudioBufferFIFO::readFromBuffer(juce::AudioBuffer<float>& destination)

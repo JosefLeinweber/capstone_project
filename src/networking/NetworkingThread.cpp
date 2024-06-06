@@ -1,6 +1,7 @@
 #include "NetworkingThread.h"
 
-NetworkThread::NetworkThread(AudioBufferFIFO& audioBufferFIFOArg) : juce::Thread("Network Thread"), audioBufferFIFO(audioBufferFIFOArg) {};
+NetworkThread::NetworkThread(AudioBufferFIFO& audioBufferFIFOArg) : 
+    juce::Thread("Network Thread"), audioBufferFIFO(audioBufferFIFOArg) {};
 
 void NetworkThread::run() {
   boost::asio::io_context io_context;
@@ -18,12 +19,15 @@ void NetworkThread::run() {
 
     for (;;) {
       
-      if (audioBufferFIFO.getNumReady() >= 256){
+      if (audioBufferFIFO.getNumReady() >= 512){
         audioBufferFIFO.readFromBuffer(tempBuffer);
 
         const float* data = tempBuffer.getReadPointer(0);
         // float* data2 = tempBuffer.getReadPointer(1);
         std::size_t length = tempBuffer.getNumSamples() * sizeof(float) * tempBuffer.getNumChannels();
+
+        OutputDebugString("Length: ");
+        OutputDebugString(std::to_string(length).c_str());
 
         boost::system::error_code ignored_error;
 
