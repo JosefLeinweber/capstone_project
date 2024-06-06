@@ -23,7 +23,11 @@ public:
 
     int getNumReady() const { return fifo.getNumReady(); }
 
-private:
-    juce::AbstractFifo fifo;
+    int getTotalSize() const { return fifo.getTotalSize(); }
+
     juce::AudioBuffer<float> buffer;
+    juce::AbstractFifo fifo;
+
+private:
+    
 };
