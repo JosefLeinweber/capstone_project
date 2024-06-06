@@ -1,6 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include "AudioBuffer.h"
-#include "NetworkingThread.h"
+#include "Server.h"
+#include <thread>
+
 
 void fillBuffer(juce::AudioBuffer<float>& buffer, float value) {
   for (int i = 0; i < buffer.getNumSamples(); i++) {
@@ -20,40 +22,50 @@ void printBuffer(auto& buffer) {
   }
 }
 
-TEST_CASE("AudioBufferFifo Integration Test") {
-    // Create an AudioBufferFifo
-    AudioBufferFifo<float> audioBufferFifo(2, 1024);
-
-    // Fill the buffer with test data
-    juce::AudioBuffer<float> originalBuffer(2, 512);
-    fillBuffer(originalBuffer, 0.5f);
-
-    // Write data to the fifo
-    audioBufferFifo.wirteToBuffer(originalBuffer);
-
-    // Read data from the fifo
-    juce::AudioBuffer<float> readBuffer(2, 512);
-    audioBufferFifo.readFromBuffer(readBuffer);
-
-    REQUIRE(readBuffer == originalBuffer);
-
-    // Create Server
-    NetworkingClass server(audioBufferFifo, "127.0.0.1", "8001");
-
-    // Create Client
-    NetworkingThread client(audioBufferFifo);
-
+TEST_CASE("Server | back & forth"){
+  std::cout << "Starting " << std::endl;
+  
+  auto thread_1 = std::jthread([] () {
+    std::cout << "Thread 1" << std::endl;
+    Server server("127.0.0.1", 8001);
+    std::cout << "Thread 1 Server created" << std::endl;
+    server.waitForConnection();
+    std::cout << "Thread 1 Connected" << std::endl;
     
+    juce::AudioBuffer<float> originalBuffer(2, 10);
+    fillBuffer(originalBuffer, 1.022f);
+    server.sendTo(originalBuffer);
+    std::cout << "Thread 1 Sent buffer" << std::endl;
 
-    // Receive data from the client (assuming NetworkingThread::receiveDataFromClient() function exists)
+    juce::AudioBuffer<float> recievedBuffer(2, 10);
+    recievedBuffer.clear();
+    server.recieveFrom(recievedBuffer);
+    std::cout << "Thread 1 Recieved buffer" << std::endl;
 
-    // Compare the received data with the original data
-    REQUIRE(receivedBuffer.getNumChannels() == originalBuffer.getNumChannels());
-    REQUIRE(receivedBuffer.getNumSamples() == originalBuffer.getNumSamples());
+    printBuffer(originalBuffer);
+    printBuffer(recievedBuffer);
+    REQUIRE(originalBuffer == recievedBuffer);
+  });
 
-    for (int channel = 0; channel < receivedBuffer.getNumChannels(); channel++) {
-        for (int i = 0; i < receivedBuffer.getNumSamples(); i++) {
-            REQUIRE(receivedBuffer.getSample(channel, i) == originalBuffer.getSample(channel, i));
-        }
-    }
+  auto thread_2 = std::jthread([] () {
+    std::cout << "Thread 2" << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    Server client("127.0.0.1", 8010);
+    std::cout << "Thread 2 Sending connection request" << std::endl;
+    client.inititalizeConnection("127.0.0.1", 8001);
+    juce::AudioBuffer<float> recievedBuffer(2, 10);
+    std::cout << "Thread 2 Waiting for buffer" << std::endl;
+    client.recieveFrom(recievedBuffer);
+    std::cout << "Thread 2 Recieved buffer" << std::endl;
+
+
+    client.sendTo(recievedBuffer);
+    std::cout << "Thread 2 Sent buffer back" << std::endl;
+  });
+
+  thread_1.join();
+  thread_2.join();
+  std::cout << "Threads joined" << std::endl;
+
 }
+

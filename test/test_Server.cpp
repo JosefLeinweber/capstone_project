@@ -42,7 +42,7 @@ TEST_CASE("Server Start"){
     thread_1.join();
     thread_2.join();
     std::cout << "Threads joined" << std::endl;
-
-
     }
 }
+
+

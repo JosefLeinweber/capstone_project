@@ -58,7 +58,27 @@ target_link_libraries(${TEST_SERVER} PUBLIC
     juce::juce_audio_utils
 )
 
+set(TEST_INTEGRATIONS "IntegrationTests")
+set(TESTS_SOURCES test_Integration.cpp)
+set(TEST_INCLUDES "./")
+
+add_executable(${TEST_INTEGRATIONS} ${TESTS_SOURCES})
+target_include_directories(${TEST_INTEGRATIONS} PUBLIC ${TEST_INCLUDES})
+target_link_libraries(${TEST_INTEGRATIONS} PUBLIC 
+    ${LIBRARY_NAME} 
+    Catch2::Catch2WithMain
+    "AudioBuffer"
+    "Server"
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_lto_flags
+    juce::juce_recommended_warning_flags
+    PRIVATE
+    juce::juce_audio_utils
+)
+
 catch_discover_tests(${TEST_NETWORKINGTHREAD} OUTPUT_DIR "NetworkingThreadTests" OUTPUT_PREFIX "NetworkingThread_")
+
+catch_discover_tests(${TEST_INTEGRATIONS} OUTPUT_DIR "IntegrationTests" OUTPUT_PREFIX "Integration_")
 
 catch_discover_tests(${TEST_SERVER} OUTPUT_DIR "ServerTests" OUTPUT_PREFIX "Server_")
 

@@ -7,6 +7,11 @@
 #include <boost/asio/error.hpp> 
 #include "AudioBuffer.h"
 
+struct datagram {
+    std::vector<float> buffer1;
+    std::vector<float> buffer2;
+};
+
 
 class Server{
 public:
@@ -16,15 +21,17 @@ public:
 
     void waitForConnection();
 
-    void sendToClient(juce::AudioBuffer<float> buffer);
+    void sendTo(juce::AudioBuffer<float> buffer);
 
-    void recieveFromClient();
+    void recieveFrom(juce::AudioBuffer<float>& buffer);
 
     void stopServer();
 
     bool isConnected();
 
 private:
+
+    
 
     std::string m_ip;
     int m_port;
