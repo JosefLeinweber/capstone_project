@@ -1,2 +1,2 @@
 add_subdirectory(audioBuffer)
-add_subdirectory(networkingThread)
+add_subdirectory(networking)

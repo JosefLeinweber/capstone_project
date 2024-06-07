@@ -5,36 +5,58 @@
     // bufferSize: the size of the buffer
     // numChannels: the number of channels in the buffer
 
-AudioBufferFIFO::AudioBufferFIFO(int numChannels, int bufferSize)
-        : fifo(bufferSize), buffer(numChannels, bufferSize)
-    {
+void printBuffer(auto& buffer) {
+    std::string debugString = "";
+  for (int channel = 0; channel < buffer.getNumChannels(); channel++) {
+    debugString.append("Channel " + std::to_string(channel) + ": ");
+    for (int i = 0; i < buffer.getNumSamples(); i++) {
+      debugString.append(std::to_string(buffer.getSample(channel, i)) + " ");
+    }
+    debugString.append("\n");
+    OutputDebugString(debugString.c_str());
+  }
+}
 
+AudioBufferFIFO::AudioBufferFIFO(int numChannels, int bufferSize) : fifo(bufferSize), buffer(numChannels, bufferSize)
+    {
+        if (numChannels <= 0 || bufferSize <= 0)
+            throw std::invalid_argument("Invalid parameters");
+        
+        buffer.clear();
     };
 
     // Function to write data to the buffer
 void AudioBufferFIFO::writeToBuffer(const juce::AudioBuffer<float>& source)
     {
-        int start1, size1, start2, size2;
-        fifo.prepareToWrite(source.getNumSamples(), start1, size1, start2, size2);
+    auto writeHandle = fifo.write (source.getNumSamples());
+ 
+    for (int channel = 0; channel < source.getNumChannels(); ++channel)
+    {
+        if (writeHandle.blockSize1 > 0){
+            buffer.copyFrom(channel, writeHandle.startIndex1, source, channel, 0, writeHandle.blockSize1);
+        }
+        if (writeHandle.blockSize2 > 0){
+            buffer.copyFrom(channel, writeHandle.startIndex2, source, channel, writeHandle.blockSize1, writeHandle.blockSize2);
+        }
 
-        if (size1 > 0)
-            buffer.copyFrom(0, start1, source, 0, 0, size1);
-        if (size2 > 0)
-            buffer.copyFrom(0, start2, source, 0, size1, size2);
-
-        fifo.finishedWrite(size1 + size2);
+    }
+    printBuffer(source);
     };
 
     // Function to read data from the buffer
 void AudioBufferFIFO::readFromBuffer(juce::AudioBuffer<float>& destination)
     {
-        int start1, size1, start2, size2;
-        fifo.prepareToRead(destination.getNumSamples(), start1, size1, start2, size2);
 
-        if (size1 > 0)
-            destination.copyFrom(0, 0, buffer, 0, start1, size1);
-        if (size2 > 0)
-            destination.copyFrom(0, size1, buffer, 0, start2, size2);
+    auto readHandle = fifo.read (destination.getNumSamples());
+ 
+    for (int channel = 0; channel < destination.getNumChannels(); ++channel)
+    {
+        if (readHandle.blockSize1 > 0){
+            destination.copyFrom(channel, 0, buffer, channel, readHandle.startIndex1, readHandle.blockSize1);
+        }
+        if (readHandle.blockSize2 > 0){
+            destination.copyFrom(channel, readHandle.blockSize1, buffer, channel, readHandle.startIndex2, readHandle.blockSize2);
+        }
 
-        fifo.finishedRead(size1 + size2);
-    };
+    }
+};
