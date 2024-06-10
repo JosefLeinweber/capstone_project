@@ -8,7 +8,6 @@
 
 #include "YourPluginName/PluginProcessor.h"
 #include "YourPluginName/PluginEditor.h"
-#include "NetworkingThread.h" 
 #include "AudioBuffer.h"
 
 
@@ -41,9 +40,9 @@ LowpassHighpassFilterAudioProcessor::LowpassHighpassFilterAudioProcessor()
       parameters.getRawParameterValue("cutoff_frequency");
   highpassParameter = parameters.getRawParameterValue("highpass");
 
+  AudioBufferFIFO outaudioBufferFIFO(2, 100000);
 
-  networkThread = std::make_unique<NetworkThread>(audioBufferFIFO);
-  networkThread->startThread();
+
 
 
 
@@ -54,7 +53,6 @@ LowpassHighpassFilterAudioProcessor::LowpassHighpassFilterAudioProcessor()
 
 LowpassHighpassFilterAudioProcessor::~LowpassHighpassFilterAudioProcessor()
 {
-  networkThread->stopThreadSafely();
 }
 
 //==============================================================================

@@ -1,12 +1,13 @@
 #include <catch2/catch_test_macros.hpp>
-#include "Server.h"
+#include "Host.h"
 #include <thread>
 
-TEST_CASE("Server Constructor"){
+TEST_CASE("Host Constructor"){
     SECTION("Initialize with valid parameters"){
         bool sucess = false;
         try{
-            Server server("127.0.0.1", 8001);
+            addressData hostAddress("127.0.0.1", 8001);
+            Host Host(hostAddress);
             sucess = true;
         } catch(...){
             sucess = false;
@@ -16,26 +17,30 @@ TEST_CASE("Server Constructor"){
 }
 }
 
-TEST_CASE("Server Start"){
-    SECTION("Start server"){
+TEST_CASE("Host Start"){
+    SECTION("Start Host"){
     std::cout << "Starting " << std::endl;
 
     auto thread_1 = std::jthread([] () {
         std::cout << "Thread 1" << std::endl;
-        Server server("127.0.0.1", 8001);
-        std::cout << "Server created" << std::endl;
-        server.waitForConnection();
+        addressData hostAddress("127.0.0.1", 8001);
+        Host host(hostAddress);
+        std::cout << "Host created" << std::endl;
+        host.waitForHandshake();
         std::cout << "Connected" << std::endl;
-        REQUIRE(server.isConnected() == true);
+        REQUIRE(host.isConnected() == true);
+        host.stopHost();
         }
     );
     
     auto thread_2 = std::jthread([] (){
-        std::this_thread::sleep_for(std::chrono::seconds(1));
         std::cout << "Thread 2" << std::endl;
-        Server client("127.0.0.1", 8010);
-        client.inititalizeConnection("127.0.0.1", 8001);
+        addressData hostAddress("127.0.0.1", 8010);
+        Host host(hostAddress);
+        addressData remoteAdress("127.0.0.1", 8001);
+        host.sendHandshake(remoteAdress);
         std::cout << "Sent connection request" << std::endl;
+        host.stopHost();
         
     } 
     );

@@ -18,7 +18,6 @@
 
 
 #include "LowpassHighpassFilter.h"
-#include "NetworkingThread.h"
 #include "AudioBuffer.h"
 
  
@@ -77,7 +76,6 @@ private:
     std::atomic<float>* cutoffFrequencyParameter = nullptr;
     std::atomic<float>* highpassParameter = nullptr;
     LowpassHighpassFilter filter;
-    std::unique_ptr<NetworkThread> networkThread;
     double currentSampleRate;
     double angleDelta;
     double currentAngle = 0.0;

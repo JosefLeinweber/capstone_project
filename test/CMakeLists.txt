@@ -12,7 +12,6 @@ target_link_libraries(${TEST_AUDIOBUFFER} PUBLIC
     ${LIBRARY_NAME} 
     Catch2::Catch2WithMain
     "AudioBuffer"
-    "NetworkingThread"
     
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
@@ -21,36 +20,38 @@ target_link_libraries(${TEST_AUDIOBUFFER} PUBLIC
     juce::juce_audio_utils
 )
 
-set(TEST_NETWORKINGTHREAD "NetworkingThreadTests")
-set(TESTS_SOURCES test_NetworkingThread.cpp)
-set(TEST_INCLUDES "./")
+# set(TEST_NETWORK "NetworkThreadTests")
+# set(TESTS_SOURCES test_NetworkThread.cpp)
+# set(TEST_INCLUDES "./")
 
-add_executable(${TEST_NETWORKINGTHREAD} ${TESTS_SOURCES})
-target_include_directories(${TEST_NETWORKINGTHREAD} PUBLIC ${TEST_INCLUDES})
-target_link_libraries(${TEST_NETWORKINGTHREAD} PUBLIC 
-    ${LIBRARY_NAME} 
-    Catch2::Catch2WithMain
-    "AudioBuffer"
-    "NetworkingThread"
+# add_executable(${TEST_NETWORK} ${TESTS_SOURCES})
+# target_include_directories(${TEST_NETWORK} PUBLIC ${TEST_INCLUDES})
+# target_link_libraries(${TEST_NETWORK} PUBLIC 
+#     ${LIBRARY_NAME} 
+#     Catch2::Catch2WithMain
+#     "AudioBuffer"
+#     "Host"
+#     "NetworkThread"
     
-    juce::juce_recommended_config_flags
-    juce::juce_recommended_lto_flags
-    juce::juce_recommended_warning_flags
-    PRIVATE
-    juce::juce_audio_utils
-)
 
-set(TEST_SERVER "ServerTests")
-set(TESTS_SOURCES test_Server.cpp)
+#     juce::juce_recommended_config_flags
+#     juce::juce_recommended_lto_flags
+#     juce::juce_recommended_warning_flags
+#     PRIVATE
+#     juce::juce_audio_utils
+# )
+
+set(TEST_HOST "HostTests")
+set(TESTS_SOURCES test_Host.cpp)
 set(TEST_INCLUDES "./")
 
-add_executable(${TEST_SERVER} ${TESTS_SOURCES})
-target_include_directories(${TEST_SERVER} PUBLIC ${TEST_INCLUDES})
-target_link_libraries(${TEST_SERVER} PUBLIC 
+add_executable(${TEST_HOST} ${TESTS_SOURCES})
+target_include_directories(${TEST_HOST} PUBLIC ${TEST_INCLUDES})
+target_link_libraries(${TEST_HOST} PUBLIC 
     ${LIBRARY_NAME} 
     Catch2::Catch2WithMain
     "AudioBuffer"
-    "Server"
+    "Host"
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags
@@ -68,7 +69,7 @@ target_link_libraries(${TEST_INTEGRATIONS} PUBLIC
     ${LIBRARY_NAME} 
     Catch2::Catch2WithMain
     "AudioBuffer"
-    "Server"
+    "Host"
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags
@@ -76,10 +77,31 @@ target_link_libraries(${TEST_INTEGRATIONS} PUBLIC
     juce::juce_audio_utils
 )
 
-catch_discover_tests(${TEST_NETWORKINGTHREAD} OUTPUT_DIR "NetworkingThreadTests" OUTPUT_PREFIX "NetworkingThread_")
+set(TEST_PROVIDERTHREAD "ProviderThreadTests")
+set(TESTS_SOURCES test_ProviderThread.cpp)
+set(TEST_INCLUDES "./")
+
+add_executable(${TEST_PROVIDERTHREAD} ${TESTS_SOURCES})
+target_include_directories(${TEST_PROVIDERTHREAD} PUBLIC ${TEST_INCLUDES})
+target_link_libraries(${TEST_PROVIDERTHREAD} PUBLIC 
+    ${LIBRARY_NAME} 
+    Catch2::Catch2WithMain
+    "AudioBuffer"
+    "Host"
+    "ProviderThread"
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_lto_flags
+    juce::juce_recommended_warning_flags
+    PRIVATE
+    juce::juce_audio_utils
+)
+
+catch_discover_tests(${TEST_PROVIDERTHREAD} OUTPUT_DIR "ProviderThreadTests" OUTPUT_PREFIX "ProviderThread_")  
+
+# catch_discover_tests(${TEST_NETWORK} OUTPUT_DIR "NetworkThreadTests" OUTPUT_PREFIX "NetworkThread_")
 
 catch_discover_tests(${TEST_INTEGRATIONS} OUTPUT_DIR "IntegrationTests" OUTPUT_PREFIX "Integration_")
 
-catch_discover_tests(${TEST_SERVER} OUTPUT_DIR "ServerTests" OUTPUT_PREFIX "Server_")
+catch_discover_tests(${TEST_HOST} OUTPUT_DIR "HostTests" OUTPUT_PREFIX "Host_")
 
 catch_discover_tests(${TEST_AUDIOBUFFER})

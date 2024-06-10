@@ -5,17 +5,27 @@
 #include <boost/system/error_code.hpp>
 #include <boost/asio/error.hpp> 
 #include "AudioBuffer.h"
+#include "Host.h"
+
+
 
 
 class NetworkThread : public juce::Thread
 {
 public:
-  NetworkThread(AudioBufferFIFO& audioBufferFIFOArg);
+  NetworkThread(addressData hostAddress);
 
-  void run() override;
+  virtual void run();
 
-  void stopThreadSafely();
+  void setupHost();
+
+  void receiveHandshake();
+
+  void sendHandshake();
+
 
 private:
-  AudioBufferFIFO& audioBufferFIFO;
+  addressData m_hostAddress;
+  std::unique_ptr<Host> m_host;
+
 };

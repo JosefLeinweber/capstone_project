@@ -7,34 +7,31 @@
 #include <boost/asio/error.hpp> 
 #include "AudioBuffer.h"
 
-struct datagram {
-    std::vector<float> buffer1;
-    std::vector<float> buffer2;
+struct addressData {
+  std::string ip;
+  int port;
 };
 
+typedef boost::asio::detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO> rcv_timeout_option;
 
-class Server{
+class Host{
 public:
-    Server(std::string ip, int port);
+    Host(addressData hostAddress);
 
-    void inititalizeConnection(std::string ip, int port);
+    void sendHandshake(addressData remoteAddress);
 
-    void waitForConnection();
+    bool waitForHandshake();
 
     void sendTo(juce::AudioBuffer<float> buffer);
 
     void recieveFrom(juce::AudioBuffer<float>& buffer);
 
-    void stopServer();
+    void stopHost();
 
     bool isConnected();
 
 private:
-
-    
-
-    std::string m_ip;
-    int m_port;
+    addressData m_hostAddress;
     boost::asio::io_context m_io_context;
     std::unique_ptr<boost::asio::ip::udp::socket> m_socket;
     boost::asio::ip::udp::endpoint m_remote_endpoint;
