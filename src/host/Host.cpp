@@ -93,3 +93,13 @@ addressData Host::getRemoteAddress()
                               m_remote_endpoint.port());
     return remoteAddress;
 }
+
+void Host::asyncWaitForConnection(
+    std::function<void(const boost::system::error_code &error,
+                       std::size_t bytes_transferred)> callback)
+{
+    m_socket->async_receive_from(boost::asio::buffer(m_recv_buf),
+                                 m_remote_endpoint,
+                                 callback);
+    m_io_context.run();
+};

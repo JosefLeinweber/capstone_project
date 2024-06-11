@@ -99,6 +99,26 @@ target_link_libraries(${TEST_CONSUMERTHREAD} PUBLIC
     juce::juce_audio_utils
 )
 
+set(TEST_CONNCETIONMANAGERTHREAD "ConnectionManagerThreadTests")
+set(TESTS_SOURCES test_ConsumerThread.cpp)
+set(TEST_INCLUDES "./")
+
+add_executable(${TEST_CONNCETIONMANAGERTHREAD} ${TESTS_SOURCES})
+target_include_directories(${TEST_CONNCETIONMANAGERTHREAD} PUBLIC ${TEST_INCLUDES})
+target_link_libraries(${TEST_CONNCETIONMANAGERTHREAD} PUBLIC
+    ${LIBRARY_NAME}
+    Catch2::Catch2WithMain
+    "AudioBuffer"
+    "Host"
+    "ConnectionManagerThread"
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_lto_flags
+    juce::juce_recommended_warning_flags
+    PRIVATE
+    juce::juce_audio_utils
+)
+catch_discover_tests(${TEST_CONNCETIONMANAGERTHREAD} OUTPUT_DIR "ConnectionManagerThreadTests" OUTPUT_PREFIX "ConnectionManagerThread_")
+
 catch_discover_tests(${TEST_PROVIDERTHREAD} PROPERTIES --repeat until-fail=10)
 
 catch_discover_tests(${TEST_CONSUMERTHREAD} OUTPUT_DIR "ConsumerThreadTests" OUTPUT_PREFIX "ConsumerThread_")

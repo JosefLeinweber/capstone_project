@@ -4,6 +4,7 @@
 #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
 #include <boost/system/error_code.hpp>
+#include <functional>
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_core/juce_core.h>
 
@@ -38,7 +39,12 @@ public:
 
     bool isConnected();
 
+    void asyncWaitForConnection(
+        std::function<void(const boost::system::error_code &error,
+                           std::size_t bytes_transferred)> callback);
+
     addressData getRemoteAddress();
+
 
 private:
     addressData m_hostAddress;
