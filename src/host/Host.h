@@ -1,22 +1,30 @@
 #pragma once
 
-#include <juce_core/juce_core.h>
-#include <juce_audio_utils/juce_audio_utils.h>
-#include <boost/asio.hpp>
-#include <boost/system/error_code.hpp>
-#include <boost/asio/error.hpp> 
 #include "AudioBuffer.h"
+#include <boost/asio.hpp>
+#include <boost/asio/error.hpp>
+#include <boost/system/error_code.hpp>
+#include <juce_audio_utils/juce_audio_utils.h>
+#include <juce_core/juce_core.h>
 
-struct addressData {
-  std::string ip;
-  int port;
+
+struct addressData
+{
+    std::string ip;
+    int port;
 };
 
-typedef boost::asio::detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO> rcv_timeout_option;
+typedef boost::asio::detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>
+    rcv_timeout_option;
 
-class Host{
+class Host
+{
 public:
     Host(addressData hostAddress);
+
+    ~Host();
+
+    void setupSocket();
 
     void sendHandshake(addressData remoteAddress);
 
@@ -24,7 +32,7 @@ public:
 
     void sendTo(juce::AudioBuffer<float> buffer);
 
-    void recieveFrom(juce::AudioBuffer<float>& buffer);
+    void recieveFrom(juce::AudioBuffer<float> &buffer);
 
     void stopHost();
 

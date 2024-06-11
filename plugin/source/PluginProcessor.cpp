@@ -7,48 +7,44 @@
 */
 
 #include "YourPluginName/PluginProcessor.h"
-#include "YourPluginName/PluginEditor.h"
 #include "AudioBuffer.h"
-
-
-
+#include "YourPluginName/PluginEditor.h"
 
 
 //==============================================================================
 LowpassHighpassFilterAudioProcessor::LowpassHighpassFilterAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       ), visualiser(2), audioBufferFIFO(2, 100000), 
-      parameters(*this, nullptr, juce::Identifier("LowpassAndHighpassPlugin"),
-{std::make_unique<juce::AudioParameterFloat>(
-                      "cutoff_frequency", "Cutoff Frequency",
-                      juce::NormalisableRange{ 20.f, 20000.f, 0.1f, 0.2f, false }, 500.f),
-                    std::make_unique<juce::AudioParameterBool>("highpass", "Highpass", false)
-                })
+    : AudioProcessor(
+          BusesProperties()
+#if !JucePlugin_IsMidiEffect
+#if !JucePlugin_IsSynth
+              .withInput("Input", juce::AudioChannelSet::stereo(), true)
+#endif
+              .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+#endif
+              ),
+      visualiser(2), audioBufferFIFO(2, 100000),
+      parameters(*this,
+                 nullptr,
+                 juce::Identifier("LowpassAndHighpassPlugin"),
+                 {std::make_unique<juce::AudioParameterFloat>(
+                      "cutoff_frequency",
+                      "Cutoff Frequency",
+                      juce::NormalisableRange{20.f, 20000.f, 0.1f, 0.2f, false},
+                      500.f),
+                  std::make_unique<juce::AudioParameterBool>("highpass",
+                                                             "Highpass",
+                                                             false)})
 #endif
 {
-  visualiser.setRepaintRate(30);
-  visualiser.setBufferSize(256);
+    visualiser.setRepaintRate(30);
+    visualiser.setBufferSize(256);
 
-  cutoffFrequencyParameter =
-      parameters.getRawParameterValue("cutoff_frequency");
-  highpassParameter = parameters.getRawParameterValue("highpass");
+    cutoffFrequencyParameter =
+        parameters.getRawParameterValue("cutoff_frequency");
+    highpassParameter = parameters.getRawParameterValue("highpass");
 
-  AudioBufferFIFO outaudioBufferFIFO(2, 100000);
-
-
-
-
-
-
-
-
+    AudioBufferFIFO outaudioBufferFIFO(2, 100000);
 }
 
 LowpassHighpassFilterAudioProcessor::~LowpassHighpassFilterAudioProcessor()
@@ -63,29 +59,29 @@ const juce::String LowpassHighpassFilterAudioProcessor::getName() const
 
 bool LowpassHighpassFilterAudioProcessor::acceptsMidi() const
 {
-   #if JucePlugin_WantsMidiInput
+#if JucePlugin_WantsMidiInput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 bool LowpassHighpassFilterAudioProcessor::producesMidi() const
 {
-   #if JucePlugin_ProducesMidiOutput
+#if JucePlugin_ProducesMidiOutput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 bool LowpassHighpassFilterAudioProcessor::isMidiEffect() const
 {
-   #if JucePlugin_IsMidiEffect
+#if JucePlugin_IsMidiEffect
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 double LowpassHighpassFilterAudioProcessor::getTailLengthSeconds() const
@@ -95,8 +91,8 @@ double LowpassHighpassFilterAudioProcessor::getTailLengthSeconds() const
 
 int LowpassHighpassFilterAudioProcessor::getNumPrograms()
 {
-    return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
-                // so this should be at least 1, even if you're not really implementing programs.
+    return 1; // NB: some hosts don't cope very well if you tell them there are 0 programs,
+        // so this should be at least 1, even if you're not really implementing programs.
 }
 
 int LowpassHighpassFilterAudioProcessor::getCurrentProgram()
@@ -104,34 +100,37 @@ int LowpassHighpassFilterAudioProcessor::getCurrentProgram()
     return 0;
 }
 
-void LowpassHighpassFilterAudioProcessor::setCurrentProgram (int index)
+void LowpassHighpassFilterAudioProcessor::setCurrentProgram(int index)
 {
-  juce::ignoreUnused(index);
+    juce::ignoreUnused(index);
 }
 
-const juce::String LowpassHighpassFilterAudioProcessor::getProgramName (int index)
+const juce::String LowpassHighpassFilterAudioProcessor::getProgramName(
+    int index)
 {
     juce::ignoreUnused(index);
     return {};
 }
 
-void LowpassHighpassFilterAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void LowpassHighpassFilterAudioProcessor::changeProgramName(
+    int index,
+    const juce::String &newName)
 {
     juce::ignoreUnused(index);
     juce::ignoreUnused(newName);
 }
 
 //==============================================================================
-void LowpassHighpassFilterAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void LowpassHighpassFilterAudioProcessor::prepareToPlay(double sampleRate,
+                                                        int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-  juce::ignoreUnused(samplesPerBlock);
-  filter.setSamplingRate(static_cast<float>(sampleRate));
-  currentSampleRate = sampleRate;
-  auto cyclesPerSample = 150 / currentSampleRate;         // [2]
-  angleDelta = cyclesPerSample * 2.0 * juce::MathConstants<double>::pi;       
-
+    juce::ignoreUnused(samplesPerBlock);
+    filter.setSamplingRate(static_cast<float>(sampleRate));
+    currentSampleRate = sampleRate;
+    auto cyclesPerSample = 150 / currentSampleRate; // [2]
+    angleDelta = cyclesPerSample * 2.0 * juce::MathConstants<double>::pi;
 }
 
 void LowpassHighpassFilterAudioProcessor::releaseResources()
@@ -141,35 +140,38 @@ void LowpassHighpassFilterAudioProcessor::releaseResources()
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool LowpassHighpassFilterAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool LowpassHighpassFilterAudioProcessor::isBusesLayoutSupported(
+    const BusesLayout &layouts) const
 {
-  #if JucePlugin_IsMidiEffect
-    juce::ignoreUnused (layouts);
+#if JucePlugin_IsMidiEffect
+    juce::ignoreUnused(layouts);
     return true;
-  #else
+#else
     // This is the place where you check if the layout is supported.
     // In this template code we only support mono or stereo.
     // Some plugin hosts, such as certain GarageBand versions, will only
     // load plugins that support stereo bus layouts.
-    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono() &&
+        layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
 
-    // This checks if the input layout matches the output layout
-   #if ! JucePlugin_IsSynth
+        // This checks if the input layout matches the output layout
+#if !JucePlugin_IsSynth
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
         return false;
-   #endif
+#endif
 
     return true;
-  #endif
+#endif
 }
 #endif
 
-void LowpassHighpassFilterAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void LowpassHighpassFilterAudioProcessor::processBlock(
+    juce::AudioBuffer<float> &buffer,
+    juce::MidiBuffer &midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
+    auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
     // In case we have more outputs than inputs, this code clears any output
@@ -179,10 +181,8 @@ void LowpassHighpassFilterAudioProcessor::processBlock (juce::AudioBuffer<float>
     // when they first compile a plugin, but obviously you don't need to keep
     // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
-    
-    
-      
+        buffer.clear(i, 0, buffer.getNumSamples());
+
 
     const auto cutoffFrequency = cutoffFrequencyParameter->load();
     const auto highpass = *highpassParameter < 0.5f ? false : true;
@@ -191,23 +191,20 @@ void LowpassHighpassFilterAudioProcessor::processBlock (juce::AudioBuffer<float>
     juce::ignoreUnused(midiMessages);
 
     auto level = 0.125f;
-    auto* leftBuffer  = buffer.getWritePointer (0);
-    auto* rightBuffer = buffer.getWritePointer (1);
+    auto *leftBuffer = buffer.getWritePointer(0);
+    auto *rightBuffer = buffer.getWritePointer(1);
 
     for (auto sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
-        auto currentSample = (float) std::sin (currentAngle);
+        auto currentSample = (float)std::sin(currentAngle);
         currentAngle += angleDelta;
-        leftBuffer[sample]  = currentSample * level;
+        leftBuffer[sample] = currentSample * level;
         rightBuffer[sample] = currentSample * level;
     }
 
     // filter.processBlock(buffer, midiMessages);
     visualiser.pushBuffer(buffer);
     audioBufferFIFO.writeToBuffer(buffer);
-
-
-    
 }
 
 //==============================================================================
@@ -216,13 +213,14 @@ bool LowpassHighpassFilterAudioProcessor::hasEditor() const
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor* LowpassHighpassFilterAudioProcessor::createEditor()
+juce::AudioProcessorEditor *LowpassHighpassFilterAudioProcessor::createEditor()
 {
-    return new LowpassHighpassFilterAudioProcessorEditor (*this, parameters);
+    return new LowpassHighpassFilterAudioProcessorEditor(*this, parameters);
 }
 
 //==============================================================================
-void LowpassHighpassFilterAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void LowpassHighpassFilterAudioProcessor::getStateInformation(
+    juce::MemoryBlock &destData)
 {
     juce::ignoreUnused(destData);
     // You should use this method to store your parameters in the memory block.
@@ -230,7 +228,8 @@ void LowpassHighpassFilterAudioProcessor::getStateInformation (juce::MemoryBlock
     // as intermediaries to make it easy to save and load complex data.
 }
 
-void LowpassHighpassFilterAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void LowpassHighpassFilterAudioProcessor::setStateInformation(const void *data,
+                                                              int sizeInBytes)
 {
     juce::ignoreUnused(data);
     juce::ignoreUnused(sizeInBytes);
@@ -240,7 +239,7 @@ void LowpassHighpassFilterAudioProcessor::setStateInformation (const void* data,
 
 //==============================================================================
 // This creates new instances of the plugin..
-juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter()
 {
     return new LowpassHighpassFilterAudioProcessor();
 }

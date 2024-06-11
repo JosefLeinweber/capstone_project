@@ -42,6 +42,11 @@ if (ENABLE_TESTING)
     find_package(catch2 3.5.4 REQUIRED)
     list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
     include(CTest)
+    include(Catch)
+    set(CATCH_DISCOVER_TESTS_EXTRA_ARGS     # Example of a Catch2 specific argument
+    --use-colour yes   # Force colored output
+)
+
     enable_testing()
     add_subdirectory(test)
 endif()
