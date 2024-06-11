@@ -1,6 +1,11 @@
----
-Language:        Cpp
-BasedOnStyle:  Chromium
-AccessModifierOffset: -2
-SortIncludes: false
-...
+---
+
+Language:        Cpp
+
+BasedOnStyle:  Chromium
+
+AccessModifierOffset: -2
+
+SortIncludes: true
+
+...

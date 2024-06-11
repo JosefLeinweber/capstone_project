@@ -3,33 +3,36 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <boost/asio.hpp>
 #include <boost/system/error_code.hpp>
-#include <boost/asio/error.hpp> 
+#include <boost/asio/error.hpp>
 #include "AudioBuffer.h"
+#include "Host.h"
 
 
 class ConsumerThread : public juce::Thread
 {
 public:
-  ConsumberThread();
+  ConsumerThread(
+    AudioBufferFIFO& inputRingBuffer,
+    std::atomic<bool>& isConsumerConnected,
+    addressData& hostAddress
+  );
 
   void run() override;
 
-  void connectToVirtualStudio();
+  void setupHost();
 
-  void sendHandshake(const std::string& ip, const int port);
+  void startRecievingAudio();
 
-  void stopThreadSafely();
+  bool validateConnection();
 
-  void startListenerThread();
-
-  void receiveHandsake();
-
-  void sendHandsake();
-
-  void 
+  std::unique_ptr<Host>& getHost() { return m_host; }
 
 private:
-  std::unique_ptr<juce::Thread> m_listenerThread;
+  addressData m_hostAddress;
+  addressData m_remoteAddress;
+  std::unique_ptr<Host> m_host;
+
   AudioBufferFIFO& m_inputRingBuffer;
   juce::AudioBuffer<float> m_inputBuffer;
+  std::atomic<bool>& m_isConsumerConnected;
 };

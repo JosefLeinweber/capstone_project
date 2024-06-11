@@ -54,4 +54,9 @@ void Host::stopHost(){
     m_socket->close();
 };
 
+addressData Host::getRemoteAddress() {
+    addressData remoteAddress(m_remote_endpoint.address().to_string(), m_remote_endpoint.port());
+    return remoteAddress;
+}
+
 

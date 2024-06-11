@@ -1,18 +1,17 @@
 #include "ProviderThread.h"
 
-ProviderThread::ProviderThread( addressData& hostAddress, 
+ProviderThread::ProviderThread( addressData& hostAddress,
                                 addressData& remoteAddress,
-                                AudioBufferFIFO& outputRingBuffer, 
-                                std::atomic<bool>& isProviderConnected) : 
-                                juce::Thread("Provider Thread"), 
+                                AudioBufferFIFO& outputRingBuffer,
+                                std::atomic<bool>& isProviderConnected) :
+                                juce::Thread("Provider Thread"),
                                 m_hostAddress(hostAddress),
                                 m_remoteAddress(remoteAddress),
-                                m_outputRingBuffer(outputRingBuffer), 
+                                m_outputRingBuffer(outputRingBuffer),
                                 m_isProviderConnected(isProviderConnected) {};
 
 void ProviderThread::run() {
     setupHost();
-
     m_isProviderConnected = validateConnection();
 };
 

@@ -2,7 +2,7 @@
 #include "Host.h"
 #include <thread>
 
-TEST_CASE("Host Constructor"){
+TEST_CASE("Host | Constructor"){
     SECTION("Initialize with valid parameters"){
         bool sucess = false;
         try{
@@ -12,12 +12,12 @@ TEST_CASE("Host Constructor"){
         } catch(...){
             sucess = false;
         }
-        
+
         REQUIRE(sucess == true);
 }
 }
 
-TEST_CASE("Host Start"){
+TEST_CASE("Host | Start"){
     SECTION("Start Host"){
     std::cout << "Starting " << std::endl;
 
@@ -32,7 +32,7 @@ TEST_CASE("Host Start"){
         host.stopHost();
         }
     );
-    
+
     auto thread_2 = std::jthread([] (){
         std::cout << "Thread 2" << std::endl;
         addressData hostAddress("127.0.0.1", 8010);
@@ -41,13 +41,11 @@ TEST_CASE("Host Start"){
         host.sendHandshake(remoteAdress);
         std::cout << "Sent connection request" << std::endl;
         host.stopHost();
-        
-    } 
+
+    }
     );
     thread_1.join();
     thread_2.join();
     std::cout << "Threads joined" << std::endl;
     }
 }
-
-

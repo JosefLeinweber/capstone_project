@@ -40,7 +40,7 @@ TEST_CASE("ProviderThread | setupHost") {
 }
 
 TEST_CASE("ProviderThread | validateConnection successfully") {
-    addressData hostAddress("127.0.0.1", 8001);    
+    addressData hostAddress("127.0.0.1", 8001);
     addressData remoteAddress("127.0.0.1", 8022);
     AudioBufferFIFO outputRingBuffer(2, 1024);
     std::atomic<bool> isProviderConnected = false;
@@ -64,7 +64,7 @@ TEST_CASE("ProviderThread | validateConnection successfully") {
 }
 
 TEST_CASE("ProviderThread | validateConnection unsuccessfully") {
-    addressData hostAddress("127.0.0.1", 8001);    
+    addressData hostAddress("127.0.0.1", 8001);
     addressData remoteAddress("127.0.0.1", 8022);
     AudioBufferFIFO outputRingBuffer(2, 1024);
     std::atomic<bool> isProviderConnected = true;
@@ -89,7 +89,7 @@ TEST_CASE("ProviderThread | validateConnection unsuccessfully") {
 
 
 TEST_CASE("ProviderThread | sendHandshake before remote waits for handshake") {
-    addressData hostAddress("127.0.0.1", 8001);    
+    addressData hostAddress("127.0.0.1", 8001);
     addressData remoteAddress("127.0.0.1", 8022);
     AudioBufferFIFO outputRingBuffer(2, 1024);
     std::atomic<bool> isProviderConnected = false;

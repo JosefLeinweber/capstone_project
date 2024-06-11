@@ -30,6 +30,8 @@ public:
 
     bool isConnected();
 
+    addressData getRemoteAddress();
+
 private:
     addressData m_hostAddress;
     boost::asio::io_context m_io_context;
