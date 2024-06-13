@@ -100,7 +100,7 @@ target_link_libraries(${TEST_CONSUMERTHREAD} PUBLIC
 )
 
 set(TEST_CONNCETIONMANAGERTHREAD "ConnectionManagerThreadTests")
-set(TESTS_SOURCES test_ConsumerThread.cpp)
+set(TESTS_SOURCES test_ConnectionManagerThread.cpp)
 set(TEST_INCLUDES "./")
 
 add_executable(${TEST_CONNCETIONMANAGERTHREAD} ${TESTS_SOURCES})
@@ -119,7 +119,7 @@ target_link_libraries(${TEST_CONNCETIONMANAGERTHREAD} PUBLIC
 )
 catch_discover_tests(${TEST_CONNCETIONMANAGERTHREAD} OUTPUT_DIR "ConnectionManagerThreadTests" OUTPUT_PREFIX "ConnectionManagerThread_")
 
-catch_discover_tests(${TEST_PROVIDERTHREAD} PROPERTIES --repeat until-fail=10)
+catch_discover_tests(${TEST_PROVIDERTHREAD} )
 
 catch_discover_tests(${TEST_CONSUMERTHREAD} OUTPUT_DIR "ConsumerThreadTests" OUTPUT_PREFIX "ConsumerThread_")
 

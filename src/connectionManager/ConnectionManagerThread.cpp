@@ -1,20 +1,26 @@
 #include "ConnectionManagerThread.h"
+#include <iostream>
 
 ConnectionManagerThread::ConnectionManagerThread(
     AudioBufferFIFO &inputRingBuffer,
     AudioBufferFIFO &outputRingBuffer)
     : juce::Thread("Network Thread"), m_inputRingBuffer(inputRingBuffer),
-      m_outputRingBuffer(outputRingBuffer) {};
+      m_outputRingBuffer(outputRingBuffer)
+{
+}
 
 void ConnectionManagerThread::run()
 {
     while (!threadShouldExit())
     {
-        setupHost();
 
-        asyncWaitForConnection();
+        //! HARDOCDED IP AND PORT
+        addressData hostAddress("127.0.0.1", 8000);
+        setupHost(hostAddress);
 
-        while (!m_incommingConnection /** or a event from gui happens */)
+        asyncWaitForConnection(std::chrono::milliseconds(10000));
+
+        while (!m_incomingConnection /** or a event from gui happens */)
         {
             wait(100);
         }
@@ -30,44 +36,55 @@ void ConnectionManagerThread::run()
             closeProviderAndConsumerThreads();
         }
     }
-};
+}
 
-void ConnectionManagerThread::setupHost()
+void ConnectionManagerThread::setupHost(addressData hostAddress)
 {
-    m_host = std::make_unique<Host>();
+    m_host = std::make_unique<Host>(hostAddress);
     m_host->setupSocket();
-};
+}
 
 void ConnectionManagerThread::callbackFunction(
     const boost::system::error_code &error,
     std::size_t bytes_transferred)
 {
-    if (!error)
+    if (!error && bytes_transferred > 0)
     {
-        m_incommingConnection = true;
+        m_incomingConnection = true;
+        std::cout << "callback > received data" << std::endl;
     }
     else
     {
-        m_incommingConnection = false;
+        m_incomingConnection = false;
+        std::cout << "callback > no data received" << std::endl;
     }
-};
+}
 
-void ConnectionManagerThread::asyncWaitForConnection()
+void ConnectionManagerThread::asyncWaitForConnection(
+    std::chrono::milliseconds timeout)
 {
-    m_host->asyncWaitForConnection(&callbackFunction);
-};
+    std::cout << "ConncectionManager::asyncWaitForConnection" << std::endl;
+    m_host->asyncWaitForConnection(
+        std::bind(&ConnectionManagerThread::callbackFunction,
+                  this,
+                  std::placeholders::_1,
+                  std::placeholders::_2),
+        timeout);
+}
 
 void ConnectionManagerThread::stopThreadSafely()
 {
     signalThreadShouldExit();
     waitForThreadToExit(1000);
-};
+}
 
 bool ConnectionManagerThread::validateConnection()
 {
     bool connected = false;
-    if (m_incommingConnection)
+    if (m_incomingConnection)
     {
+        std::cout << "ConnectionManager::validateConnection getRemoteAddress: "
+                  << m_host->getRemoteAddress().ip << std::endl;
         m_host->sendHandshake(m_host->getRemoteAddress());
         connected = m_host->waitForHandshake();
     }
@@ -80,7 +97,7 @@ bool ConnectionManagerThread::validateConnection()
         }
     }
     return connected;
-};
+}
 
 bool ConnectionManagerThread::startUpProviderAndConsumerThreads()
 {
@@ -117,7 +134,7 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads()
         wait(100);
     }
     return true;
-};
+}
 
 
 void ConnectionManagerThread::waitForClosingRequest()
@@ -130,10 +147,10 @@ void ConnectionManagerThread::waitForClosingRequest()
 
     m_providerThread->stopThread(1000);
     m_consumerThread->stopThread(1000);
-};
+}
 
 void ConnectionManagerThread::closeProviderAndConsumerThreads()
 {
     m_providerThread->waitForThreadToExit(1000);
     m_consumerThread->waitForThreadToExit(1000);
-};
+}

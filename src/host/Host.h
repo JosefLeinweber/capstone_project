@@ -41,10 +41,10 @@ public:
 
     void asyncWaitForConnection(
         std::function<void(const boost::system::error_code &error,
-                           std::size_t bytes_transferred)> callback);
+                           std::size_t bytes_transferred)> callback,
+        std::chrono::milliseconds timeout = std::chrono::milliseconds(1500));
 
     addressData getRemoteAddress();
-
 
 private:
     addressData m_hostAddress;
@@ -54,5 +54,6 @@ private:
     std::array<char, 128> m_recv_buf;
     juce::AudioBuffer<float> m_tempBuffer;
     boost::system::error_code m_ignored_error;
+    std::unique_ptr<boost::asio::steady_timer> m_timer;
     bool m_connected = false;
 };

@@ -14,6 +14,7 @@ void ConsumerThread::run()
     setupHost();
 
     m_isConsumerConnected = validateConnection();
+    std::cout << "Consumer connected: " << m_isConsumerConnected << std::endl;
 };
 
 void ConsumerThread::setupHost()

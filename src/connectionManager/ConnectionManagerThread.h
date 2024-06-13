@@ -19,9 +19,9 @@ public:
 
     void run() override;
 
-    void setupHost();
+    void setupHost(addressData hostAddress);
 
-    void asyncWaitForConnection();
+    void asyncWaitForConnection(std::chrono::milliseconds timeout);
 
     void callbackFunction(const boost::system::error_code &error,
                           size_t bytes_transferred);
@@ -36,6 +36,15 @@ public:
 
     void closeProviderAndConsumerThreads();
 
+    std::unique_ptr<Host> &getHost()
+    {
+        return m_host;
+    };
+
+    bool incommingConnection()
+    {
+        return m_incomingConnection;
+    };
 
 private:
     std::atomic<bool> m_isProviderConnected;
@@ -44,6 +53,6 @@ private:
     std::unique_ptr<ConsumerThread> m_consumerThread;
     AudioBufferFIFO &m_inputRingBuffer;
     AudioBufferFIFO &m_outputRingBuffer;
-    bool m_incommingConnection = false;
+    std::atomic<bool> m_incomingConnection = false;
     std::unique_ptr<Host> m_host;
 };

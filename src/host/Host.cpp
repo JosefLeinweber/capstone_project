@@ -52,6 +52,7 @@ void Host::sendHandshake(addressData remoteAddress)
         remoteAddress.port);
     std::array<char, 1> send_buf = {{0}};
     m_socket->send_to(boost::asio::buffer(send_buf), m_remote_endpoint);
+    std::cout << "Handshake sent" << std::endl;
 };
 
 void Host::sendTo(juce::AudioBuffer<float> buffer)
@@ -83,6 +84,16 @@ void Host::stopHost()
 {
     if (m_socket)
     {
+        try
+        {
+            m_socket->cancel();
+        }
+        catch (...)
+        {
+            std::cout << "No async call to cancel" << std::endl;
+        }
+
+
         m_socket->close();
     }
 };
@@ -94,12 +105,33 @@ addressData Host::getRemoteAddress()
     return remoteAddress;
 }
 
+
 void Host::asyncWaitForConnection(
     std::function<void(const boost::system::error_code &error,
-                       std::size_t bytes_transferred)> callback)
+                       std::size_t bytes_transferred)> callback,
+    std::chrono::milliseconds timeout)
 {
-    m_socket->async_receive_from(boost::asio::buffer(m_recv_buf),
-                                 m_remote_endpoint,
-                                 callback);
+    m_timer =
+        std::make_unique<boost::asio::steady_timer>(m_io_context, timeout);
+    m_socket->async_receive_from(
+        boost::asio::buffer(m_recv_buf),
+        m_remote_endpoint,
+        [this, callback](const boost::system::error_code &error,
+                         std::size_t bytes_transferred) {
+            std::cout << "callback executed at: "
+                      << std::chrono::system_clock::now() << std::endl;
+            callback(error, bytes_transferred);
+            this->m_timer->cancel();
+        });
+
+
+    m_timer->async_wait([this](const boost::system::error_code &error) {
+        if (!error)
+        {
+            std::cout << "Timer expired" << std::endl;
+            m_socket->cancel();
+        }
+    });
+
     m_io_context.run();
 };
