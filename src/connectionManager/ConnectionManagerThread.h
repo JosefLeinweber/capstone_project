@@ -17,6 +17,8 @@ public:
     ConnectionManagerThread(AudioBufferFIFO &inputRingBuffer,
                             AudioBufferFIFO &outputRingBuffer);
 
+    ~ConnectionManagerThread() override;
+
     void run() override;
 
     void setupHost(addressData hostAddress);
@@ -30,9 +32,11 @@ public:
 
     void stopThreadSafely();
 
-    bool startUpProviderAndConsumerThreads();
+    bool startUpProviderAndConsumerThreads(addressData providerAddress,
+                                           addressData consumerAddress,
+                                           addressData remoteConsumerAddress);
 
-    void waitForClosingRequest();
+    void asyncWaitForClosingRequest();
 
     void closeProviderAndConsumerThreads();
 
@@ -47,12 +51,15 @@ public:
     };
 
 private:
-    std::atomic<bool> m_isProviderConnected;
-    std::atomic<bool> m_isConsumerConnected;
-    std::unique_ptr<ProviderThread> m_providerThread;
+    std::atomic<bool> m_isProviderConnected = false;
+    std::atomic<bool> m_isConsumerConnected = false;
+    std::atomic<bool> m_incomingConnection = false;
+    std::atomic<bool> m_closingRequest = false;
+
+    std::unique_ptr<juceThread> m_providerThread;
     std::unique_ptr<ConsumerThread> m_consumerThread;
+    std::unique_ptr<Host> m_host;
+
     AudioBufferFIFO &m_inputRingBuffer;
     AudioBufferFIFO &m_outputRingBuffer;
-    std::atomic<bool> m_incomingConnection = false;
-    std::unique_ptr<Host> m_host;
 };

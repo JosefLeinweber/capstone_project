@@ -9,12 +9,21 @@ ConsumerThread::ConsumerThread(addressData &hostAddress,
     : juce::Thread("Consumer Thread"), m_inputRingBuffer(inputRingBuffer),
       m_isConsumerConnected(isConsumerConnected), m_hostAddress(hostAddress) {};
 
+ConsumerThread::~ConsumerThread()
+{
+    if (isThreadRunning())
+    {
+        stopThread(1000);
+    }
+}
+
 void ConsumerThread::run()
 {
-    setupHost();
-
-    m_isConsumerConnected = validateConnection();
-    std::cout << "Consumer connected: " << m_isConsumerConnected << std::endl;
+    while (!threadShouldExit())
+    {
+        setupHost();
+        m_isConsumerConnected = validateConnection();
+    }
 };
 
 void ConsumerThread::setupHost()

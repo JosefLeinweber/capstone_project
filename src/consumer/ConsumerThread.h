@@ -15,6 +15,8 @@ public:
                    AudioBufferFIFO &inputRingBuffer,
                    std::atomic<bool> &isConsumerConnected);
 
+    ~ConsumerThread() override;
+
     void run() override;
 
     void setupHost();

@@ -15,6 +15,8 @@ public:
                    AudioBufferFIFO &outputRingBuffer,
                    std::atomic<bool> &isProviderConnected);
 
+    ~ProviderThread() override = default;
+
     void run() override;
 
     void setupHost();

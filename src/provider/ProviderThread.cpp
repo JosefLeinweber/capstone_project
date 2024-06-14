@@ -10,10 +10,12 @@ ProviderThread::ProviderThread(addressData &hostAddress,
       m_remoteAddress(remoteAddress), m_outputRingBuffer(outputRingBuffer),
       m_isProviderConnected(isProviderConnected) {};
 
+
 void ProviderThread::run()
 {
     setupHost();
     m_isProviderConnected = validateConnection();
+    std::cout << "Provider connected: " << m_isProviderConnected << std::endl;
 };
 
 void ProviderThread::startSendingAudio()
@@ -33,18 +35,7 @@ void ProviderThread::setupHost()
 
 bool ProviderThread::validateConnection()
 {
-
     m_host->sendHandshake(m_remoteAddress);
-    auto currentTime = std::chrono::system_clock::now().time_since_epoch();
-    std::cout << "Provider sends handshake at: " << currentTime.count()
-              << " seconds" << std::endl;
     bool connected = m_host->waitForHandshake();
-    std::cout << "Provider recieved handshake == " << connected << std::endl;
-    if (connected)
-    {
-        auto currentTime = std::chrono::system_clock::now().time_since_epoch();
-        std::cout << "Provider recieved handshake at: " << currentTime.count()
-                  << " seconds" << std::endl;
-    }
     return connected;
 }

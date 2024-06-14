@@ -16,21 +16,17 @@ void Host::setupSocket()
         m_io_context,
         boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(),
                                        m_hostAddress.port));
-    m_socket->set_option(rcv_timeout_option{1500});
 };
 
 bool Host::waitForHandshake()
 {
-
+    m_socket->set_option(rcv_timeout_option{3000});
     std::size_t length = m_socket->receive_from(boost::asio::buffer(m_recv_buf),
                                                 m_remote_endpoint,
                                                 0,
                                                 m_ignored_error);
     if (length > 0)
     {
-        std::cout << "Handshake received" << std::endl;
-        std::cout << length << std::endl;
-        std::cout << m_recv_buf.data() << std::endl;
         m_connected = true;
     }
     else
@@ -52,7 +48,6 @@ void Host::sendHandshake(addressData remoteAddress)
         remoteAddress.port);
     std::array<char, 1> send_buf = {{0}};
     m_socket->send_to(boost::asio::buffer(send_buf), m_remote_endpoint);
-    std::cout << "Handshake sent" << std::endl;
 };
 
 void Host::sendTo(juce::AudioBuffer<float> buffer)
@@ -96,6 +91,7 @@ void Host::stopHost()
 
         m_socket->close();
     }
+    m_io_context.stop();
 };
 
 addressData Host::getRemoteAddress()
@@ -134,4 +130,5 @@ void Host::asyncWaitForConnection(
     });
 
     m_io_context.run();
+    m_io_context.restart();
 };

@@ -9,6 +9,11 @@ ConnectionManagerThread::ConnectionManagerThread(
 {
 }
 
+ConnectionManagerThread::~ConnectionManagerThread()
+{
+    std::cout << "ConnectionManagerThread Destructor" << std::endl;
+}
+
 void ConnectionManagerThread::run()
 {
     while (!threadShouldExit())
@@ -16,6 +21,9 @@ void ConnectionManagerThread::run()
 
         //! HARDOCDED IP AND PORT
         addressData hostAddress("127.0.0.1", 8000);
+        addressData consumerAddress("127.0.0.1", 8001);
+        addressData providerAddress("127.0.0.1", 8002);
+        addressData remoteConsumerAddress("127.0.0.1", 8003);
         setupHost(hostAddress);
 
         asyncWaitForConnection(std::chrono::milliseconds(10000));
@@ -25,13 +33,16 @@ void ConnectionManagerThread::run()
             wait(100);
         }
 
-        bool valid_connection = validateConnection();
-
-        if (valid_connection)
+        if (validateConnection() &&
+            startUpProviderAndConsumerThreads(consumerAddress,
+                                              providerAddress,
+                                              remoteConsumerAddress))
         {
-            startUpProviderAndConsumerThreads();
-
-            waitForClosingRequest();
+            asyncWaitForClosingRequest();
+            while (!m_closingRequest /* or a event from gui happens */)
+            {
+                wait(100);
+            }
 
             closeProviderAndConsumerThreads();
         }
@@ -72,6 +83,7 @@ void ConnectionManagerThread::asyncWaitForConnection(
         timeout);
 }
 
+
 void ConnectionManagerThread::stopThreadSafely()
 {
     signalThreadShouldExit();
@@ -83,10 +95,22 @@ bool ConnectionManagerThread::validateConnection()
     bool connected = false;
     if (m_incomingConnection)
     {
-        std::cout << "ConnectionManager::validateConnection getRemoteAddress: "
-                  << m_host->getRemoteAddress().ip << std::endl;
-        m_host->sendHandshake(m_host->getRemoteAddress());
-        connected = m_host->waitForHandshake();
+        try
+        {
+            std::cout
+                << "ConnectionManager::validateConnection getRemoteAddress: "
+                << m_host->getRemoteAddress().ip << ":"
+                << m_host->getRemoteAddress().port << std::endl;
+            m_host->sendHandshake(m_host->getRemoteAddress());
+            std::cout << "ConnectionManager::validateConnection sendHandshake"
+                      << std::endl;
+            connected = m_host->waitForHandshake();
+        }
+        catch (std::exception &e)
+        {
+            std::cerr << "ConnectionManager::validateConnection exception: "
+                      << e.what() << std::endl;
+        }
     }
     else
     {
@@ -99,45 +123,56 @@ bool ConnectionManagerThread::validateConnection()
     return connected;
 }
 
-bool ConnectionManagerThread::startUpProviderAndConsumerThreads()
+bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
+    addressData providerAddress,
+    addressData consumerAddress,
+    addressData remoteConsumerAddress)
 {
-    //! temporary hardcoded implementation of provider and consumer address in header!!!!!!!!!!
-    addressData m_providerAddress("127.0.0.1", 8001);
-    addressData m_consumerAddress("127.0.0.1", 8002);
-    addressData m_remoteConsumerAddress("127.0.0.1", 8012);
+    //TODO: implement a way to get the provider and consumer address from the handshake
 
-    m_isProviderConnected = false;
-    m_isConsumerConnected = false;
-    m_providerThread = std::make_unique<ProviderThread>(m_providerAddress,
-                                                        m_remoteConsumerAddress,
+    m_providerThread = std::make_unique<ProviderThread>(providerAddress,
+                                                        remoteConsumerAddress,
                                                         m_outputRingBuffer,
                                                         m_isProviderConnected);
-    m_consumerThread = std::make_unique<ConsumerThread>(m_consumerAddress,
+    m_consumerThread = std::make_unique<ConsumerThread>(consumerAddress,
                                                         m_inputRingBuffer,
                                                         m_isConsumerConnected);
-    m_providerThread->startThread();
     m_consumerThread->startThread();
+    m_providerThread->startThread();
+
+
+    std::cout << "are threads running : " << m_providerThread->isThreadRunning()
+              << " " << m_consumerThread->isThreadRunning() << std::endl;
 
     //time now
     auto startTime = std::chrono::high_resolution_clock::now();
 
     while (!m_isProviderConnected || !m_isConsumerConnected)
     {
+        //TODO: make timeout not hardcoded!
         if (std::chrono::duration_cast<std::chrono::seconds>(
                 std::chrono::high_resolution_clock::now() - startTime)
                 .count() > 5)
         {
+            std::cout << "ConnectionManager::startUpProviderAndConsumerThreads "
+                         "timeout"
+                      << std::endl;
+            std::cout << " CM Provider connected: " << m_isProviderConnected
+                      << std::endl;
+            std::cout << " CM Consumer connected: " << m_isConsumerConnected
+                      << std::endl;
+
             m_providerThread->waitForThreadToExit(1000);
             m_consumerThread->waitForThreadToExit(1000);
             return false;
         }
-        wait(100);
+        wait(1000);
     }
     return true;
 }
 
 
-void ConnectionManagerThread::waitForClosingRequest()
+void ConnectionManagerThread::asyncWaitForClosingRequest()
 {
     while (!threadShouldExit())
     {
