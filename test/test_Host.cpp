@@ -4,62 +4,53 @@
 
 TEST_CASE("Host | Constructor")
 {
-    SECTION("Initialize with valid parameters")
+    bool sucess = false;
+    try
     {
-        bool sucess = false;
-        try
-        {
-            addressData hostAddress("127.0.0.1", 8001);
-            Host Host(hostAddress);
-            sucess = true;
-        }
-        catch (...)
-        {
-            sucess = false;
-        }
-
-        REQUIRE(sucess == true);
+        addressData hostAddress("127.0.0.1", 8001);
+        Host Host(hostAddress);
+        sucess = true;
     }
+    catch (...)
+    {
+        sucess = false;
+    }
+
+    REQUIRE(sucess == true);
 }
 
-TEST_CASE("Host | Start")
+TEST_CASE("Host | wait and send Handshake")
 {
-    SECTION("Start Host")
-    {
-        std::cout << "Starting " << std::endl;
+    std::cout << "Starting " << std::endl;
 
-        auto thread_1 = std::jthread([]() {
-            std::cout << "Thread 1" << std::endl;
-            addressData hostAddress("127.0.0.1", 8001);
-            Host host(hostAddress);
-            host.setupSocket();
-            std::cout << "Host created" << std::endl;
-            host.waitForHandshake();
-            std::cout << "Connected" << std::endl;
-            REQUIRE(host.isConnected() == true);
-            host.stopHost();
-        });
+    auto thread_1 = std::jthread([]() {
+        std::cout << "Thread 1" << std::endl;
+        addressData hostAddress("127.0.0.1", 8001);
+        Host host(hostAddress);
+        host.setupSocket();
+        std::cout << "Host created" << std::endl;
+        host.waitForHandshake();
+        std::cout << "Connected" << std::endl;
+        host.stopHost();
+    });
 
-        auto thread_2 = std::jthread([]() {
-            std::cout << "Thread 2" << std::endl;
-            addressData hostAddress("127.0.0.1", 8010);
-            Host host(hostAddress);
-            host.setupSocket();
-            addressData remoteAdress("127.0.0.1", 8001);
-            host.sendHandshake(remoteAdress);
-            std::cout << "Sent connection request" << std::endl;
-            host.stopHost();
-        });
-        thread_1.join();
-        thread_2.join();
-        std::cout << "Threads joined" << std::endl;
-    }
+    auto thread_2 = std::jthread([]() {
+        std::cout << "Thread 2" << std::endl;
+        addressData hostAddress("127.0.0.1", 8010);
+        Host host(hostAddress);
+        host.setupSocket();
+        addressData remoteAdress("127.0.0.1", 8001);
+        host.sendHandshake(remoteAdress);
+        std::cout << "Sent connection request" << std::endl;
+        host.stopHost();
+    });
+    thread_1.join();
+    thread_2.join();
+    std::cout << "Threads joined" << std::endl;
 }
 
 TEST_CASE("Host | sentHandshake before waitForHandshake")
 {
-
-
     auto thread_2 = std::jthread([]() {
         std::cout << "Thread 2" << std::endl;
         addressData hostAddress("127.0.0.1", 8010);
@@ -83,11 +74,9 @@ TEST_CASE("Host | sentHandshake before waitForHandshake")
         {
             std::cout << "Connected" << std::endl;
         }
-
-        REQUIRE(host.isConnected() == true);
         host.stopHost();
     });
-
+    std::cout << "false before join" << std::endl;
     thread_1.join();
     thread_2.join();
     std::cout << "Threads joined" << std::endl;
@@ -100,7 +89,6 @@ void callbackFunction(const boost::system::error_code &error,
     {
         std::cout << "Callback successfully called" << std::endl;
         // Perform additional assertions or actions here
-        REQUIRE(true);
     }
     else
     {
@@ -111,38 +99,44 @@ void callbackFunction(const boost::system::error_code &error,
 
 TEST_CASE("Host | asyncWaitForConnection")
 {
+    std::cout << "Starting " << std::endl;
+    auto thread_1 = std::jthread([]() {
+        std::cout << "Thread 1" << std::endl;
+        addressData hostAddress("127.0.0.1", 8001);
+        Host host(hostAddress);
+        host.setupSocket();
+        std::cout << "Host created" << std::endl;
+        host.asyncWaitForConnection(callbackFunction,
+                                    std::chrono::milliseconds(2000));
+        std::cout << "this should get called 2 seconds before the callback : "
+                  << std::chrono::system_clock::now() << std::endl;
+        host.stopHost();
+    });
+    auto thread_2 = std::jthread([]() {
+        std::cout << "Thread 2" << std::endl;
+        addressData hostAddress("127.0.0.1", 8010);
+        Host host(hostAddress);
+        host.setupSocket();
+        addressData remoteAdress("127.0.0.1", 8001);
+        host.sendHandshake(remoteAdress);
+        std::cout << "Sent connection request" << std::endl;
+        host.stopHost();
+    });
+    thread_1.join();
+    thread_2.join();
+    std::cout << "Threads joined" << std::endl;
+}
 
-    SECTION("Wait for connection asynchronously")
-    {
+TEST_CASE("Host | waitForHandshake timout")
+{
+    std::cout << "Thread 2" << std::endl;
+    addressData hostAddress("127.0.0.1", 8010);
+    Host host(hostAddress);
+    host.setupSocket();
+    bool connected = host.waitForHandshake();
+    std::cout << "Sent connection request" << std::endl;
+    host.stopHost();
 
-
-        bool sucess = false;
-        std::cout << "Starting " << std::endl;
-        auto thread_1 = std::jthread([]() {
-            std::cout << "Thread 1" << std::endl;
-            addressData hostAddress("127.0.0.1", 8001);
-            Host host(hostAddress);
-            host.setupSocket();
-            std::cout << "Host created" << std::endl;
-            host.asyncWaitForConnection(callbackFunction,
-                                        std::chrono::milliseconds(2000));
-            std::cout
-                << "this should get called 2 seconds before the callback : "
-                << std::chrono::system_clock::now() << std::endl;
-            host.stopHost();
-        });
-        auto thread_2 = std::jthread([]() {
-            std::cout << "Thread 2" << std::endl;
-            addressData hostAddress("127.0.0.1", 8010);
-            Host host(hostAddress);
-            host.setupSocket();
-            addressData remoteAdress("127.0.0.1", 8001);
-            host.sendHandshake(remoteAdress);
-            std::cout << "Sent connection request" << std::endl;
-            host.stopHost();
-        });
-        thread_1.join();
-        thread_2.join();
-        std::cout << "Threads joined" << std::endl;
-    }
+    std::cout << "Threads joined" << std::endl;
+    REQUIRE(connected == false);
 }

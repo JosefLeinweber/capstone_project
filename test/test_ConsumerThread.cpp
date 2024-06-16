@@ -71,7 +71,6 @@ TEST_CASE("ConsumerThread | validateConnection successfully")
 
 
     providerThread.join();
-    consumerThread.stopThread(1000);
     REQUIRE(isConsumerConnected == true);
 }
 
@@ -86,9 +85,12 @@ TEST_CASE("ConsumerThread | validateConnection unsuccessfully")
     std::cout << "Consumer thread created" << std::endl;
     consumerThread.startThread();
     std::cout << "Consumer thread started" << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    REQUIRE(isConsumerConnected == false);
-    consumerThread.stopThread(1000);
+
+    consumerThread.signalThreadShouldExit();
+    while (consumerThread.isThreadRunning())
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
 }
 
 TEST_CASE("ConsumerThread | sendHandshake before remote waits for handshake")

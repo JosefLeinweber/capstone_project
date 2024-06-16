@@ -13,7 +13,8 @@ class ConsumerThread : public juce::Thread
 public:
     ConsumerThread(addressData &hostAddress,
                    AudioBufferFIFO &inputRingBuffer,
-                   std::atomic<bool> &isConsumerConnected);
+                   std::atomic<bool> &isConsumerConnected,
+                   const std::string threadName = "ConsumerThread");
 
     ~ConsumerThread() override;
 

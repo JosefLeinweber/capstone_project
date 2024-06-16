@@ -11,7 +11,26 @@ ConnectionManagerThread::ConnectionManagerThread(
 
 ConnectionManagerThread::~ConnectionManagerThread()
 {
-    std::cout << "ConnectionManagerThread Destructor" << std::endl;
+    if (m_host)
+    {
+        m_host->stopHost();
+    }
+
+    if (isThreadRunning())
+    {
+        signalThreadShouldExit();
+    }
+
+    if (m_providerThread && m_providerThread->isThreadRunning())
+    {
+        m_providerThread->signalThreadShouldExit();
+    }
+
+    if (m_consumerThread && m_consumerThread->isThreadRunning())
+    {
+        m_consumerThread->signalThreadShouldExit();
+    }
+    waitForThreadToExit(1000);
 }
 
 void ConnectionManagerThread::run()
@@ -86,8 +105,10 @@ void ConnectionManagerThread::asyncWaitForConnection(
 
 void ConnectionManagerThread::stopThreadSafely()
 {
-    signalThreadShouldExit();
-    waitForThreadToExit(1000);
+    if (isThreadRunning())
+    {
+        signalThreadShouldExit();
+    }
 }
 
 bool ConnectionManagerThread::validateConnection()
@@ -130,6 +151,14 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
 {
     //TODO: implement a way to get the provider and consumer address from the handshake
 
+    std::cout << "CMT::startUpProviderAndConsumerThreads" << std::endl;
+    std::cout << "Provider address: " << providerAddress.ip << ":"
+              << providerAddress.port << std::endl;
+    std::cout << "Consumer address: " << consumerAddress.ip << ":"
+              << consumerAddress.port << std::endl;
+    std::cout << "Remote Consumer address: " << remoteConsumerAddress.ip << ":"
+              << remoteConsumerAddress.port << std::endl;
+
     m_providerThread = std::make_unique<ProviderThread>(providerAddress,
                                                         remoteConsumerAddress,
                                                         m_outputRingBuffer,
@@ -137,8 +166,9 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
     m_consumerThread = std::make_unique<ConsumerThread>(consumerAddress,
                                                         m_inputRingBuffer,
                                                         m_isConsumerConnected);
-    m_consumerThread->startThread();
+
     m_providerThread->startThread();
+    m_consumerThread->startThread();
 
 
     std::cout << "are threads running : " << m_providerThread->isThreadRunning()
@@ -162,8 +192,8 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
             std::cout << " CM Consumer connected: " << m_isConsumerConnected
                       << std::endl;
 
-            m_providerThread->waitForThreadToExit(1000);
-            m_consumerThread->waitForThreadToExit(1000);
+            m_providerThread->signalThreadShouldExit();
+            m_consumerThread->signalThreadShouldExit();
             return false;
         }
         wait(1000);
@@ -171,6 +201,47 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
     return true;
 }
 
+void ConnectionManagerThread::onlyStartConsumerThread(
+    addressData consumerAddress)
+{
+    AudioBufferFIFO remoteInputRingBuffer(2, 1024);
+
+    std::atomic<bool> isConsumerConnected = false;
+    ConsumerThread consumerThread(consumerAddress,
+                                  remoteInputRingBuffer,
+                                  isConsumerConnected,
+                                  "ConsumerThread");
+    consumerThread.startThread();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    consumerThread.signalThreadShouldExit();
+    while (consumerThread.isThreadRunning())
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+}
+
+void ConnectionManagerThread::stopProviderAndConsumerThreads(
+    std::chrono::seconds timeout)
+{
+    m_providerThread->signalThreadShouldExit();
+    m_consumerThread->signalThreadShouldExit();
+
+    auto startTime = std::chrono::high_resolution_clock::now();
+
+    while (m_providerThread->isThreadRunning() ||
+           m_consumerThread->isThreadRunning())
+    {
+        if (std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::high_resolution_clock::now() - startTime)
+                .count() > timeout.count())
+        {
+            m_providerThread->waitForThreadToExit(1000);
+            m_consumerThread->waitForThreadToExit(1000);
+            return;
+        }
+        wait(100);
+    }
+}
 
 void ConnectionManagerThread::asyncWaitForClosingRequest()
 {

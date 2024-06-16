@@ -4,17 +4,25 @@
 
 ConsumerThread::ConsumerThread(addressData &hostAddress,
                                AudioBufferFIFO &inputRingBuffer,
-                               std::atomic<bool> &isConsumerConnected)
+                               std::atomic<bool> &isConsumerConnected,
+                               const std::string threadName)
 
-    : juce::Thread("Consumer Thread"), m_inputRingBuffer(inputRingBuffer),
+    : juce::Thread(threadName), m_inputRingBuffer(inputRingBuffer),
       m_isConsumerConnected(isConsumerConnected), m_hostAddress(hostAddress) {};
 
 ConsumerThread::~ConsumerThread()
 {
+    if (m_host)
+    {
+        m_host->stopHost();
+    }
+
     if (isThreadRunning())
     {
-        stopThread(1000);
+        signalThreadShouldExit();
+        waitForThreadToExit(1000);
     }
+    std::cout << "ConsumerThread | Destructor" << std::endl;
 }
 
 void ConsumerThread::run()
@@ -23,6 +31,7 @@ void ConsumerThread::run()
     {
         setupHost();
         m_isConsumerConnected = validateConnection();
+        return;
     }
 };
 
@@ -47,11 +56,14 @@ bool ConsumerThread::validateConnection()
     bool connected = false;
     if (recievedHandshake)
     {
+        std::cout << "ConsumerThread | Recieved Handshake" << std::endl;
         m_host->sendHandshake(m_host->getRemoteAddress());
         connected = true;
     }
     else
     {
+        std::cout << "ConsumerThread | Failed to Recieve Handshake"
+                  << std::endl;
         connected = false;
     }
     return connected;

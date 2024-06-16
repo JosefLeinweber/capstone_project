@@ -18,19 +18,28 @@ void Host::setupSocket()
                                        m_hostAddress.port));
 };
 
-bool Host::waitForHandshake()
+bool Host::waitForHandshake(int timeout)
 {
-    m_socket->set_option(rcv_timeout_option{3000});
+    m_socket->set_option(rcv_timeout_option{timeout});
+    std::cout << "Waiting for handshake at" << m_hostAddress.ip << ":"
+              << m_hostAddress.port << std::endl;
     std::size_t length = m_socket->receive_from(boost::asio::buffer(m_recv_buf),
                                                 m_remote_endpoint,
                                                 0,
                                                 m_ignored_error);
-    if (length > 0)
+    if (!m_ignored_error && length > 0)
     {
+        std::cout << "Handshake recieved from : " << m_remote_endpoint
+                  << std::endl;
         m_connected = true;
     }
     else
     {
+        std::cout << "Handshake not recieved:" << m_hostAddress.ip << ":"
+                  << m_hostAddress.port << std::endl;
+        std::cout << "Error receive: " << m_ignored_error.message()
+                  << std::endl;
+        std::cout << "Length: " << length << std::endl;
         m_connected = false;
     }
     return m_connected;
@@ -43,11 +52,19 @@ bool Host::isConnected()
 
 void Host::sendHandshake(addressData remoteAddress)
 {
+    std::cout << "Sending handshake to : " << remoteAddress.ip << ":"
+              << remoteAddress.port << std::endl;
     m_remote_endpoint = boost::asio::ip::udp::endpoint(
         boost::asio::ip::address::from_string(remoteAddress.ip),
         remoteAddress.port);
     std::array<char, 1> send_buf = {{0}};
     m_socket->send_to(boost::asio::buffer(send_buf), m_remote_endpoint);
+    std::cout << "Handshake sent to : " << m_remote_endpoint << std::endl;
+    if (m_ignored_error)
+    {
+        std::cout << "Error sent to : " << m_ignored_error.message()
+                  << std::endl;
+    }
 };
 
 void Host::sendTo(juce::AudioBuffer<float> buffer)

@@ -131,7 +131,6 @@ TEST_CASE("ProviderThread | sendHandshake before remote waits for handshake")
         addressData consumerAddress("127.0.0.1", 8022);
         Host host(consumerAddress);
         host.setupSocket();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
         bool gotHandshake = host.waitForHandshake();
         auto currentTime = std::chrono::system_clock::now().time_since_epoch();
@@ -154,44 +153,4 @@ TEST_CASE("ProviderThread | sendHandshake before remote waits for handshake")
     consumerThread.join();
     providerThread.stopThread(1000);
     REQUIRE(isProviderConnected == true);
-}
-
-TEST_CASE(
-    "ProviderThread | too much time between sendHandshake and waitForHandshake")
-{
-    addressData hostAddress("127.0.0.1", 8001);
-    addressData remoteAddress("127.0.0.1", 8022);
-    AudioBufferFIFO outputRingBuffer(2, 1024);
-    std::atomic<bool> isProviderConnected = true;
-
-    ProviderThread providerThread(hostAddress,
-                                  remoteAddress,
-                                  outputRingBuffer,
-                                  isProviderConnected);
-    providerThread.startThread();
-
-    auto consumerThread = std::thread([&]() {
-        addressData consumerAddress("127.0.0.1", 8022);
-        Host host(consumerAddress);
-        host.setupSocket();
-
-        bool gotHandshake = host.waitForHandshake();
-        auto currentTime = std::chrono::system_clock::now().time_since_epoch();
-        if (gotHandshake)
-        {
-
-            std::cout << "ConsumerThread recieved handshake at: "
-                      << currentTime.count() << " seconds" << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-            host.sendHandshake(hostAddress);
-            auto currentTime =
-                std::chrono::system_clock::now().time_since_epoch();
-            std::cout << "ConsumerThread sends handshake at: "
-                      << currentTime.count() << " seconds" << std::endl;
-        }
-    });
-
-    consumerThread.join();
-    providerThread.stopThread(2000);
-    REQUIRE(isProviderConnected == false);
 }

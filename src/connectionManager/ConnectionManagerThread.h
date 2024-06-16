@@ -39,6 +39,7 @@ public:
     void asyncWaitForClosingRequest();
 
     void closeProviderAndConsumerThreads();
+    void stopProviderAndConsumerThreads(std::chrono::seconds timeout);
 
     std::unique_ptr<Host> &getHost()
     {
@@ -50,13 +51,16 @@ public:
         return m_incomingConnection;
     };
 
+    //! DELETE
+    void onlyStartConsumerThread(addressData consumerAddress);
+
 private:
     std::atomic<bool> m_isProviderConnected = false;
     std::atomic<bool> m_isConsumerConnected = false;
     std::atomic<bool> m_incomingConnection = false;
     std::atomic<bool> m_closingRequest = false;
 
-    std::unique_ptr<juceThread> m_providerThread;
+    std::unique_ptr<ProviderThread> m_providerThread;
     std::unique_ptr<ConsumerThread> m_consumerThread;
     std::unique_ptr<Host> m_host;
 

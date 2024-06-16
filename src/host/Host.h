@@ -29,7 +29,7 @@ public:
 
     void sendHandshake(addressData remoteAddress);
 
-    bool waitForHandshake();
+    bool waitForHandshake(int timeout = 1500);
 
     void sendTo(juce::AudioBuffer<float> buffer);
 
