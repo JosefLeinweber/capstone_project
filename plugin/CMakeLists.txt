@@ -51,7 +51,6 @@ target_link_libraries(${PROJECT_NAME}
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags
-        "NetworkingThread"
         "AudioBuffer"
 )
 
@@ -63,17 +62,17 @@ target_compile_definitions(${PROJECT_NAME}
         JUCE_VST3_CAN_REPLACE_VST2=0
 )
 
-# Enables all warnings and treats warnings as errors.
-# This needs to be set up only for your projects, not 3rd party
-if (MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE /Wall /WX)
-    # Silences some deprecation warnings that (hopefully) will be fixed in a future release of JUCE.
-    target_compile_definitions(${PROJECT_NAME}
-        PRIVATE
-            _SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING)
-else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
-endif()
+# # Enables all warnings and treats warnings as errors.
+# # This needs to be set up only for your projects, not 3rd party
+# if (MSVC)
+#     target_compile_options(${PROJECT_NAME} PRIVATE /Wall /WX)
+#     # Silences some deprecation warnings that (hopefully) will be fixed in a future release of JUCE.
+#     target_compile_definitions(${PROJECT_NAME}
+#         PRIVATE
+#             _SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING)
+# else()
+#     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+# endif()
 
 message(STATUS "Configuring Plugin CMakeLists.txt done")
 

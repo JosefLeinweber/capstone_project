@@ -1,2 +1,5 @@
 add_subdirectory(audioBuffer)
-add_subdirectory(networking)
+add_subdirectory(host)
+add_subdirectory(provider)
+add_subdirectory(consumer)
+add_subdirectory(connectionManager)

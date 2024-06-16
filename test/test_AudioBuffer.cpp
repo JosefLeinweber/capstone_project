@@ -20,7 +20,7 @@ void printBuffer(auto& buffer) {
 }
 
 
-TEST_CASE("AudioBufferFIFO Constructor") {
+TEST_CASE("AudioBufferFIFO | Constructor") {
   SECTION("Initialize with valid parameters") {
     const int numChannels = 2;
     const int bufferSize = 1024;
@@ -46,7 +46,7 @@ TEST_CASE("AudioBufferFIFO Constructor") {
 
 
 
-TEST_CASE("AudioBufferFIFO Write") {
+TEST_CASE("AudioBufferFIFO | Write") {
   const int numChannels = 2;
   const int fifoBufferSize = 1024;
   const int bufferSize = 512;
@@ -62,7 +62,7 @@ TEST_CASE("AudioBufferFIFO Write") {
 
     // Write data to the buffer
     audioBufferFIFO.writeToBuffer(sourceBuffer);
-    
+
     bool areBuffersEqual = true;
 
     for (int channel = 0; channel < numChannels; channel++) {
@@ -91,7 +91,7 @@ TEST_CASE("AudioBufferFIFO Write") {
 }
 
 
-TEST_CASE("AudioBufferFIFO Read") {
+TEST_CASE("AudioBufferFIFO | Read") {
   const int numChannels = 2;
   const int fifoBufferSize = 1024;
   const int bufferSize = 512;
