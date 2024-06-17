@@ -1,31 +1,35 @@
 {
-  "name": "boostasioexample",
-  "version": "1.0.0",
-  "dependencies": [
-    {
-      "name": "boost-asio",
-      "version>=": "1.84.0"
-    },
-    {
-      "name": "boost-system",
-      "version>=": "1.84.0"
-    },
-    {
-      "name": "boost-regex",
-      "version>=": "1.84.0"
-    },
-    {
-      "name": "boost-coroutine",
-      "version>=": "1.84.0"
-    },
-    {
-      "name": "catch2",
-      "version>=": "3.5.4"
-    },
-    {
-      "name": "juce",
-      "version>=": "7.0.12"
-    }
-  ],
-  "builtin-baseline": "501cb01e517ee5689577bb01ba8bd1b4c1041a53"
+    "name": "boostasioexample",
+    "version": "1.0.0",
+    "dependencies": [
+        {
+            "name": "boost-asio",
+            "version>=": "1.84.0"
+        },
+        {
+            "name": "boost-system",
+            "version>=": "1.84.0"
+        },
+        {
+            "name": "boost-regex",
+            "version>=": "1.84.0"
+        },
+        {
+            "name": "boost-coroutine",
+            "version>=": "1.84.0"
+        },
+        {
+            "name": "catch2",
+            "version>=": "3.5.4"
+        },
+        {
+            "name": "juce",
+            "version>=": "7.0.12"
+        },
+        {
+            "name": "protobuf",
+            "version>=": "3.21.12"
+        }
+    ],
+    "builtin-baseline": "501cb01e517ee5689577bb01ba8bd1b4c1041a53"
 }

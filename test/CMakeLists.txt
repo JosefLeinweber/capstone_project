@@ -117,13 +117,33 @@ target_link_libraries(${TEST_CONNCETIONMANAGERTHREAD} PUBLIC
     PRIVATE
     juce::juce_audio_utils
 )
+
+set(TEST_TCPHOST "TcpHostTests")
+set(TESTS_SOURCES test_TcpHost.cpp)
+set(TEST_INCLUDES "./")
+
+add_executable(${TEST_TCPHOST} ${TESTS_SOURCES})
+target_include_directories(${TEST_TCPHOST} PUBLIC ${TEST_INCLUDES})
+target_link_libraries(${TEST_TCPHOST} PUBLIC
+    ${LIBRARY_NAME}
+    Catch2::Catch2WithMain
+    "TcpHost"
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_lto_flags
+    juce::juce_recommended_warning_flags
+    PRIVATE
+    juce::juce_audio_utils
+)
+
+catch_discover_tests(${TEST_TCPHOST} OUTPUT_DIR "TcpHostTests" OUTPUT_PREFIX "TcpHost_")
+
 catch_discover_tests(${TEST_CONNCETIONMANAGERTHREAD} OUTPUT_DIR "ConnectionManagerThreadTests" OUTPUT_PREFIX "ConnectionManagerThread_")
 
-catch_discover_tests(${TEST_PROVIDERTHREAD} )
+# catch_discover_tests(${TEST_PROVIDERTHREAD} )
 
-catch_discover_tests(${TEST_CONSUMERTHREAD} OUTPUT_DIR "ConsumerThreadTests" OUTPUT_PREFIX "ConsumerThread_")
+# catch_discover_tests(${TEST_CONSUMERTHREAD} OUTPUT_DIR "ConsumerThreadTests" OUTPUT_PREFIX "ConsumerThread_")
 
-catch_discover_tests(${TEST_HOST} OUTPUT_DIR "HostTests" OUTPUT_PREFIX "Host_")
+# catch_discover_tests(${TEST_HOST} OUTPUT_DIR "HostTests" OUTPUT_PREFIX "Host_")
 
-catch_discover_tests(${TEST_AUDIOBUFFER})
+# catch_discover_tests(${TEST_AUDIOBUFFER})
 

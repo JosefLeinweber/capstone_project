@@ -3,6 +3,7 @@
 #include "ConsumerThread.h"
 #include "Host.h"
 #include "ProviderThread.h"
+#include "TcpHost.h"
 #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
 #include <boost/system/error_code.hpp>
@@ -39,17 +40,8 @@ public:
     void asyncWaitForClosingRequest();
 
     void closeProviderAndConsumerThreads();
+
     void stopProviderAndConsumerThreads(std::chrono::seconds timeout);
-
-    std::unique_ptr<Host> &getHost()
-    {
-        return m_host;
-    };
-
-    bool incommingConnection()
-    {
-        return m_incomingConnection;
-    };
 
     //! DELETE
     void onlyStartConsumerThread(addressData consumerAddress);
@@ -62,7 +54,7 @@ private:
 
     std::unique_ptr<ProviderThread> m_providerThread;
     std::unique_ptr<ConsumerThread> m_consumerThread;
-    std::unique_ptr<Host> m_host;
+    std::unique_ptr<TcpHost> m_host;
 
     AudioBufferFIFO &m_inputRingBuffer;
     AudioBufferFIFO &m_outputRingBuffer;

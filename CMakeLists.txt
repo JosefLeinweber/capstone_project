@@ -29,9 +29,22 @@ message(STATUS "Installing with VCPKG")
 include(    ${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake)
 find_package(juce 7.0.12 REQUIRED)
 find_package(Boost 1.83.0 REQUIRED COMPONENTS system coroutine context)
+find_package(protobuf CONFIG REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIRS})
 
+if(protobuf_FOUND)
+    message(STATUS "Found Protobuf: ${protobuf_VERSION}")
+    set(PROTO_FILES "${CMAKE_SOURCE_DIR}/src/proto/datagram.proto")
+    set(GENERATED_PROTO_DIR "${CMAKE_BINARY_DIR}/generated")
+    protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS "${PROTO_FILES}"
+                            PROTOC_OUT_DIR "${GENERATED_PROTO_DIR}")
+    message(STATUS "Generated Protobuf sources: ${PROTO_SRCS}")
+    message(STATUS "Generated Protobuf headers: ${PROTO_HDRS}")
+    add_library(protobufGenerated "${PROTO_SRCS}" "${PROTO_HDRS}")
+    target_link_libraries(protobufGenerated PUBLIC protobuf::libprotobuf)
+
+endif()
 
 
 

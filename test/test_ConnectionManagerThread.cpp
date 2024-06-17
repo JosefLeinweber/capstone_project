@@ -32,11 +32,6 @@ AudioBufferFIFO outputRingBuffer(2, 1024);
 AudioBufferFIFO remoteInputRingBuffer(2, 1024);
 AudioBufferFIFO remoteOutputRingBuffer(2, 1024);
 
-TEST_CASE("ConnectionManagerThread | defaul")
-{
-    REQUIRE(true);
-}
-
 TEST_CASE("ConnectionManagerThread | Constructor")
 {
     bool success = false;

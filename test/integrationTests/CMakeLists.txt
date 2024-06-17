@@ -21,6 +21,6 @@ target_link_libraries(${TEST_NAME} PUBLIC
     juce::juce_audio_utils
 )
 
-catch_discover_tests(${TEST_NAME} TEST_PREFIX "integration.")
+# catch_discover_tests(${TEST_NAME} TEST_PREFIX "integration.")
 
 

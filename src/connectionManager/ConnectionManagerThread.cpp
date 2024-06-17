@@ -70,7 +70,7 @@ void ConnectionManagerThread::run()
 
 void ConnectionManagerThread::setupHost(addressData hostAddress)
 {
-    m_host = std::make_unique<Host>(hostAddress);
+    m_host = std::make_unique<TcpHost>(hostAddress);
     m_host->setupSocket();
 }
 

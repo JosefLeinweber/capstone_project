@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+message pbConfigurationData {
+    string provider_ip = 1;
+    int32 provider_port = 2;
+    string consumer_ip = 3;
+    int32 consumer_port = 4;
+}
