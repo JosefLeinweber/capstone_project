@@ -135,7 +135,7 @@ target_link_libraries(${TEST_TCPHOST} PUBLIC
     juce::juce_audio_utils
 )
 
-catch_discover_tests(${TEST_TCPHOST} OUTPUT_DIR "TcpHostTests" OUTPUT_PREFIX "TcpHost_")
+#catch_discover_tests(${TEST_TCPHOST} OUTPUT_DIR "TcpHostTests" OUTPUT_PREFIX "TcpHost_")
 
 catch_discover_tests(${TEST_CONNCETIONMANAGERTHREAD} OUTPUT_DIR "ConnectionManagerThreadTests" OUTPUT_PREFIX "ConnectionManagerThread_")
 

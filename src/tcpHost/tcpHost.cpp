@@ -29,12 +29,25 @@ void TcpHost::setupSocket()
         m_acceptor.get_executor());
 }
 
-void TcpHost::startAsyncAccept()
+void TcpHost::asyncWaitForConnection(
+    std::function<void(const boost::system::error_code &error)> callback,
+    std::chrono::milliseconds timeout)
 {
-    m_acceptor.async_accept(*m_socket, [this](boost::system::error_code ec) {
-        if (!ec)
+    auto timer =
+        std::make_shared<boost::asio::steady_timer>(m_acceptor.get_executor(),
+                                                    timeout);
+    m_acceptor.async_accept(
+        *m_socket,
+        [this, callback, timer](const boost::system::error_code &error) {
+            callback(error);
+            timer->cancel();
+            m_incomingConnection = true;
+        });
+    timer->async_wait([this, timer](const boost::system::error_code &error) {
+        if (!error)
         {
-            std::cout << "New connection established!" << std::endl;
+            std::cout << "Timer expired" << std::endl;
+            m_acceptor.cancel();
         }
     });
 }
@@ -74,10 +87,13 @@ void TcpHost::initializeConnection(addressData remoteAddress)
             std::throw_with_nested(
                 std::runtime_error("Failed to connect to remote host"));
         }
+
+        m_incomingConnection = false;
     }
     else
     {
         std::cout << "No socket available" << std::endl;
+        throw std::runtime_error("No socket available");
     }
 }
 
@@ -92,6 +108,7 @@ void TcpHost::send(std::string &message)
         if (len <= 0 || m_error)
         {
             std::cout << "Failed to send configuration" << std::endl;
+            throw std::runtime_error("Failed to send configuration");
         }
         std::cout << len << " bytes sent" << std::endl;
     }

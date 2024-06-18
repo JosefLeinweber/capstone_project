@@ -38,7 +38,9 @@ public:
 
     void setupSocket();
 
-    void startAsyncAccept();
+    void asyncWaitForConnection(
+        std::function<void(const boost::system::error_code &error)> callback,
+        std::chrono::milliseconds timeout = std::chrono::milliseconds(1000));
 
     void startAccept();
 
@@ -55,9 +57,14 @@ public:
     ConfigurationDataStruct deserializeConfigurationData(
         std::string &serializedData);
 
+    bool incomingConnection()
+    {
+        return m_incomingConnection;
+    };
+
 private:
     boost::asio::ip::tcp::acceptor m_acceptor;
     boost::system::error_code m_error;
     std::unique_ptr<boost::asio::ip::tcp::socket> m_socket;
-    boost::asio::io_context m_ioContext;
+    bool m_incomingConnection = false;
 };

@@ -24,14 +24,19 @@ public:
 
     void setupHost(addressData hostAddress);
 
-    void asyncWaitForConnection(std::chrono::milliseconds timeout);
+    void asyncWaitForConnection(
+        std::chrono::milliseconds timeout = std::chrono::milliseconds(500));
 
-    void callbackFunction(const boost::system::error_code &error,
-                          size_t bytes_transferred);
+    void callbackFunction(const boost::system::error_code &error);
 
-    bool validateConnection();
+    void initializeConnection(addressData remoteAddress);
 
-    void stopThreadSafely();
+    bool sendConfigurationData(ConfigurationDataStruct configurationData);
+
+    bool receiveConfigurationData();
+
+    bool exchangeConfigurationDataWithRemote(
+        ConfigurationDataStruct configurationData);
 
     bool startUpProviderAndConsumerThreads(addressData providerAddress,
                                            addressData consumerAddress,
@@ -39,12 +44,18 @@ public:
 
     void asyncWaitForClosingRequest();
 
+    void stopThreadSafely();
+
     void closeProviderAndConsumerThreads();
 
     void stopProviderAndConsumerThreads(std::chrono::seconds timeout);
 
-    //! DELETE
-    void onlyStartConsumerThread(addressData consumerAddress);
+    ConfigurationDataStruct getConfigurationData() const;
+
+    bool incomingConnection() const;
+
+    boost::asio::io_context m_ioContext;
+
 
 private:
     std::atomic<bool> m_isProviderConnected = false;
@@ -58,4 +69,6 @@ private:
 
     AudioBufferFIFO &m_inputRingBuffer;
     AudioBufferFIFO &m_outputRingBuffer;
+    ConfigurationDataStruct m_localConfigurationData;
+    ConfigurationDataStruct m_remoteConfigurationData;
 };

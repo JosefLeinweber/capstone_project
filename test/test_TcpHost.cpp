@@ -5,6 +5,11 @@
 addressData remoteAddress("127.0.0.1", 8002);
 addressData hostAddress("127.0.0.1", 8002);
 
+void callbackFunction(const boost::system::error_code &error)
+{
+    std::cout << "callback function called" << std::endl;
+}
+
 
 SCENARIO("TcpHost | Constructor")
 {
@@ -39,7 +44,7 @@ SCENARIO("TcpHost | SetupSocket")
     }
 }
 
-SCENARIO("TcpHost | startAsyncAccept")
+SCENARIO("TcpHost | asyncWaitForConnection")
 {
     GIVEN("A tcpHost object")
     {
@@ -47,14 +52,14 @@ SCENARIO("TcpHost | startAsyncAccept")
         unsigned short port = 8001;
         TcpHost tcpHost(ioContext, port);
         tcpHost.setupSocket();
-        WHEN("startAsyncAccept is called")
+        WHEN("asyncWaitForConnection is called")
         {
             THEN("The function is called without error")
             {
                 try
                 {
 
-                    tcpHost.startAsyncAccept();
+                    tcpHost.asyncWaitForConnection(callbackFunction);
                 }
                 catch (std::exception &e)
                 {
@@ -100,7 +105,7 @@ SCENARIO("TcpHost | initializeConnection with reachable remote host")
             boost::asio::io_context ioContext;
             TcpHost remoteTcpHost(ioContext, remoteAddress.port);
             remoteTcpHost.setupSocket();
-            remoteTcpHost.startAsyncAccept();
+            remoteTcpHost.asyncWaitForConnection(callbackFunction);
             ioContext.run();
         });
 
@@ -125,7 +130,7 @@ SCENARIO("TcpHost | sendConfiguration without receiving remote host")
             boost::asio::io_context ioContext;
             TcpHost remoteTcpHost(ioContext, remoteAddress.port);
             remoteTcpHost.setupSocket();
-            remoteTcpHost.startAsyncAccept();
+            remoteTcpHost.asyncWaitForConnection(callbackFunction);
             ioContext.run();
             std::cout << "end of remote thread" << std::endl;
         });
@@ -184,7 +189,7 @@ TEST_CASE("TcpHost | sendConfiguration with receiving remote host")
     boost::asio::io_context ioContext;
     TcpHost tcpHost(ioContext, hostAddress.port);
     tcpHost.setupSocket();
-    tcpHost.startAsyncAccept();
+    tcpHost.asyncWaitForConnection(callbackFunction);
     ioContext.run();
     // WHEN: tcpHost receives the data
     std::string received_string = tcpHost.receiveConfiguration();
@@ -231,7 +236,7 @@ SCENARIO("TcpHost | sendConfiguration, receiveConfiguration, "
             boost::asio::io_context ioContext;
             TcpHost tcpHost(ioContext, hostAddress.port);
             tcpHost.setupSocket();
-            tcpHost.startAsyncAccept();
+            tcpHost.asyncWaitForConnection(callbackFunction);
             ioContext.run();
             std::string configurationDataString =
                 tcpHost.receiveConfiguration();

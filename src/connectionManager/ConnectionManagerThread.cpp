@@ -11,11 +11,6 @@ ConnectionManagerThread::ConnectionManagerThread(
 
 ConnectionManagerThread::~ConnectionManagerThread()
 {
-    if (m_host)
-    {
-        m_host->stopHost();
-    }
-
     if (isThreadRunning())
     {
         signalThreadShouldExit();
@@ -47,13 +42,19 @@ void ConnectionManagerThread::run()
 
         asyncWaitForConnection(std::chrono::milliseconds(10000));
 
+        // run ioContext on ioContext thread ?
+
         while (!m_incomingConnection /** or a event from gui happens */)
         {
             wait(100);
         }
 
-        if (validateConnection() &&
-            startUpProviderAndConsumerThreads(consumerAddress,
+        //generateConfigurationData();
+
+        //exchangeConfigurationDataWithRemote();
+
+
+        if (startUpProviderAndConsumerThreads(consumerAddress,
                                               providerAddress,
                                               remoteConsumerAddress))
         {
@@ -68,17 +69,80 @@ void ConnectionManagerThread::run()
     }
 }
 
+void ConnectionManagerThread::generateConfigurationData()
+{
+    //TODO: implement automatic configuration data generation
+    //! HARDCODED CONFIGURATION DATA CHANGE IT!
+    ConfigurationDataStruct configurationData;
+    configurationData.providerAddress = addressData("127.0.0.1", 8002);
+    configurationData.consumerAddress = addressData("127.0.0.1", 8001);
+    m_localConfigurationData = configurationData;
+}
+
+bool ConnectionManagerThread::exchangeConfigurationDataWithRemote(
+    ConfigurationDataStruct configurationData)
+{
+    if (m_host->incomingConnection())
+    {
+        return receiveConfigurationData() &&
+               sendConfigurationData(configurationData);
+    }
+    else
+    {
+        return sendConfigurationData(configurationData) &&
+               receiveConfigurationData();
+    }
+}
+
+bool ConnectionManagerThread::sendConfigurationData(
+    ConfigurationDataStruct configurationData)
+{
+    pbConfigurationData pbConfigurationData = configurationData.toPb();
+    std::string serializedData =
+        m_host->serializeConfigurationData(pbConfigurationData);
+    try
+    {
+        m_host->send(serializedData);
+        return true;
+    }
+    catch (std::exception &e)
+    {
+        std::cout << "ConnectionManagerThread::sendConfigurationData | "
+                     "Failed to send configuration data"
+                  << std::endl;
+        return false;
+    }
+}
+
+bool ConnectionManagerThread::receiveConfigurationData()
+{
+    try
+    {
+        std::string serializedData = m_host->receiveConfiguration();
+        m_localConfigurationData =
+            m_host->deserializeConfigurationData(serializedData);
+        return true;
+    }
+    catch (std::exception &e)
+    {
+        std::cout << "ConnectionManagerThread::receiveConfigurationData | "
+                     "Failed to receive configuration data"
+                  << std::endl;
+        return false;
+    }
+}
+
+
 void ConnectionManagerThread::setupHost(addressData hostAddress)
 {
-    m_host = std::make_unique<TcpHost>(hostAddress);
+    m_host = std::make_unique<TcpHost>(m_ioContext, hostAddress.port);
     m_host->setupSocket();
 }
 
 void ConnectionManagerThread::callbackFunction(
-    const boost::system::error_code &error,
-    std::size_t bytes_transferred)
+    const boost::system::error_code &error)
 {
-    if (!error && bytes_transferred > 0)
+    if (!error)
     {
         m_incomingConnection = true;
         std::cout << "callback > received data" << std::endl;
@@ -97,73 +161,41 @@ void ConnectionManagerThread::asyncWaitForConnection(
     m_host->asyncWaitForConnection(
         std::bind(&ConnectionManagerThread::callbackFunction,
                   this,
-                  std::placeholders::_1,
-                  std::placeholders::_2),
+                  std::placeholders::_1),
         timeout);
 }
 
-
-void ConnectionManagerThread::stopThreadSafely()
+void ConnectionManagerThread::initializeConnection(addressData remoteAddress)
 {
-    if (isThreadRunning())
+    try
     {
-        signalThreadShouldExit();
+        m_host->initializeConnection(remoteAddress);
+    }
+    catch (std::exception &e)
+    {
+        std::cout << "ConnectionManagerThread::initializeConnection | "
+                     "Failed to initialize connection"
+                  << std::endl;
+        throw std::runtime_error(
+            "Failed to initialize connection! With error: " +
+            std::string(e.what()));
     }
 }
 
-bool ConnectionManagerThread::validateConnection()
-{
-    bool connected = false;
-    if (m_incomingConnection)
-    {
-        try
-        {
-            std::cout
-                << "ConnectionManager::validateConnection getRemoteAddress: "
-                << m_host->getRemoteAddress().ip << ":"
-                << m_host->getRemoteAddress().port << std::endl;
-            m_host->sendHandshake(m_host->getRemoteAddress());
-            std::cout << "ConnectionManager::validateConnection sendHandshake"
-                      << std::endl;
-            connected = m_host->waitForHandshake();
-        }
-        catch (std::exception &e)
-        {
-            std::cerr << "ConnectionManager::validateConnection exception: "
-                      << e.what() << std::endl;
-        }
-    }
-    else
-    {
-        connected = m_host->waitForHandshake();
-        if (connected)
-        {
-            m_host->sendHandshake(m_host->getRemoteAddress());
-        }
-    }
-    return connected;
-}
 
 bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
-    addressData providerAddress,
-    addressData consumerAddress,
-    addressData remoteConsumerAddress)
+    ConfigurationDataStruct remoteConfigurationData,
+    ConfigurationDataStruct localConfigurationData,
+    std::chrono::seconds timeout)
 {
     //TODO: implement a way to get the provider and consumer address from the handshake
 
-    std::cout << "CMT::startUpProviderAndConsumerThreads" << std::endl;
-    std::cout << "Provider address: " << providerAddress.ip << ":"
-              << providerAddress.port << std::endl;
-    std::cout << "Consumer address: " << consumerAddress.ip << ":"
-              << consumerAddress.port << std::endl;
-    std::cout << "Remote Consumer address: " << remoteConsumerAddress.ip << ":"
-              << remoteConsumerAddress.port << std::endl;
-
-    m_providerThread = std::make_unique<ProviderThread>(providerAddress,
-                                                        remoteConsumerAddress,
+    m_providerThread = std::make_unique<ProviderThread>(remoteConfigurationData,
+                                                        localConfigurationData,
                                                         m_outputRingBuffer,
                                                         m_isProviderConnected);
-    m_consumerThread = std::make_unique<ConsumerThread>(consumerAddress,
+    m_consumerThread = std::make_unique<ConsumerThread>(remoteConfigurationData,
+                                                        localConfigurationData,
                                                         m_inputRingBuffer,
                                                         m_isConsumerConnected);
 
@@ -177,48 +209,20 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
     //time now
     auto startTime = std::chrono::high_resolution_clock::now();
 
-    while (!m_isProviderConnected || !m_isConsumerConnected)
+    while (!m_providerThread->isThreadRunning() ||
+           !m_consumerThread->isThreadRunning())
     {
-        //TODO: make timeout not hardcoded!
         if (std::chrono::duration_cast<std::chrono::seconds>(
                 std::chrono::high_resolution_clock::now() - startTime)
-                .count() > 5)
+                .count() > timeout.count())
         {
-            std::cout << "ConnectionManager::startUpProviderAndConsumerThreads "
-                         "timeout"
-                      << std::endl;
-            std::cout << " CM Provider connected: " << m_isProviderConnected
-                      << std::endl;
-            std::cout << " CM Consumer connected: " << m_isConsumerConnected
-                      << std::endl;
-
-            m_providerThread->signalThreadShouldExit();
-            m_consumerThread->signalThreadShouldExit();
             return false;
         }
-        wait(1000);
+        wait(100);
     }
     return true;
 }
 
-void ConnectionManagerThread::onlyStartConsumerThread(
-    addressData consumerAddress)
-{
-    AudioBufferFIFO remoteInputRingBuffer(2, 1024);
-
-    std::atomic<bool> isConsumerConnected = false;
-    ConsumerThread consumerThread(consumerAddress,
-                                  remoteInputRingBuffer,
-                                  isConsumerConnected,
-                                  "ConsumerThread");
-    consumerThread.startThread();
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    consumerThread.signalThreadShouldExit();
-    while (consumerThread.isThreadRunning())
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-}
 
 void ConnectionManagerThread::stopProviderAndConsumerThreads(
     std::chrono::seconds timeout)
@@ -259,4 +263,22 @@ void ConnectionManagerThread::closeProviderAndConsumerThreads()
 {
     m_providerThread->waitForThreadToExit(1000);
     m_consumerThread->waitForThreadToExit(1000);
+}
+
+bool ConnectionManagerThread::incomingConnection() const
+{
+    return m_incomingConnection;
+}
+
+ConfigurationDataStruct ConnectionManagerThread::getConfigurationData() const
+{
+    return m_localConfigurationData;
+}
+
+void ConnectionManagerThread::stopThreadSafely()
+{
+    if (isThreadRunning())
+    {
+        signalThreadShouldExit();
+    }
 }
