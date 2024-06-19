@@ -3,114 +3,89 @@
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 #include <thread>
+void fillBuffer(juce::AudioBuffer<float> &buffer, float value)
+{
+    for (int i = 0; i < buffer.getNumSamples(); i++)
+    {
+        for (int channel = 0; channel < buffer.getNumChannels(); channel++)
+        {
+            buffer.setSample(channel, i, value);
+        }
+    }
+}
 
+void printBuffer(auto &buffer)
+{
+    for (int channel = 0; channel < buffer.getNumChannels(); channel++)
+    {
+        std::cout << "Channel " << channel << ": ";
+        for (int i = 0; i < buffer.getNumSamples(); i++)
+        {
+            std::cout << buffer.getSample(channel, i) << " ";
+        }
+        std::cout << std::endl;
+    }
+}
 
 TEST_CASE("ConsumerThread | Constructor", "[ConsumerThread]")
 {
-    bool success = false;
+    ConfigurationData remoteConfigurationData;
+    ConfigurationData localConfigurationData;
+    AudioBufferFIFO inputRingBuffer(2, 1024);
+
     try
     {
-        AudioBufferFIFO inputRingBuffer(2, 2);
-        std::atomic<bool> isConsumerConnected = false;
-        addressData hostAddress("127.0.0.1", 8001);
-        ConsumerThread consumerThread(hostAddress,
-                                      inputRingBuffer,
-                                      isConsumerConnected);
-        success = true;
+        ConsumerThread consumerThread(remoteConfigurationData,
+                                      localConfigurationData,
+                                      inputRingBuffer);
     }
     catch (...)
     {
-        success = false;
+        FAIL("No error should be thrown");
     }
-
-    REQUIRE(success);
 }
 
 TEST_CASE("ConsumerThread | setupHost")
 {
-    AudioBufferFIFO inputRingBuffer(2, 2);
-    std::atomic<bool> isConsumerConnected = false;
-    addressData hostAddress("127.0.0.1", 8001);
+    ConfigurationData remoteConfigurationData;
+    ConfigurationData localConfigurationData;
+    localConfigurationData.set_consumer_port(5000);
+    AudioBufferFIFO inputRingBuffer(2, 1024);
 
-    ConsumerThread consumerThread(hostAddress,
-                                  inputRingBuffer,
-                                  isConsumerConnected);
-    REQUIRE(consumerThread.getHost() == nullptr);
-
-    try
-    {
-        consumerThread.setupHost();
-    }
-    catch (...)
-    {
-        FAIL("setupHost failed");
-    }
-    REQUIRE(consumerThread.getHost() != nullptr);
-    REQUIRE(true);
+    ConsumerThread consumerThread(remoteConfigurationData,
+                                  localConfigurationData,
+                                  inputRingBuffer);
+    REQUIRE_NOTHROW(consumerThread.setupHost());
 }
 
-TEST_CASE("ConsumerThread | validateConnection successfully")
+TEST_CASE("ConsumerThread | writeToFIFOBuffer")
 {
-    AudioBufferFIFO inputRingBuffer(2, 2);
-    std::atomic<bool> isConsumerConnected = false;
-    addressData hostAddress("127.0.0.1", 8001);
-
-    ConsumerThread consumerThread(hostAddress,
-                                  inputRingBuffer,
-                                  isConsumerConnected);
-    consumerThread.startThread();
-
-    auto providerThread = std::thread([&]() {
-        addressData providerAddress("127.0.0.1", 8022);
-        Host host(providerAddress);
-        host.setupSocket();
-        host.sendHandshake(hostAddress);
-        host.waitForHandshake();
-        std::cout << "ProviderThread finishes" << std::endl;
-    });
+    ConfigurationData remoteConfigurationData;
+    ConfigurationData localConfigurationData;
+    AudioBufferFIFO inputRingBuffer(2, 1024);
 
 
-    providerThread.join();
-    REQUIRE(isConsumerConnected == true);
+    ConsumerThread consumerThread(remoteConfigurationData,
+                                  localConfigurationData,
+                                  inputRingBuffer);
+
+    fillBuffer(consumerThread.m_inputBuffer, 1.0f);
+    REQUIRE_NOTHROW(consumerThread.writeToFIFOBuffer());
+    REQUIRE(consumerThread.m_inputRingBuffer.buffer.getSample(0, 0) == 1.0f);
 }
 
-TEST_CASE("ConsumerThread | validateConnection unsuccessfully")
+TEST_CASE("ConsumerThread | receiveAudioFromRemoteProvider")
 {
-    AudioBufferFIFO inputRingBuffer(2, 2);
-    std::atomic<bool> isConsumerConnected = true;
-    addressData hostAddress("127.0.0.1", 8001);
-    ConsumerThread consumerThread(hostAddress,
-                                  inputRingBuffer,
-                                  isConsumerConnected);
-    std::cout << "Consumer thread created" << std::endl;
-    consumerThread.startThread();
-    std::cout << "Consumer thread started" << std::endl;
+    ConfigurationData remoteConfigurationData;
+    remoteConfigurationData.set_consumer_port(5001);
+    remoteConfigurationData.set_ip("127.0.0.1");
+    ConfigurationData localConfigurationData;
+    localConfigurationData.set_consumer_port(5000);
+    AudioBufferFIFO inputRingBuffer(2, 20);
 
-    consumerThread.signalThreadShouldExit();
-    while (consumerThread.isThreadRunning())
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-}
-
-TEST_CASE("ConsumerThread | sendHandshake before remote waits for handshake")
-{
-    AudioBufferFIFO inputRingBuffer(2, 2);
-    std::atomic<bool> isConsumerConnected = false;
-    addressData hostAddress("127.0.0.1", 8001);
-    ConsumerThread consumerThread(hostAddress,
-                                  inputRingBuffer,
-                                  isConsumerConnected);
-    consumerThread.startThread();
-    auto providerThread = std::thread([&]() {
-        addressData providerAddress("127.0.0.1", 8022);
-        Host host(providerAddress);
-        host.setupSocket();
-        // Send handshake before the consumer thread waits for it
-        host.sendHandshake(hostAddress);
-        std::cout << "ProviderThread finishes" << std::endl;
-    });
-    providerThread.join();
-    consumerThread.stopThread(1000);
-    REQUIRE(isConsumerConnected == true);
+    ConsumerThread consumerThread(remoteConfigurationData,
+                                  localConfigurationData,
+                                  inputRingBuffer);
+    consumerThread.setupHost();
+    REQUIRE_FALSE(consumerThread.receiveAudioFromRemoteProvider());
 }

@@ -1,9 +1,9 @@
 #include "Host.h"
 #include "TcpHost.h"
+#include "datagram.pb.h"
 #include <catch2/catch_test_macros.hpp>
 #include <thread>
-addressData remoteAddress("127.0.0.1", 8002);
-addressData hostAddress("127.0.0.1", 8002);
+
 
 void callbackFunction(const boost::system::error_code &error)
 {
@@ -76,6 +76,7 @@ SCENARIO("TcpHost | initializeConnection with unreachable remote host")
 {
     GIVEN("A tcpHost object with setupHost called and a addressData object")
     {
+
         boost::asio::io_context ioContext;
         unsigned short port = 8001;
         TcpHost tcpHost(ioContext, port);
@@ -85,7 +86,7 @@ SCENARIO("TcpHost | initializeConnection with unreachable remote host")
         {
             THEN("The function fails because the remote host is not reachable")
             {
-                REQUIRE_THROWS(tcpHost.initializeConnection(remoteAddress),
+                REQUIRE_THROWS(tcpHost.initializeConnection("127.0.0.1", 8002),
                                "Failed to connect to remote host");
             }
         }
@@ -97,23 +98,29 @@ SCENARIO("TcpHost | initializeConnection with reachable remote host")
     GIVEN("A tcpHost object with setupHost called and a remote tcpHost running "
           "on a different thread")
     {
-        boost::asio::io_context ioContext;
-        unsigned short port = 8001;
-        TcpHost tcpHost(ioContext, port);
-        tcpHost.setupSocket();
-        std::jthread remoteThread([]() {
+        AddressData remoteAddress;
+        remoteAddress.set_ip("127.0.0.1");
+        remoteAddress.set_port(8001);
+
+        std::jthread remoteThread([&]() {
             boost::asio::io_context ioContext;
-            TcpHost remoteTcpHost(ioContext, remoteAddress.port);
+            TcpHost remoteTcpHost(ioContext, remoteAddress.port());
             remoteTcpHost.setupSocket();
             remoteTcpHost.asyncWaitForConnection(callbackFunction);
             ioContext.run();
         });
 
+        boost::asio::io_context ioContext;
+        unsigned short port = 8001;
+        TcpHost tcpHost(ioContext, port);
+        tcpHost.setupSocket();
         WHEN("initializeConnection is called")
         {
             THEN("The function connects to the remote host without error")
             {
-                REQUIRE_NOTHROW(tcpHost.initializeConnection(remoteAddress));
+                REQUIRE_NOTHROW(
+                    tcpHost.initializeConnection(remoteAddress.ip(),
+                                                 remoteAddress.port()));
             }
         }
         remoteThread.join();
@@ -125,10 +132,14 @@ SCENARIO("TcpHost | sendConfiguration without receiving remote host")
     GIVEN("A tcpHost connected to a remote tcpHost running "
           "on a different thread")
     {
-        std::jthread remoteThread([]() {
+        AddressData remoteAddress;
+        remoteAddress.set_ip("127.0.0.1");
+        remoteAddress.set_port(8001);
+
+        std::jthread remoteThread([&]() {
             std::cout << "from remote thread" << std::endl;
             boost::asio::io_context ioContext;
-            TcpHost remoteTcpHost(ioContext, remoteAddress.port);
+            TcpHost remoteTcpHost(ioContext, remoteAddress.port());
             remoteTcpHost.setupSocket();
             remoteTcpHost.asyncWaitForConnection(callbackFunction);
             ioContext.run();
@@ -138,7 +149,7 @@ SCENARIO("TcpHost | sendConfiguration without receiving remote host")
         unsigned short port = 8001;
         TcpHost tcpHost(ioContext, port);
         tcpHost.setupSocket();
-        tcpHost.initializeConnection(remoteAddress);
+        tcpHost.initializeConnection(remoteAddress.ip(), remoteAddress.port());
 
 
         WHEN("sendConfiguration is called")
@@ -146,16 +157,16 @@ SCENARIO("TcpHost | sendConfiguration without receiving remote host")
             THEN("The function sends the configuration to the remote host "
                  "without error")
             {
-                ConfigurationDataStruct configurationData;
-                configurationData.providerAddress = remoteAddress;
-                configurationData.consumerAddress = remoteAddress;
+                ConfigurationData configurationData;
+                configurationData.set_ip(remoteAddress.ip());
+                configurationData.set_provider_port(remoteAddress.port());
+                configurationData.set_consumer_port(remoteAddress.port());
                 std::cout << "sending configuration" << std::endl;
                 try
                 {
                     std::cout << "inside try block" << std::endl;
                     std::string serializedString =
-                        tcpHost.serializeConfigurationData(
-                            configurationData.toPb());
+                        tcpHost.serializeConfigurationData(configurationData);
                     tcpHost.send(serializedString);
                     std::cout << "sent configuration" << std::endl;
                 }
@@ -173,13 +184,21 @@ SCENARIO("TcpHost | sendConfiguration without receiving remote host")
 
 TEST_CASE("TcpHost | sendConfiguration with receiving remote host")
 {
+    AddressData remoteAddress;
+    remoteAddress.set_ip("127.0.0.1");
+    remoteAddress.set_port(8001);
+    AddressData hostAddress;
+    hostAddress.set_ip("127.0.0.1");
+    hostAddress.set_port(8002);
+
     // GIVEN: A tcpHost connected to a remote tcpHost running
-    std::jthread remoteThread([]() {
+    std::jthread remoteThread([&]() {
         std::cout << "from remote thread" << std::endl;
         boost::asio::io_context ioContext;
-        TcpHost remoteTcpHost(ioContext, remoteAddress.port);
+        TcpHost remoteTcpHost(ioContext, remoteAddress.port());
         remoteTcpHost.setupSocket();
-        remoteTcpHost.initializeConnection(hostAddress);
+        remoteTcpHost.initializeConnection(hostAddress.ip(),
+                                           hostAddress.port());
         std::string message = "Hello from remote host";
         remoteTcpHost.send(message);
         std::cout << "after send configuration" << std::endl;
@@ -187,7 +206,7 @@ TEST_CASE("TcpHost | sendConfiguration with receiving remote host")
 
 
     boost::asio::io_context ioContext;
-    TcpHost tcpHost(ioContext, hostAddress.port);
+    TcpHost tcpHost(ioContext, hostAddress.port());
     tcpHost.setupSocket();
     tcpHost.asyncWaitForConnection(callbackFunction);
     ioContext.run();
@@ -204,27 +223,33 @@ TEST_CASE("TcpHost | sendConfiguration with receiving remote host")
 SCENARIO("TcpHost | sendConfiguration, receiveConfiguration, "
          "deseraializeConfiguration")
 {
-    std::cout << "1" << std::endl;
+    AddressData remoteAddress;
+    remoteAddress.set_ip("127.0.0.1");
+    remoteAddress.set_port(8001);
+    AddressData hostAddress;
+    hostAddress.set_ip("127.0.0.1");
+    hostAddress.set_port(8002);
+
     GIVEN("tcpHost connected to a remote tcpHost who "
           "sends a configuration ")
     {
-        std::cout << "2" << std::endl;
-        std::jthread remoteThread([]() {
+
+        std::jthread remoteThread([&]() {
             std::cout << "from remote thread" << std::endl;
             boost::asio::io_context ioContext;
-            TcpHost remoteTcpHost(ioContext, remoteAddress.port);
+            TcpHost remoteTcpHost(ioContext, remoteAddress.port());
             remoteTcpHost.setupSocket();
-            remoteTcpHost.initializeConnection(hostAddress);
+            remoteTcpHost.initializeConnection(hostAddress.ip(),
+                                               hostAddress.port());
             std::cout << "after init connection" << std::endl;
-            addressData addressData1("125.0.0.1", 5555);
-            addressData addressData2("125.0.0.2", 7777);
+            ConfigurationData configurationData;
+            configurationData.set_ip(remoteAddress.ip());
+            configurationData.set_provider_port(remoteAddress.port());
+            configurationData.set_consumer_port(hostAddress.port());
 
-            ConfigurationDataStruct configurationData;
-            configurationData.providerAddress = addressData1;
-            configurationData.consumerAddress = addressData2;
+
             std::string serializedString =
-                remoteTcpHost.serializeConfigurationData(
-                    configurationData.toPb());
+                remoteTcpHost.serializeConfigurationData(configurationData);
             remoteTcpHost.send(serializedString);
             std::cout << "after send configuration" << std::endl;
         });
@@ -232,9 +257,8 @@ SCENARIO("TcpHost | sendConfiguration, receiveConfiguration, "
 
         WHEN("tcpHost calls recieveConfiguration")
         {
-            std::cout << "3" << std::endl;
             boost::asio::io_context ioContext;
-            TcpHost tcpHost(ioContext, hostAddress.port);
+            TcpHost tcpHost(ioContext, hostAddress.port());
             tcpHost.setupSocket();
             tcpHost.asyncWaitForConnection(callbackFunction);
             ioContext.run();
@@ -245,14 +269,14 @@ SCENARIO("TcpHost | sendConfiguration, receiveConfiguration, "
                       << configurationDataString.size() << std::endl;
             THEN("the recieved data can be successfully deseralized")
             {
-                std::cout << "4" << std::endl;
-                ConfigurationDataStruct configurationData =
+                ConfigurationData configurationData =
                     tcpHost.deserializeConfigurationData(
                         configurationDataString);
-                REQUIRE(configurationData.providerAddress.port == 5555);
-                REQUIRE(configurationData.providerAddress.ip == "125.0.0.1");
-                REQUIRE(configurationData.consumerAddress.ip == "125.0.0.2");
-                REQUIRE(configurationData.consumerAddress.port == 7777);
+                REQUIRE(configurationData.provider_port() ==
+                        remoteAddress.port());
+                REQUIRE(configurationData.ip() == remoteAddress.ip());
+                REQUIRE(configurationData.consumer_port() ==
+                        hostAddress.port());
             }
         }
         remoteThread.join();
@@ -261,37 +285,41 @@ SCENARIO("TcpHost | sendConfiguration, receiveConfiguration, "
 
 SCENARIO("TcpHost | serializer and deserializer")
 {
+    AddressData remoteAddress;
+    remoteAddress.set_ip("127.0.0.1");
+    remoteAddress.set_port(8001);
+    AddressData hostAddress;
+    hostAddress.set_ip("127.0.0.1");
+    hostAddress.set_port(8002);
 
     GIVEN("Some data to serialize")
     {
         boost::asio::io_context ioContext;
-        TcpHost tcpHost(ioContext, hostAddress.port);
+        TcpHost tcpHost(ioContext, hostAddress.port());
 
-        addressData addressData1("125.0.0.1", 5555);
-        addressData addressData2("125.0.0.2", 7777);
-
-        ConfigurationDataStruct configurationData;
-        configurationData.providerAddress = addressData1;
-        configurationData.consumerAddress = addressData2;
+        ConfigurationData configurationData;
+        configurationData.set_ip(remoteAddress.ip());
+        configurationData.set_provider_port(remoteAddress.port());
+        configurationData.set_consumer_port(hostAddress.port());
 
         WHEN("data gets serialized and deserialized")
         {
 
             std::string serializedData =
-                tcpHost.serializeConfigurationData(configurationData.toPb());
-            ConfigurationDataStruct deseralizedconfigurationData =
+                tcpHost.serializeConfigurationData(configurationData);
+            ConfigurationData deseralizedconfigurationData =
                 tcpHost.deserializeConfigurationData(serializedData);
             THEN("the data is still equal to the original")
             {
 
-                REQUIRE(deseralizedconfigurationData.providerAddress.port ==
-                        configurationData.providerAddress.port);
-                REQUIRE(deseralizedconfigurationData.providerAddress.ip ==
-                        configurationData.providerAddress.ip);
-                REQUIRE(deseralizedconfigurationData.consumerAddress.ip ==
-                        configurationData.consumerAddress.ip);
-                REQUIRE(deseralizedconfigurationData.consumerAddress.port ==
-                        configurationData.consumerAddress.port);
+                REQUIRE(deseralizedconfigurationData.provider_port() ==
+                        configurationData.provider_port());
+                REQUIRE(deseralizedconfigurationData.ip() ==
+                        configurationData.ip());
+                REQUIRE(deseralizedconfigurationData.ip() ==
+                        configurationData.ip());
+                REQUIRE(deseralizedconfigurationData.consumer_port() ==
+                        configurationData.consumer_port());
             }
         }
     }

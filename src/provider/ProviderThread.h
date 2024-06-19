@@ -1,6 +1,7 @@
 #pragma once
 #include "AudioBuffer.h"
 #include "Host.h"
+#include "datagram.pb.h"
 #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
 #include <boost/system/error_code.hpp>
@@ -10,10 +11,10 @@
 class ProviderThread : public juce::Thread
 {
 public:
-    ProviderThread(addressData &hostAddress,
-                   addressData &remoteAddress,
+    ProviderThread(ConfigurationData remoteConfigurationData,
+                   ConfigurationData localConfigurationData,
                    AudioBufferFIFO &outputRingBuffer,
-                   std::atomic<bool> &isProviderConnected);
+                   const std::string threadName = "ProviderThread");
 
 
     ~ProviderThread() override;
@@ -22,18 +23,18 @@ public:
 
     void setupHost();
 
-    bool validateConnection();
+    bool readFromFIFOBuffer(
+        std::chrono::milliseconds timeout = std::chrono::milliseconds(1000));
 
-    void startSendingAudio();
-
-
-private:
-    addressData m_hostAddress;
-    addressData m_remoteAddress;
-    std::unique_ptr<Host> m_host;
-
+    bool sendAudioToRemoteConsumer();
 
     AudioBufferFIFO &m_outputRingBuffer;
     juce::AudioBuffer<float> m_outputBuffer;
-    std::atomic<bool> &m_isProviderConnected;
+
+private:
+    boost::asio::io_context m_ioContext;
+    std::unique_ptr<Host> m_host;
+
+    ConfigurationData m_remoteConfigurationData;
+    ConfigurationData m_localConfigurationData;
 };

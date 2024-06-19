@@ -31,12 +31,14 @@ public:
 
     void initializeConnection(addressData remoteAddress);
 
-    bool sendConfigurationData(ConfigurationDataStruct configurationData);
+    bool sendConfigurationData(ConfigurationData configurationData);
 
     bool receiveConfigurationData();
 
     bool exchangeConfigurationDataWithRemote(
-        ConfigurationDataStruct configurationData);
+        ConfigurationData configurationData);
+
+    void generateConfigurationData();
 
     bool startUpProviderAndConsumerThreads(addressData providerAddress,
                                            addressData consumerAddress,
@@ -50,7 +52,7 @@ public:
 
     void stopProviderAndConsumerThreads(std::chrono::seconds timeout);
 
-    ConfigurationDataStruct getConfigurationData() const;
+    ConfigurationData getConfigurationData() const;
 
     bool incomingConnection() const;
 
@@ -69,6 +71,6 @@ private:
 
     AudioBufferFIFO &m_inputRingBuffer;
     AudioBufferFIFO &m_outputRingBuffer;
-    ConfigurationDataStruct m_localConfigurationData;
-    ConfigurationDataStruct m_remoteConfigurationData;
+    ConfigurationData m_localConfigurationData;
+    ConfigurationData m_remoteConfigurationData;
 };

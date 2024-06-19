@@ -43,6 +43,7 @@ if(protobuf_FOUND)
     message(STATUS "Generated Protobuf headers: ${PROTO_HDRS}")
     add_library(protobufGenerated "${PROTO_SRCS}" "${PROTO_HDRS}")
     target_link_libraries(protobufGenerated PUBLIC protobuf::libprotobuf)
+    target_include_directories(protobufGenerated PUBLIC "${GENERATED_PROTO_DIR}")
 
 endif()
 

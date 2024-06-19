@@ -1,14 +1,26 @@
 #include "Host.h"
+#include <boost/asio.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <thread>
+
+void fillBuffer(juce::AudioBuffer<float> &buffer, float value)
+{
+    for (int i = 0; i < buffer.getNumSamples(); i++)
+    {
+        for (int channel = 0; channel < buffer.getNumChannels(); channel++)
+        {
+            buffer.setSample(channel, i, value);
+        }
+    }
+}
 
 TEST_CASE("Host | Constructor")
 {
     bool sucess = false;
     try
     {
-        addressData hostAddress("127.0.0.1", 8001);
-        Host Host(hostAddress);
+        boost::asio::io_context ioContext;
+        Host host;
         sucess = true;
     }
     catch (...)
@@ -19,124 +31,62 @@ TEST_CASE("Host | Constructor")
     REQUIRE(sucess == true);
 }
 
-TEST_CASE("Host | wait and send Handshake")
+TEST_CASE("Host | SetupSocket successfull")
+
 {
-    std::cout << "Starting " << std::endl;
-
-    auto thread_1 = std::jthread([]() {
-        std::cout << "Thread 1" << std::endl;
-        addressData hostAddress("127.0.0.1", 8001);
-        Host host(hostAddress);
-        host.setupSocket();
-        std::cout << "Host created" << std::endl;
-        host.waitForHandshake();
-        std::cout << "Connected" << std::endl;
-        host.stopHost();
-    });
-
-    auto thread_2 = std::jthread([]() {
-        std::cout << "Thread 2" << std::endl;
-        addressData hostAddress("127.0.0.1", 8010);
-        Host host(hostAddress);
-        host.setupSocket();
-        addressData remoteAdress("127.0.0.1", 8001);
-        host.sendHandshake(remoteAdress);
-        std::cout << "Sent connection request" << std::endl;
-        host.stopHost();
-    });
-    thread_1.join();
-    thread_2.join();
-    std::cout << "Threads joined" << std::endl;
+    boost::asio::io_context ioContext;
+    Host host;
+    REQUIRE_NOTHROW(host.setupSocket(ioContext, 8001));
 }
 
-TEST_CASE("Host | sentHandshake before waitForHandshake")
+TEST_CASE("Host | SetupSocket with invalid port")
 {
-    auto thread_2 = std::jthread([]() {
-        std::cout << "Thread 2" << std::endl;
-        addressData hostAddress("127.0.0.1", 8010);
-        Host host(hostAddress);
-        host.setupSocket();
-        addressData remoteAdress("127.0.0.1", 8001);
-        host.sendHandshake(remoteAdress);
-        std::cout << "Sent connection request" << std::endl;
-        host.stopHost();
-    });
-
-    auto thread_1 = std::jthread([]() {
-        std::cout << "Thread 1" << std::endl;
-        addressData hostAddress("127.0.0.1", 8001);
-        Host host(hostAddress);
-        host.setupSocket();
-        std::cout << "Host created" << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        bool connected = host.waitForHandshake();
-        if (connected)
-        {
-            std::cout << "Connected" << std::endl;
-        }
-        host.stopHost();
-    });
-    std::cout << "false before join" << std::endl;
-    thread_1.join();
-    thread_2.join();
-    std::cout << "Threads joined" << std::endl;
+    boost::asio::io_context ioContext;
+    Host host;
+    REQUIRE_THROWS(host.setupSocket(ioContext, 0));
 }
 
-void callbackFunction(const boost::system::error_code &error,
-                      std::size_t bytes_transferred)
+TEST_CASE("Host | sendAudioBuffer and receive")
 {
-    if (!error && bytes_transferred > 0)
-    {
-        std::cout << "Callback successfully called" << std::endl;
-        // Perform additional assertions or actions here
-    }
-    else
-    {
-        FAIL("Connection failed");
-    }
-};
-
-
-TEST_CASE("Host | asyncWaitForConnection")
-{
-    std::cout << "Starting " << std::endl;
-    auto thread_1 = std::jthread([]() {
-        std::cout << "Thread 1" << std::endl;
-        addressData hostAddress("127.0.0.1", 8001);
-        Host host(hostAddress);
-        host.setupSocket();
-        std::cout << "Host created" << std::endl;
-        host.asyncWaitForConnection(callbackFunction,
-                                    std::chrono::milliseconds(2000));
-        std::cout << "this should get called 2 seconds before the callback : "
-                  << std::chrono::system_clock::now() << std::endl;
-        host.stopHost();
+    std::jthread remoteThread([]() {
+        boost::asio::io_context ioContext;
+        Host host;
+        host.setupSocket(ioContext, 8001);
+        juce::AudioBuffer<float> buffer(2, 10);
+        fillBuffer(buffer, 0.5);
+        boost::asio::ip::udp::endpoint remoteEndpoint(
+            boost::asio::ip::address::from_string("127.0.0.1"),
+            8002);
+        host.sendAudioBuffer(buffer, remoteEndpoint);
     });
-    auto thread_2 = std::jthread([]() {
-        std::cout << "Thread 2" << std::endl;
-        addressData hostAddress("127.0.0.1", 8010);
-        Host host(hostAddress);
-        host.setupSocket();
-        addressData remoteAdress("127.0.0.1", 8001);
-        host.sendHandshake(remoteAdress);
-        std::cout << "Sent connection request" << std::endl;
-        host.stopHost();
-    });
-    thread_1.join();
-    thread_2.join();
-    std::cout << "Threads joined" << std::endl;
+
+    juce::AudioBuffer<float> buffer(2, 10);
+    boost::asio::io_context ioContext;
+    Host host;
+    host.setupSocket(ioContext, 8002);
+    REQUIRE(host.receiveAudioBuffer(buffer));
+    REQUIRE(buffer.getSample(0, 0) == 0.5);
+    remoteThread.join();
 }
 
-TEST_CASE("Host | waitForHandshake timout")
+TEST_CASE("Host | sendAudioBuffer to invalid endpoint still successfull")
 {
-    std::cout << "Thread 2" << std::endl;
-    addressData hostAddress("127.0.0.1", 8010);
-    Host host(hostAddress);
-    host.setupSocket();
-    bool connected = host.waitForHandshake();
-    std::cout << "Sent connection request" << std::endl;
-    host.stopHost();
+    boost::asio::io_context ioContext;
+    Host host;
+    host.setupSocket(ioContext, 8001);
+    juce::AudioBuffer<float> buffer(2, 10);
+    fillBuffer(buffer, 0.5);
+    boost::asio::ip::udp::endpoint remoteEndpoint(
+        boost::asio::ip::address::from_string("127.0.0.1"),
+        8002);
+    REQUIRE_NOTHROW(host.sendAudioBuffer(buffer, remoteEndpoint));
+}
 
-    std::cout << "Threads joined" << std::endl;
-    REQUIRE(connected == false);
+TEST_CASE("Host | recieveAudioBuffer timeout")
+{
+    boost::asio::io_context ioContext;
+    Host host;
+    host.setupSocket(ioContext, 8001, 50);
+    juce::AudioBuffer<float> buffer(2, 10);
+    REQUIRE_FALSE(host.receiveAudioBuffer(buffer));
 }

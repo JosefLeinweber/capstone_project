@@ -2,150 +2,117 @@
 #include <chrono>
 #include <iostream>
 
+void printBuffer(auto &buffer)
+{
+    for (int channel = 0; channel < buffer.getNumChannels(); channel++)
+    {
+        std::cout << "Channel " << channel << ": ";
+        for (int i = 0; i < buffer.getNumSamples(); i++)
+        {
+            std::cout << buffer.getSample(channel, i) << " ";
+        }
+        std::cout << std::endl;
+    }
+}
 
-Host::Host(addressData hostAddress) : m_hostAddress(hostAddress) {};
+
+Host::Host() {};
 
 Host::~Host()
-{
-    stopHost();
-};
-
-void Host::setupSocket()
-{
-    m_socket = std::make_unique<boost::asio::ip::udp::socket>(
-        m_io_context,
-        boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(),
-                                       m_hostAddress.port));
-};
-
-bool Host::waitForHandshake(int timeout)
-{
-    m_socket->set_option(rcv_timeout_option{timeout});
-    std::cout << "Waiting for handshake at" << m_hostAddress.ip << ":"
-              << m_hostAddress.port << std::endl;
-    std::size_t length = m_socket->receive_from(boost::asio::buffer(m_recv_buf),
-                                                m_remote_endpoint,
-                                                0,
-                                                m_ignored_error);
-    if (!m_ignored_error && length > 0)
-    {
-        std::cout << "Handshake recieved from : " << m_remote_endpoint
-                  << std::endl;
-        m_connected = true;
-    }
-    else
-    {
-        std::cout << "Handshake not recieved:" << m_hostAddress.ip << ":"
-                  << m_hostAddress.port << std::endl;
-        std::cout << "Error receive: " << m_ignored_error.message()
-                  << std::endl;
-        std::cout << "Length: " << length << std::endl;
-        m_connected = false;
-    }
-    return m_connected;
-};
-
-bool Host::isConnected()
-{
-    return m_connected;
-};
-
-void Host::sendHandshake(addressData remoteAddress)
-{
-    std::cout << "Sending handshake to : " << remoteAddress.ip << ":"
-              << remoteAddress.port << std::endl;
-    m_remote_endpoint = boost::asio::ip::udp::endpoint(
-        boost::asio::ip::address::from_string(remoteAddress.ip),
-        remoteAddress.port);
-    std::array<char, 1> send_buf = {{0}};
-    m_socket->send_to(boost::asio::buffer(send_buf), m_remote_endpoint);
-    std::cout << "Handshake sent to : " << m_remote_endpoint << std::endl;
-    if (m_ignored_error)
-    {
-        std::cout << "Error sent to : " << m_ignored_error.message()
-                  << std::endl;
-    }
-};
-
-void Host::sendTo(juce::AudioBuffer<float> buffer)
-{
-    const float *data = buffer.getReadPointer(0);
-    // float* data2 = tempBuffer.getReadPointer(1);
-    std::size_t length =
-        buffer.getNumSamples() * sizeof(float) * buffer.getNumChannels();
-    m_socket->send_to(boost::asio::buffer(data, length),
-                      m_remote_endpoint,
-                      0,
-                      m_ignored_error);
-};
-
-void Host::recieveFrom(juce::AudioBuffer<float> &buffer)
-{
-    float *data = buffer.getWritePointer(0);
-    // float* data2 = tempBuffer.getReadPointer(1);
-    std::size_t length =
-        buffer.getNumSamples() * sizeof(float) * buffer.getNumChannels();
-
-    m_socket->receive_from(boost::asio::buffer(data, length),
-                           m_remote_endpoint,
-                           0,
-                           m_ignored_error);
-};
-
-void Host::stopHost()
 {
     if (m_socket)
     {
         try
         {
-            m_socket->cancel();
+            m_socket->close();
         }
         catch (...)
         {
-            std::cout << "No async call to cancel" << std::endl;
+            std::cout << "Socket already closed" << std::endl;
         }
-
-
-        m_socket->close();
     }
-    m_io_context.stop();
 };
 
-addressData Host::getRemoteAddress()
+void Host::setupSocket(boost::asio::io_context &ioContext,
+                       unsigned short port,
+                       unsigned short rec_timeout)
 {
-    addressData remoteAddress(m_remote_endpoint.address().to_string(),
-                              m_remote_endpoint.port());
-    return remoteAddress;
-}
-
-
-void Host::asyncWaitForConnection(
-    std::function<void(const boost::system::error_code &error,
-                       std::size_t bytes_transferred)> callback,
-    std::chrono::milliseconds timeout)
-{
-    m_timer =
-        std::make_unique<boost::asio::steady_timer>(m_io_context, timeout);
-    m_socket->async_receive_from(
-        boost::asio::buffer(m_recv_buf),
-        m_remote_endpoint,
-        [this, callback](const boost::system::error_code &error,
-                         std::size_t bytes_transferred) {
-            std::cout << "callback executed at: "
-                      << std::chrono::system_clock::now() << std::endl;
-            callback(error, bytes_transferred);
-            this->m_timer->cancel();
-        });
-
-
-    m_timer->async_wait([this](const boost::system::error_code &error) {
-        if (!error)
+    try
+    {
+        if (port == 0)
         {
-            std::cout << "Timer expired" << std::endl;
-            m_socket->cancel();
+            throw std::runtime_error("Invalid port number");
         }
-    });
+        m_socket = std::make_unique<boost::asio::ip::udp::socket>(
+            ioContext,
+            boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port));
+        m_socket->set_option(rcv_timeout_option{rec_timeout});
+    }
+    catch (const std::exception &e)
+    {
+        std::cout << "Failed to create socket: " << e.what() << std::endl;
+        throw e;
+    }
+};
 
-    m_io_context.run();
-    m_io_context.restart();
+
+void Host::sendAudioBuffer(juce::AudioBuffer<float> buffer,
+                           boost::asio::ip::udp::endpoint remoteEndpoint)
+{
+    const float *data = buffer.getReadPointer(0);
+    // float* data2 = tempBuffer.getReadPointer(1);
+    std::size_t length =
+        buffer.getNumSamples() * sizeof(float) * buffer.getNumChannels();
+
+    try
+    {
+        std::cout << "Sending data..." << std::endl;
+        printBuffer(buffer);
+        std::size_t len = m_socket->send_to(boost::asio::buffer(data, length),
+                                            remoteEndpoint,
+                                            0,
+                                            m_ignoredError);
+        if (m_ignoredError)
+        {
+            throw std::runtime_error("Error sending data");
+        }
+        if (len <= 0 || len != length)
+        {
+            throw std::runtime_error("Failed to send all data");
+        }
+        std::cout << "Sent " << len << " bytes" << std::endl;
+    }
+    catch (const std::exception &e)
+    {
+        std::cout << "Failed to send data: " << e.what() << std::endl;
+        throw e;
+    }
+};
+
+bool Host::receiveAudioBuffer(juce::AudioBuffer<float> &buffer)
+{
+
+    float *data = buffer.getWritePointer(0);
+    // float* data2 = tempBuffer.getReadPointer(1);
+    std::size_t length =
+        buffer.getNumSamples() * sizeof(float) * buffer.getNumChannels();
+
+
+    std::size_t len = m_socket->receive_from(boost::asio::buffer(data, length),
+                                             m_remoteEndpoint,
+                                             0,
+                                             m_ignoredError);
+
+    if (!m_ignoredError && len > 0)
+    {
+        std::cout << "Received " << len << " bytes" << std::endl;
+        std::cout << "Received data..." << std::endl;
+        printBuffer(buffer);
+        return true;
+    }
+    else
+    {
+        std::cout << "Failed to receive data" << std::endl;
+        return false;
+    }
 };

@@ -4,31 +4,6 @@
 #include <boost/asio.hpp>
 #include <iostream>
 
-struct ConfigurationDataStruct
-{
-    addressData providerAddress;
-    addressData consumerAddress;
-
-    pbConfigurationData toPb()
-    {
-        pbConfigurationData configurationData;
-        configurationData.set_provider_ip(providerAddress.ip);
-        configurationData.set_provider_port(providerAddress.port);
-        configurationData.set_consumer_ip(consumerAddress.ip);
-        configurationData.set_consumer_port(consumerAddress.port);
-        return configurationData;
-    }
-
-    void fromPb(pbConfigurationData pbConfigurationData)
-    {
-        providerAddress.ip = pbConfigurationData.provider_ip();
-        providerAddress.port = pbConfigurationData.provider_port();
-        consumerAddress.ip = pbConfigurationData.consumer_ip();
-        consumerAddress.port = pbConfigurationData.consumer_port();
-    }
-};
-
-
 class TcpHost
 {
 public:
@@ -44,7 +19,7 @@ public:
 
     void startAccept();
 
-    void initializeConnection(addressData remoteAddress);
+    void initializeConnection(std::string ip, unsigned short port);
 
     void send(std::string &message);
 
@@ -52,10 +27,9 @@ public:
 
     void asyncWaitForExitCall();
 
-    std::string serializeConfigurationData(pbConfigurationData dataCollection);
+    std::string serializeConfigurationData(ConfigurationData dataCollection);
 
-    ConfigurationDataStruct deserializeConfigurationData(
-        std::string &serializedData);
+    ConfigurationData deserializeConfigurationData(std::string &serializedData);
 
     bool incomingConnection()
     {

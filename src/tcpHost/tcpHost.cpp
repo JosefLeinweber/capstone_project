@@ -68,18 +68,17 @@ void TcpHost::startAccept()
     }
 }
 
-void TcpHost::initializeConnection(addressData remoteAddress)
+void TcpHost::initializeConnection(std::string ip, unsigned short port)
 {
     std::cout << "tcpHost initConnection  | Connecting to remote host"
               << std::endl;
     if (m_socket)
     {
         std::cout << "Connecting to remote host" << std::endl;
-        m_socket->connect(
-            boost::asio::ip::tcp::endpoint(
-                boost::asio::ip::address::from_string(remoteAddress.ip),
-                remoteAddress.port),
-            m_error);
+        m_socket->connect(boost::asio::ip::tcp::endpoint(
+                              boost::asio::ip::address::from_string(ip),
+                              port),
+                          m_error);
         if (m_error)
         {
             std::cout << "!!!Failed to connect to remote host" << std::endl;
@@ -175,7 +174,7 @@ std::string TcpHost::receiveConfiguration()
 
 
 std::string TcpHost::serializeConfigurationData(
-    pbConfigurationData configurationData)
+    ConfigurationData configurationData)
 {
     std::string serializedData;
     if (!configurationData.SerializeToString(&serializedData))
@@ -186,16 +185,14 @@ std::string TcpHost::serializeConfigurationData(
     return serializedData;
 }
 
-ConfigurationDataStruct TcpHost::deserializeConfigurationData(
+ConfigurationData TcpHost::deserializeConfigurationData(
     std::string &serializedData)
 {
-    pbConfigurationData configurationData;
+    ConfigurationData configurationData;
     if (!configurationData.ParseFromString(serializedData))
     {
         std::cout << "faild to deserialize data " << std::endl;
         throw std::runtime_error("Failed to deserialize configuration data");
     }
-    ConfigurationDataStruct configurationDataStruct;
-    configurationDataStruct.fromPb(configurationData);
-    return configurationDataStruct;
+    return configurationData;
 }

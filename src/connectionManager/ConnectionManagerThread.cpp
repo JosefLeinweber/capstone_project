@@ -54,18 +54,18 @@ void ConnectionManagerThread::run()
         //exchangeConfigurationDataWithRemote();
 
 
-        if (startUpProviderAndConsumerThreads(consumerAddress,
-                                              providerAddress,
-                                              remoteConsumerAddress))
-        {
-            asyncWaitForClosingRequest();
-            while (!m_closingRequest /* or a event from gui happens */)
-            {
-                wait(100);
-            }
+        // if (startUpProviderAndConsumerThreads(consumerAddress,
+        //                                       providerAddress,
+        //                                       remoteConsumerAddress))
+        // {
+        //     asyncWaitForClosingRequest();
+        //     while (!m_closingRequest /* or a event from gui happens */)
+        //     {
+        //         wait(100);
+        //     }
 
-            closeProviderAndConsumerThreads();
-        }
+        //     closeProviderAndConsumerThreads();
+        // }
     }
 }
 
@@ -73,14 +73,15 @@ void ConnectionManagerThread::generateConfigurationData()
 {
     //TODO: implement automatic configuration data generation
     //! HARDCODED CONFIGURATION DATA CHANGE IT!
-    ConfigurationDataStruct configurationData;
-    configurationData.providerAddress = addressData("127.0.0.1", 8002);
-    configurationData.consumerAddress = addressData("127.0.0.1", 8001);
+    ConfigurationData configurationData;
+    configurationData.set_ip("127.0.0.1");
+    configurationData.set_consumer_port(8001);
+    configurationData.set_provider_port(8002);
     m_localConfigurationData = configurationData;
 }
 
 bool ConnectionManagerThread::exchangeConfigurationDataWithRemote(
-    ConfigurationDataStruct configurationData)
+    ConfigurationData configurationData)
 {
     if (m_host->incomingConnection())
     {
@@ -95,11 +96,10 @@ bool ConnectionManagerThread::exchangeConfigurationDataWithRemote(
 }
 
 bool ConnectionManagerThread::sendConfigurationData(
-    ConfigurationDataStruct configurationData)
+    ConfigurationData configurationData)
 {
-    pbConfigurationData pbConfigurationData = configurationData.toPb();
     std::string serializedData =
-        m_host->serializeConfigurationData(pbConfigurationData);
+        m_host->serializeConfigurationData(configurationData);
     try
     {
         m_host->send(serializedData);
@@ -169,7 +169,7 @@ void ConnectionManagerThread::initializeConnection(addressData remoteAddress)
 {
     try
     {
-        m_host->initializeConnection(remoteAddress);
+        m_host->initializeConnection(remoteAddress.ip, remoteAddress.port);
     }
     catch (std::exception &e)
     {
@@ -183,45 +183,45 @@ void ConnectionManagerThread::initializeConnection(addressData remoteAddress)
 }
 
 
-bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
-    ConfigurationDataStruct remoteConfigurationData,
-    ConfigurationDataStruct localConfigurationData,
-    std::chrono::seconds timeout)
-{
-    //TODO: implement a way to get the provider and consumer address from the handshake
+// bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
+//     ConfigurationDataStruct remoteConfigurationData,
+//     ConfigurationDataStruct localConfigurationData,
+//     std::chrono::seconds timeout)
+// {
+//     //TODO: implement a way to get the provider and consumer address from the handshake
 
-    m_providerThread = std::make_unique<ProviderThread>(remoteConfigurationData,
-                                                        localConfigurationData,
-                                                        m_outputRingBuffer,
-                                                        m_isProviderConnected);
-    m_consumerThread = std::make_unique<ConsumerThread>(remoteConfigurationData,
-                                                        localConfigurationData,
-                                                        m_inputRingBuffer,
-                                                        m_isConsumerConnected);
+//     m_providerThread = std::make_unique<ProviderThread>(remoteConfigurationData,
+//                                                         localConfigurationData,
+//                                                         m_outputRingBuffer,
+//                                                         m_isProviderConnected);
+//     m_consumerThread = std::make_unique<ConsumerThread>(remoteConfigurationData,
+//                                                         localConfigurationData,
+//                                                         m_inputRingBuffer,
+//                                                         m_isConsumerConnected);
 
-    m_providerThread->startThread();
-    m_consumerThread->startThread();
+//     m_providerThread->startThread();
+//     m_consumerThread->startThread();
 
 
-    std::cout << "are threads running : " << m_providerThread->isThreadRunning()
-              << " " << m_consumerThread->isThreadRunning() << std::endl;
+//     std::cout << "are threads running : " << m_providerThread->isThreadRunning()
+//               << " " << m_consumerThread->isThreadRunning() << std::endl;
 
-    //time now
-    auto startTime = std::chrono::high_resolution_clock::now();
+//     //time now
+//     auto startTime = std::chrono::high_resolution_clock::now();
 
-    while (!m_providerThread->isThreadRunning() ||
-           !m_consumerThread->isThreadRunning())
-    {
-        if (std::chrono::duration_cast<std::chrono::seconds>(
-                std::chrono::high_resolution_clock::now() - startTime)
-                .count() > timeout.count())
-        {
-            return false;
-        }
-        wait(100);
-    }
-    return true;
-}
+//     while (!m_providerThread->isThreadRunning() ||
+//            !m_consumerThread->isThreadRunning())
+//     {
+//         if (std::chrono::duration_cast<std::chrono::seconds>(
+//                 std::chrono::high_resolution_clock::now() - startTime)
+//                 .count() > timeout.count())
+//         {
+//             return false;
+//         }
+//         wait(100);
+//     }
+//     return true;
+// }
 
 
 void ConnectionManagerThread::stopProviderAndConsumerThreads(
@@ -270,7 +270,7 @@ bool ConnectionManagerThread::incomingConnection() const
     return m_incomingConnection;
 }
 
-ConfigurationDataStruct ConnectionManagerThread::getConfigurationData() const
+ConfigurationData ConnectionManagerThread::getConfigurationData() const
 {
     return m_localConfigurationData;
 }

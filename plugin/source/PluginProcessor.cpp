@@ -204,7 +204,7 @@ void LowpassHighpassFilterAudioProcessor::processBlock(
 
     // filter.processBlock(buffer, midiMessages);
     visualiser.pushBuffer(buffer);
-    audioBufferFIFO.writeToBuffer(buffer);
+    audioBufferFIFO.writeToInternalBufferFrom(buffer);
 }
 
 //==============================================================================

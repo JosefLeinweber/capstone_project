@@ -11,9 +11,9 @@
 class ConsumerThread : public juce::Thread
 {
 public:
-    ConsumerThread(addressData &hostAddress,
+    ConsumerThread(ConfigurationData remoteConfigurationData,
+                   ConfigurationData localConfigurationData,
                    AudioBufferFIFO &inputRingBuffer,
-                   std::atomic<bool> &isConsumerConnected,
                    const std::string threadName = "ConsumerThread");
 
     ~ConsumerThread() override;
@@ -22,21 +22,17 @@ public:
 
     void setupHost();
 
-    void startRecievingAudio();
+    bool receiveAudioFromRemoteProvider();
 
-    bool validateConnection();
+    void writeToFIFOBuffer();
 
-    std::unique_ptr<Host> &getHost()
-    {
-        return m_host;
-    }
+    juce::AudioBuffer<float> m_inputBuffer;
+    AudioBufferFIFO &m_inputRingBuffer;
 
 private:
-    addressData m_hostAddress;
-    addressData m_remoteAddress;
+    boost::asio::io_context m_ioContext;
     std::unique_ptr<Host> m_host;
 
-    AudioBufferFIFO &m_inputRingBuffer;
-    juce::AudioBuffer<float> m_inputBuffer;
-    std::atomic<bool> &m_isConsumerConnected;
+    ConfigurationData m_remoteConfigurationData;
+    ConfigurationData m_localConfigurationData;
 };

@@ -1,29 +1,35 @@
 #include "ProviderThread.h"
 #include <chrono>
 #include <iostream>
-
-ProviderThread::ProviderThread(addressData &hostAddress,
-                               addressData &remoteAddress,
-                               AudioBufferFIFO &outputRingBuffer,
-                               std::atomic<bool> &isProviderConnected)
-    : juce::Thread("Provider Thread"), m_hostAddress(hostAddress),
-      m_remoteAddress(remoteAddress), m_outputRingBuffer(outputRingBuffer),
-      m_isProviderConnected(isProviderConnected)
+void printBuffer(auto &buffer)
 {
-    std::cout << "hostAddress: " << hostAddress.ip << ":" << hostAddress.port
-              << "  m_hostAddress: " << m_hostAddress.ip << ":"
-              << m_hostAddress.port << std::endl;
-    std::cout << remoteAddress.ip << ":" << remoteAddress.port
-              << "  m_remoteAddress: " << m_remoteAddress.ip << ":"
-              << m_remoteAddress.port << std::endl;
+    for (int channel = 0; channel < buffer.getNumChannels(); channel++)
+    {
+        std::cout << "Channel " << channel << ": ";
+        for (int i = 0; i < buffer.getNumSamples(); i++)
+        {
+            std::cout << buffer.getSample(channel, i) << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+ProviderThread::ProviderThread(ConfigurationData remoteConfigurationData,
+                               ConfigurationData localConfigurationData,
+                               AudioBufferFIFO &outputRingBuffer,
+                               const std::string threadName)
+    : juce::Thread(threadName),
+      m_remoteConfigurationData(remoteConfigurationData),
+      m_localConfigurationData(localConfigurationData),
+      m_outputRingBuffer(outputRingBuffer)
+{
+    m_outputBuffer.setSize(m_outputRingBuffer.buffer.getNumChannels(),
+                           m_outputRingBuffer.buffer.getNumSamples() / 4);
+    m_outputBuffer.clear();
 };
 
 ProviderThread::~ProviderThread()
 {
-    if (m_host)
-    {
-        m_host->stopHost();
-    }
 
     if (isThreadRunning())
     {
@@ -37,29 +43,75 @@ ProviderThread::~ProviderThread()
 void ProviderThread::run()
 {
     setupHost();
-    m_isProviderConnected = validateConnection();
-    std::cout << "Provider connected: " << m_isProviderConnected << std::endl;
-    return;
-};
-
-void ProviderThread::startSendingAudio()
-{
     while (!threadShouldExit())
     {
-        m_outputRingBuffer.readFromBuffer(m_outputBuffer);
-        m_host->sendTo(m_outputBuffer);
+        if (readFromFIFOBuffer())
+        {
+            sendAudioToRemoteConsumer();
+        }
+    }
+};
+
+bool ProviderThread::readFromFIFOBuffer(std::chrono::milliseconds timeout)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+    //TODO: change 0 to not be hardcoded
+    std::cout << "m_outputBzffer.getNumSamples(): "
+              << m_outputBuffer.getNumSamples() << std::endl;
+    while (m_outputRingBuffer.getNumReady() < m_outputBuffer.getNumSamples())
+
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        if (threadShouldExit())
+        {
+            std::cout << "ProviderThread | readFromFIFOBuffer | "
+                         "threadShouldExit"
+                      << std::endl;
+            return false;
+        }
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::high_resolution_clock::now() - start) > timeout)
+        {
+            std::cout << "ProviderThread | readFromFIFOBuffer | "
+                         "timeout"
+                      << std::endl;
+            return false;
+        }
+    }
+    std::cout << "ProviderThread | readFromFIFOBuffer | numReady: "
+              << m_outputRingBuffer.getNumReady() << std::endl;
+    m_outputRingBuffer.readFromInternalBufferTo(m_outputBuffer);
+    return true;
+}
+
+bool ProviderThread::sendAudioToRemoteConsumer()
+{
+    std::cout << "ProviderThread | sendAudioToRemoteConsumer" << std::endl;
+
+    try
+    {
+        std::cout << "ProviderThread | sendAudioToRemoteConsumer | "
+                     "send the following buffer: "
+                  << std::endl;
+        printBuffer(m_outputBuffer);
+        m_host->sendAudioBuffer(m_outputBuffer,
+                                boost::asio::ip::udp::endpoint(
+                                    boost::asio::ip::address::from_string(
+                                        m_remoteConfigurationData.ip()),
+                                    m_remoteConfigurationData.consumer_port()));
+        return true;
+    }
+    catch (const std::exception &e)
+    {
+        std::cout << "ProviderThread | sendAudioToRemoteConsumer | "
+                     "Failed to send data: "
+                  << e.what() << std::endl;
+        return false;
     }
 };
 
 void ProviderThread::setupHost()
 {
-    m_host = std::make_unique<Host>(m_hostAddress);
-    m_host->setupSocket();
-}
-
-bool ProviderThread::validateConnection()
-{
-    m_host->sendHandshake(m_remoteAddress);
-    bool connected = m_host->waitForHandshake();
-    return connected;
+    m_host = std::make_unique<Host>();
+    m_host->setupSocket(m_ioContext, m_localConfigurationData.provider_port());
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AudioBuffer.h"
+#include "datagram.pb.h"
 #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
 #include <boost/system/error_code.hpp>
@@ -8,52 +9,34 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_core/juce_core.h>
 
-
-struct addressData
-{
-    std::string ip;
-    int port;
-};
-
 typedef boost::asio::detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>
     rcv_timeout_option;
 
 class Host
 {
 public:
-    Host(addressData hostAddress);
+    Host();
 
     ~Host();
 
-    void setupSocket();
+    void setupSocket(boost::asio::io_context &ioContext,
+                     unsigned short port,
+                     unsigned short rec_timeout = 1000);
 
-    void sendHandshake(addressData remoteAddress);
+    void sendAudioBuffer(juce::AudioBuffer<float> buffer,
+                         boost::asio::ip::udp::endpoint remoteEndpoint);
 
-    bool waitForHandshake(int timeout = 1500);
-
-    void sendTo(juce::AudioBuffer<float> buffer);
-
-    void recieveFrom(juce::AudioBuffer<float> &buffer);
-
-    void stopHost();
-
-    bool isConnected();
-
-    void asyncWaitForConnection(
-        std::function<void(const boost::system::error_code &error,
-                           std::size_t bytes_transferred)> callback,
-        std::chrono::milliseconds timeout = std::chrono::milliseconds(1500));
-
-    addressData getRemoteAddress();
+    bool receiveAudioBuffer(juce::AudioBuffer<float> &buffer);
 
 private:
-    addressData m_hostAddress;
-    boost::asio::io_context m_io_context;
+    ConfigurationData m_configurationData;
+
+    boost::asio::io_context m_ioContext;
+    boost::system::error_code m_ignoredError;
+    boost::asio::ip::udp::endpoint m_remoteEndpoint;
+
     std::unique_ptr<boost::asio::ip::udp::socket> m_socket;
-    boost::asio::ip::udp::endpoint m_remote_endpoint;
-    std::array<char, 128> m_recv_buf;
-    juce::AudioBuffer<float> m_tempBuffer;
-    boost::system::error_code m_ignored_error;
     std::unique_ptr<boost::asio::steady_timer> m_timer;
-    bool m_connected = false;
+
+    juce::AudioBuffer<float> m_tempBuffer;
 };

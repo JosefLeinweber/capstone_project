@@ -1,22 +1,36 @@
 #include "ConsumerThread.h"
 #include <iostream>
 #include <thread>
+void printBuffer(auto &buffer)
+{
+    for (int channel = 0; channel < buffer.getNumChannels(); channel++)
+    {
+        std::cout << "Channel " << channel << ": ";
+        for (int i = 0; i < buffer.getNumSamples(); i++)
+        {
+            std::cout << buffer.getSample(channel, i) << " ";
+        }
+        std::cout << std::endl;
+    }
+}
 
-ConsumerThread::ConsumerThread(addressData &hostAddress,
+ConsumerThread::ConsumerThread(ConfigurationData remoteConfigurationData,
+                               ConfigurationData localConfigurationData,
                                AudioBufferFIFO &inputRingBuffer,
-                               std::atomic<bool> &isConsumerConnected,
                                const std::string threadName)
 
-    : juce::Thread(threadName), m_inputRingBuffer(inputRingBuffer),
-      m_isConsumerConnected(isConsumerConnected), m_hostAddress(hostAddress) {};
+    : juce::Thread(threadName),
+      m_remoteConfigurationData(remoteConfigurationData),
+      m_localConfigurationData(localConfigurationData),
+      m_inputRingBuffer(inputRingBuffer)
+{
+    m_inputBuffer.setSize(m_inputRingBuffer.buffer.getNumChannels(),
+                          m_inputRingBuffer.buffer.getNumSamples() / 4);
+    m_inputBuffer.clear();
+};
 
 ConsumerThread::~ConsumerThread()
 {
-    if (m_host)
-    {
-        m_host->stopHost();
-    }
-
     if (isThreadRunning())
     {
         signalThreadShouldExit();
@@ -27,44 +41,51 @@ ConsumerThread::~ConsumerThread()
 
 void ConsumerThread::run()
 {
+    setupHost();
     while (!threadShouldExit())
     {
-        setupHost();
-        m_isConsumerConnected = validateConnection();
-        return;
+        if (receiveAudioFromRemoteProvider())
+        {
+            writeToFIFOBuffer();
+        }
     }
 };
 
 void ConsumerThread::setupHost()
 {
-    m_host = std::make_unique<Host>(m_hostAddress);
-    m_host->setupSocket();
+    m_host = std::make_unique<Host>();
+    m_host->setupSocket(m_ioContext, m_localConfigurationData.consumer_port());
 };
 
-void ConsumerThread::startRecievingAudio()
+bool ConsumerThread::receiveAudioFromRemoteProvider()
 {
-    while (!threadShouldExit())
+    std::cout << "ConsumerThread | receiveAudioFromRemoteProvider" << std::endl;
+    try
     {
-        m_host->recieveFrom(m_inputBuffer);
-        m_inputRingBuffer.writeToBuffer(m_inputBuffer);
-    }
-};
-
-bool ConsumerThread::validateConnection()
-{
-    bool recievedHandshake = m_host->waitForHandshake();
-    bool connected = false;
-    if (recievedHandshake)
-    {
-        std::cout << "ConsumerThread | Recieved Handshake" << std::endl;
-        m_host->sendHandshake(m_host->getRemoteAddress());
-        connected = true;
-    }
-    else
-    {
-        std::cout << "ConsumerThread | Failed to Recieve Handshake"
+        bool success = m_host->receiveAudioBuffer(m_inputBuffer);
+        if (!success)
+        {
+            std::cout << "ConsumerThread | receiveAudioFromRemoteProvider | "
+                         "Failed to receive audio buffer"
+                      << std::endl;
+            return false;
+        }
+        std::cout << "ConsumerThread | receiveAudioFromRemoteProvider | "
+                     "Received audio buffer"
                   << std::endl;
-        connected = false;
+        printBuffer(m_inputBuffer);
+        return success;
     }
-    return connected;
+    catch (std::exception &e)
+    {
+        std::cout << "ConsumerThread | receiveAudioFromRemoteProvider | "
+                     "Exception: "
+                  << e.what() << std::endl;
+        return false;
+    }
+};
+
+void ConsumerThread::writeToFIFOBuffer()
+{
+    return m_inputRingBuffer.writeToInternalBufferFrom(m_inputBuffer);
 };
