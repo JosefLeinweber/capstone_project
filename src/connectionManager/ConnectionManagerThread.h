@@ -4,6 +4,7 @@
 #include "Host.h"
 #include "ProviderThread.h"
 #include "TcpHost.h"
+#include "datagram.pb.h"
 #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
 #include <boost/system/error_code.hpp>
@@ -15,59 +16,66 @@
 class ConnectionManagerThread : public juce::Thread
 {
 public:
-    ConnectionManagerThread(AudioBufferFIFO &inputRingBuffer,
-                            AudioBufferFIFO &outputRingBuffer);
+    ConnectionManagerThread(ConfigurationData localConfigurationData,
+                            AudioBufferFIFO &inputRingBuffer,
+                            AudioBufferFIFO &outputRingBuffer,
+                            std::atomic<bool> &startConnection,
+                            std::atomic<bool> &stopConnection);
 
     ~ConnectionManagerThread() override;
 
     void run() override;
 
-    void setupHost(addressData hostAddress);
+    void setupHost();
 
     void asyncWaitForConnection(
         std::chrono::milliseconds timeout = std::chrono::milliseconds(500));
 
     void callbackFunction(const boost::system::error_code &error);
 
-    void initializeConnection(addressData remoteAddress);
+    void startIOContextInDifferentThread();
 
-    bool sendConfigurationData(ConfigurationData configurationData);
+    void initializeConnection(ConfigurationData remoteConfigurationData);
+
+    bool sendConfigurationData(ConfigurationData localConfigurationData);
 
     bool receiveConfigurationData();
+
+    ConfigurationData remoteConfigurationDataFromGUI();
 
     bool exchangeConfigurationDataWithRemote(
         ConfigurationData configurationData);
 
-    void generateConfigurationData();
+    ConfigurationData generateConfigurationData();
 
-    bool startUpProviderAndConsumerThreads(addressData providerAddress,
-                                           addressData consumerAddress,
-                                           addressData remoteConsumerAddress);
+    bool startUpProviderAndConsumerThreads(
+        ConfigurationData localConfigurationData,
+        ConfigurationData remoteConfigurationData,
+        std::chrono::milliseconds timeout = std::chrono::milliseconds(3000));
+
+    void resetToStartState();
 
     void asyncWaitForClosingRequest();
 
-    void stopThreadSafely();
-
-    void closeProviderAndConsumerThreads();
-
     void stopProviderAndConsumerThreads(std::chrono::seconds timeout);
 
-    ConfigurationData getConfigurationData() const;
+    ConfigurationData getRemoteConfigurationData() const;
 
     bool incomingConnection() const;
 
     boost::asio::io_context m_ioContext;
-
+    std::jthread m_ioContextThread;
+    std::atomic<bool> &m_startConnection;
+    std::atomic<bool> &m_stopConnection;
 
 private:
-    std::atomic<bool> m_isProviderConnected = false;
-    std::atomic<bool> m_isConsumerConnected = false;
     std::atomic<bool> m_incomingConnection = false;
-    std::atomic<bool> m_closingRequest = false;
 
     std::unique_ptr<ProviderThread> m_providerThread;
     std::unique_ptr<ConsumerThread> m_consumerThread;
+
     std::unique_ptr<TcpHost> m_host;
+
 
     AudioBufferFIFO &m_inputRingBuffer;
     AudioBufferFIFO &m_outputRingBuffer;

@@ -14,6 +14,7 @@ public:
     ProviderThread(ConfigurationData remoteConfigurationData,
                    ConfigurationData localConfigurationData,
                    AudioBufferFIFO &outputRingBuffer,
+
                    const std::string threadName = "ProviderThread");
 
 

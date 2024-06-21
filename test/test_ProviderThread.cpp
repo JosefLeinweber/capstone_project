@@ -1,40 +1,22 @@
 #include "AudioBuffer.h"
 #include "Host.h"
 #include "ProviderThread.h"
+#include "sharedValues.h"
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 #include <juce_core/juce_core.h>
 #include <thread>
 
-void fillBuffer(juce::AudioBuffer<float> &buffer, float value)
-{
-    for (int i = 0; i < buffer.getNumSamples(); i++)
-    {
-        for (int channel = 0; channel < buffer.getNumChannels(); channel++)
-        {
-            buffer.setSample(channel, i, value);
-        }
-    }
-}
+ConfigurationData localConfigurationData =
+    setConfigurationData("127.0.0.1", 5000, 5001, 5002);
 
-void printBuffer(auto &buffer)
-{
-    for (int channel = 0; channel < buffer.getNumChannels(); channel++)
-    {
-        std::cout << "Channel " << channel << ": ";
-        for (int i = 0; i < buffer.getNumSamples(); i++)
-        {
-            std::cout << buffer.getSample(channel, i) << " ";
-        }
-        std::cout << std::endl;
-    }
-}
+ConfigurationData remoteConfigurationData =
+    setConfigurationData("127.0.0.1", 6000, 6001, 6002);
 
 
 TEST_CASE("ProviderThread | Constructor")
 {
-    ConfigurationData remoteConfigurationData;
-    ConfigurationData localConfigurationData;
+
     AudioBufferFIFO outputRingBuffer(2, 1024);
 
     try
@@ -51,9 +33,7 @@ TEST_CASE("ProviderThread | Constructor")
 
 TEST_CASE("ProviderThread | setupHost")
 {
-    ConfigurationData remoteConfigurationData;
-    ConfigurationData localConfigurationData;
-    localConfigurationData.set_provider_port(5000);
+
     AudioBufferFIFO outputRingBuffer(2, 1024);
 
     ProviderThread providerThread(remoteConfigurationData,
@@ -64,8 +44,7 @@ TEST_CASE("ProviderThread | setupHost")
 
 TEST_CASE("ProviderThread | readFromFIFOBuffer")
 {
-    ConfigurationData remoteConfigurationData;
-    ConfigurationData localConfigurationData;
+
     AudioBufferFIFO outputRingBuffer(2, 20);
 
     auto fillThread = std::jthread([&outputRingBuffer]() {
@@ -86,8 +65,7 @@ TEST_CASE("ProviderThread | readFromFIFOBuffer")
 
 TEST_CASE("ProviderThread | readFromFIFOBuffer timeout")
 {
-    ConfigurationData remoteConfigurationData;
-    ConfigurationData localConfigurationData;
+
     AudioBufferFIFO outputRingBuffer(2, 20);
 
     ProviderThread providerThread(remoteConfigurationData,
@@ -99,11 +77,6 @@ TEST_CASE("ProviderThread | readFromFIFOBuffer timeout")
 
 TEST_CASE("ProviderThread | sendAudioToRemoteConsumer")
 {
-    ConfigurationData remoteConfigurationData;
-    remoteConfigurationData.set_consumer_port(5001);
-    remoteConfigurationData.set_ip("127.0.0.1");
-    ConfigurationData localConfigurationData;
-    localConfigurationData.set_provider_port(5000);
     AudioBufferFIFO outputRingBuffer(2, 20);
 
 

@@ -9,4 +9,5 @@ message ConfigurationData {
     string ip = 1;
     int32 provider_port = 2;
     int32 consumer_port = 3;
+    int32 host_port = 4;
 }

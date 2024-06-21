@@ -2,57 +2,36 @@
 #include "ConsumerThread.h"
 #include "ProviderThread.h"
 #include "datagram.pb.h"
+#include "sharedValues.h"
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 #include <juce_core/juce_core.h>
 #include <thread>
-void fillBuffer(juce::AudioBuffer<float> &buffer, float value)
-{
-    for (int i = 0; i < buffer.getNumSamples(); i++)
-    {
-        for (int channel = 0; channel < buffer.getNumChannels(); channel++)
-        {
-            buffer.setSample(channel, i, value);
-        }
-    }
-}
-void printBuffer(auto &buffer)
-{
-    for (int channel = 0; channel < buffer.getNumChannels(); channel++)
-    {
-        std::cout << "Channel " << channel << ": ";
-        for (int i = 0; i < buffer.getNumSamples(); i++)
-        {
-            std::cout << buffer.getSample(channel, i) << " ";
-        }
-        std::cout << std::endl;
-    }
-}
+
+ConfigurationData localConfigurationData =
+    setConfigurationData("127.0.0.1", 5000, 5001, 5002);
+
+ConfigurationData remoteConfigurationData =
+    setConfigurationData("127.0.0.1", 6000, 6001, 6002);
+
 
 TEST_CASE("Provider & Consumer Thread | send and receive audio buffer")
 {
+    ConfigurationData providerConfigurationData = localConfigurationData;
+    ConfigurationData consumerConfigurationData = remoteConfigurationData;
+
     juce::AudioBuffer<float> tempBuffer(2, 20);
     fillBuffer(tempBuffer, 0.5);
 
-    ConfigurationData providerConfigurationData;
-    providerConfigurationData.set_provider_port(8001);
-    providerConfigurationData.set_consumer_port(8002);
-    providerConfigurationData.set_ip("127.0.0.1");
     AudioBufferFIFO outputRingBuffer(2, 80);
     outputRingBuffer.writeToInternalBufferFrom(tempBuffer);
 
 
-    ConfigurationData consumerConfigurationData;
-    consumerConfigurationData.set_provider_port(8003);
-    consumerConfigurationData.set_consumer_port(8004);
-    consumerConfigurationData.set_ip("127.0.0.1");
     AudioBufferFIFO inputRingBuffer(2, 80);
-
 
     ProviderThread providerThread(consumerConfigurationData,
                                   providerConfigurationData,
                                   outputRingBuffer);
-
 
     ConsumerThread consumerThread(providerConfigurationData,
                                   consumerConfigurationData,

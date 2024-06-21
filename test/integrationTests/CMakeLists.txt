@@ -1,7 +1,7 @@
 include(Catch)
 
 set(TEST_NAME "IntegrationTests")
-set(TESTS_SOURCES integrationTest_Provider_Consumer.cpp)
+set(TESTS_SOURCES integrationTest_ConnectionManagerThread.cpp)
 set(TEST_INCLUDES "./")
 
 add_executable(${TEST_NAME} ${TESTS_SOURCES})
@@ -13,7 +13,9 @@ target_link_libraries(${TEST_NAME} PUBLIC
     "Host"
     "ProviderThread"
     "ConsumerThread"
+    "ConnectionManagerThread"
     "protobufGenerated"
+    "SharedValuesForTests"
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags

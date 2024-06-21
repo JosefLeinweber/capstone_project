@@ -8,6 +8,7 @@ TcpHost::TcpHost(boost::asio::io_context &ioContext, unsigned short port)
           ioContext,
           boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port))
 {
+    std::cout << "TcpHost created" << std::endl;
 }
 
 TcpHost::~TcpHost()
@@ -46,7 +47,9 @@ void TcpHost::asyncWaitForConnection(
     timer->async_wait([this, timer](const boost::system::error_code &error) {
         if (!error)
         {
-            std::cout << "Timer expired" << std::endl;
+            std::cout
+                << "TcpHost | asyncWaitForConnection timeout, timer expiered"
+                << std::endl;
             m_acceptor.cancel();
         }
     });

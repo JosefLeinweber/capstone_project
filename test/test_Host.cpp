@@ -1,18 +1,8 @@
 #include "Host.h"
+#include "sharedValues.h"
 #include <boost/asio.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <thread>
-
-void fillBuffer(juce::AudioBuffer<float> &buffer, float value)
-{
-    for (int i = 0; i < buffer.getNumSamples(); i++)
-    {
-        for (int channel = 0; channel < buffer.getNumChannels(); channel++)
-        {
-            buffer.setSample(channel, i, value);
-        }
-    }
-}
 
 TEST_CASE("Host | Constructor")
 {

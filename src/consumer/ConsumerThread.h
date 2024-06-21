@@ -20,7 +20,8 @@ public:
 
     void run() override;
 
-    void setupHost();
+    void setupHost(
+        std::chrono::milliseconds timeout = std::chrono::milliseconds(500));
 
     bool receiveAudioFromRemoteProvider();
 

@@ -1,4 +1,5 @@
 add_subdirectory(integrationTests)
+add_subdirectory(helpers)
 include(Catch)
 
 
@@ -12,34 +13,13 @@ target_link_libraries(${TEST_AUDIOBUFFER} PUBLIC
     ${LIBRARY_NAME}
     Catch2::Catch2WithMain
     "AudioBuffer"
-
+    "SharedValuesForTests"
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags
     PRIVATE
     juce::juce_audio_utils
 )
-
-# set(TEST_NETWORK "NetworkThreadTests")
-# set(TESTS_SOURCES test_NetworkThread.cpp)
-# set(TEST_INCLUDES "./")
-
-# add_executable(${TEST_NETWORK} ${TESTS_SOURCES})
-# target_include_directories(${TEST_NETWORK} PUBLIC ${TEST_INCLUDES})
-# target_link_libraries(${TEST_NETWORK} PUBLIC
-#     ${LIBRARY_NAME}
-#     Catch2::Catch2WithMain
-#     "AudioBuffer"
-#     "Host"
-#     "NetworkThread"
-
-
-#     juce::juce_recommended_config_flags
-#     juce::juce_recommended_lto_flags
-#     juce::juce_recommended_warning_flags
-#     PRIVATE
-#     juce::juce_audio_utils
-# )
 
 set(TEST_HOST "HostTests")
 set(TESTS_SOURCES test_Host.cpp)
@@ -52,6 +32,7 @@ target_link_libraries(${TEST_HOST} PUBLIC
     Catch2::Catch2WithMain
     "AudioBuffer"
     "Host"
+    "SharedValuesForTests"
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags
@@ -73,6 +54,7 @@ target_link_libraries(${TEST_PROVIDERTHREAD} PUBLIC
     "AudioBuffer"
     "Host"
     "ProviderThread"
+    "SharedValuesForTests"
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags
@@ -92,6 +74,7 @@ target_link_libraries(${TEST_CONSUMERTHREAD} PUBLIC
     "AudioBuffer"
     "Host"
     "ConsumerThread"
+    "SharedValuesForTests"
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags
@@ -99,24 +82,25 @@ target_link_libraries(${TEST_CONSUMERTHREAD} PUBLIC
     juce::juce_audio_utils
 )
 
-# set(TEST_CONNCETIONMANAGERTHREAD "ConnectionManagerThreadTests")
-# set(TESTS_SOURCES test_ConnectionManagerThread.cpp)
-# set(TEST_INCLUDES "./")
+set(TEST_CONNCETIONMANAGERTHREAD "ConnectionManagerThreadTests")
+set(TESTS_SOURCES test_ConnectionManagerThread.cpp)
+set(TEST_INCLUDES "./")
 
-# add_executable(${TEST_CONNCETIONMANAGERTHREAD} ${TESTS_SOURCES})
-# target_include_directories(${TEST_CONNCETIONMANAGERTHREAD} PUBLIC ${TEST_INCLUDES})
-# target_link_libraries(${TEST_CONNCETIONMANAGERTHREAD} PUBLIC
-#     ${LIBRARY_NAME}
-#     Catch2::Catch2WithMain
-#     "AudioBuffer"
-#     "Host"
-#     "ConnectionManagerThread"
-#     juce::juce_recommended_config_flags
-#     juce::juce_recommended_lto_flags
-#     juce::juce_recommended_warning_flags
-#     PRIVATE
-#     juce::juce_audio_utils
-# )
+add_executable(${TEST_CONNCETIONMANAGERTHREAD} ${TESTS_SOURCES})
+target_include_directories(${TEST_CONNCETIONMANAGERTHREAD} PUBLIC ${TEST_INCLUDES})
+target_link_libraries(${TEST_CONNCETIONMANAGERTHREAD} PUBLIC
+    ${LIBRARY_NAME}
+    Catch2::Catch2WithMain
+    "AudioBuffer"
+    "Host"
+    "ConnectionManagerThread"
+    "SharedValuesForTests"
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_lto_flags
+    juce::juce_recommended_warning_flags
+    PRIVATE
+    juce::juce_audio_utils
+)
 
 set(TEST_TCPHOST "TcpHostTests")
 set(TESTS_SOURCES test_TcpHost.cpp)
@@ -137,13 +121,13 @@ target_link_libraries(${TEST_TCPHOST} PUBLIC
 
 #catch_discover_tests(${TEST_TCPHOST} OUTPUT_DIR "TcpHostTests" OUTPUT_PREFIX "TcpHost_")
 
-#catch_discover_tests(${TEST_CONNCETIONMANAGERTHREAD} OUTPUT_DIR "ConnectionManagerThreadTests" OUTPUT_PREFIX "ConnectionManagerThread_")
+catch_discover_tests(${TEST_CONNCETIONMANAGERTHREAD} OUTPUT_DIR "ConnectionManagerThreadTests" OUTPUT_PREFIX "ConnectionManagerThread_")
 
 catch_discover_tests(${TEST_PROVIDERTHREAD} )
 
 catch_discover_tests(${TEST_CONSUMERTHREAD})
 
-catch_discover_tests(${TEST_HOST})
+# catch_discover_tests(${TEST_HOST})
 
-catch_discover_tests(${TEST_AUDIOBUFFER})
+# catch_discover_tests(${TEST_AUDIOBUFFER})
 

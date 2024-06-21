@@ -1,30 +1,6 @@
 #include "AudioBuffer.h"
+#include "sharedValues.h"
 #include <catch2/catch_test_macros.hpp>
-
-void fillBuffer(juce::AudioBuffer<float> &buffer, float value)
-{
-    for (int i = 0; i < buffer.getNumSamples(); i++)
-    {
-        for (int channel = 0; channel < buffer.getNumChannels(); channel++)
-        {
-            buffer.setSample(channel, i, value);
-        }
-    }
-}
-
-void printBuffer(auto &buffer)
-{
-    for (int channel = 0; channel < buffer.getNumChannels(); channel++)
-    {
-        std::cout << "Channel " << channel << ": ";
-        for (int i = 0; i < buffer.getNumSamples(); i++)
-        {
-            std::cout << buffer.getSample(channel, i) << " ";
-        }
-        std::cout << std::endl;
-    }
-}
-
 
 TEST_CASE("AudioBufferFIFO | Constructor")
 {

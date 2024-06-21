@@ -3,9 +3,18 @@
 #include "ConsumerThread.h"
 #include "ProviderThread.h"
 #include "TcpHost.h"
+#include "datagram.pb.h"
+#include "sharedValues.h"
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 #include <thread>
+
+
+ConfigurationData localConfigurationData =
+    setConfigurationData("127.0.0.1", 5000, 5001, 5002);
+
+ConfigurationData remoteConfigurationData =
+    setConfigurationData("127.0.0.1", 6000, 6001, 6002);
 
 
 AudioBufferFIFO inputRingBuffer(2, 1024);
@@ -14,13 +23,19 @@ AudioBufferFIFO outputRingBuffer(2, 1024);
 AudioBufferFIFO remoteInputRingBuffer(2, 1024);
 AudioBufferFIFO remoteOutputRingBuffer(2, 1024);
 
+std::atomic<bool> startConnection = false;
+std::atomic<bool> stopConnection = false;
+
 TEST_CASE("ConnectionManagerThread | Constructor")
 {
     bool success = false;
     try
     {
-        ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                        outputRingBuffer);
+        ConnectionManagerThread connectionManagerThread(localConfigurationData,
+                                                        inputRingBuffer,
+                                                        outputRingBuffer,
+                                                        startConnection,
+                                                        stopConnection);
         success = true;
     }
     catch (...)
@@ -34,35 +49,42 @@ TEST_CASE("ConnectionManagerThread | Constructor")
 TEST_CASE("ConnectionManagerThread | setupHost")
 {
     // GIVEN: a ConnectionManagerThread
-    ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                    outputRingBuffer);
+    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+                                                    inputRingBuffer,
+                                                    outputRingBuffer,
+                                                    startConnection,
+                                                    stopConnection);
     // WHEN: setupHost is called
     // THEN: no exception should be thrown
-    REQUIRE_NOTHROW(
-        connectionManagerThread.setupHost(addressDataCollection.hostAddress));
+    REQUIRE_NOTHROW(connectionManagerThread.setupHost());
 }
 
 TEST_CASE("ConnectionManagerThread | asyncWaitForConnection successfull")
 {
     std::atomic<bool> connectionEstablished = false;
+    REQUIRE_FALSE(startConnection);
+    REQUIRE_FALSE(stopConnection);
     //GIVEN: a ConnectionManagerThread which is waiting for a connection
     auto waitingThread = std::jthread([&]() {
-        ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                        outputRingBuffer);
-        connectionManagerThread.setupHost(addressDataCollection.hostAddress);
+        ConnectionManagerThread connectionManagerThread(localConfigurationData,
+                                                        inputRingBuffer,
+                                                        outputRingBuffer,
+                                                        startConnection,
+                                                        stopConnection);
+        connectionManagerThread.setupHost();
         connectionManagerThread.asyncWaitForConnection();
-        connectionManagerThread.m_ioContext.run();
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
         connectionEstablished = connectionManagerThread.incomingConnection();
+        std::cout << "waitingThread finishes" << std::endl;
     });
     //WHEN: a remote host tries to connect
     auto connectionInitializerThread = std::jthread([]() {
         boost::asio::io_context ioContext;
-        TcpHost host(ioContext,
-                     remoteAddressDataCollection.providerAddress.port);
+        TcpHost host(ioContext, remoteConfigurationData.host_port());
         host.setupSocket();
         // Send handshake before the consumer thread waits for it
-        host.initializeConnection(addressDataCollection.hostAddress.ip,
-                                  addressDataCollection.hostAddress.port);
+        host.initializeConnection(localConfigurationData.ip(),
+                                  localConfigurationData.host_port());
         std::cout << "connectionInitializerThread finishes" << std::endl;
     });
 
@@ -75,15 +97,18 @@ TEST_CASE("ConnectionManagerThread | asyncWaitForConnection unsuccessfull")
 {
     std::atomic<bool> connectionEstablished = true;
     auto waitingThread = std::jthread([&]() {
-        ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                        outputRingBuffer);
-        connectionManagerThread.setupHost(addressDataCollection.hostAddress);
+        ConnectionManagerThread connectionManagerThread(localConfigurationData,
+                                                        inputRingBuffer,
+                                                        outputRingBuffer,
+                                                        startConnection,
+                                                        stopConnection);
+        connectionManagerThread.setupHost();
         connectionManagerThread.asyncWaitForConnection(
             std::chrono::milliseconds(5));
-        connectionManagerThread.m_ioContext.run();
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
         connectionEstablished = connectionManagerThread.incomingConnection();
     });
-
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     waitingThread.join();
     REQUIRE_FALSE(connectionEstablished);
 }
@@ -92,21 +117,26 @@ TEST_CASE("ConnectionManagerThread | initializeConnection successfull")
 {
     //GIVEN: a remote host waits for a connection
     auto connectionInitializerThread = std::jthread([]() {
-        ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                        outputRingBuffer);
-        connectionManagerThread.setupHost(
-            remoteAddressDataCollection.providerAddress);
+        ConnectionManagerThread connectionManagerThread(remoteConfigurationData,
+                                                        inputRingBuffer,
+                                                        outputRingBuffer,
+                                                        startConnection,
+                                                        stopConnection);
+        connectionManagerThread.setupHost();
         connectionManagerThread.asyncWaitForConnection();
         connectionManagerThread.m_ioContext.run();
     });
 
     //WHEN: a ConnectionManagerThread tries to connect to the remote host
-    ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                    outputRingBuffer);
-    connectionManagerThread.setupHost(addressDataCollection.hostAddress);
+    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+                                                    inputRingBuffer,
+                                                    outputRingBuffer,
+                                                    startConnection,
+                                                    stopConnection);
+    connectionManagerThread.setupHost();
     //THEN: no exception should be thrown
-    REQUIRE_NOTHROW(connectionManagerThread.initializeConnection(
-        remoteAddressDataCollection.providerAddress));
+    REQUIRE_NOTHROW(
+        connectionManagerThread.initializeConnection(remoteConfigurationData));
     connectionInitializerThread.join();
 }
 
@@ -115,14 +145,16 @@ TEST_CASE("ConnectionManagerThread | initializeConnection unsuccessfully")
     //GIVEN: the remote host is not waiting for a connection
 
     //WHEN: a ConnectionManagerThread tries to connect to the remote host
-    ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                    outputRingBuffer);
-    connectionManagerThread.setupHost(addressDataCollection.hostAddress);
+    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+                                                    inputRingBuffer,
+                                                    outputRingBuffer,
+                                                    startConnection,
+                                                    stopConnection);
+    connectionManagerThread.setupHost();
     //THEN: exception should be thrown
     try
     {
-        connectionManagerThread.initializeConnection(
-            remoteAddressDataCollection.providerAddress);
+        connectionManagerThread.initializeConnection(remoteConfigurationData);
     }
     catch (std::exception &e)
     {
@@ -137,30 +169,25 @@ TEST_CASE("ConnectionManagerThread | receiveConfigurationData successfull")
     std::atomic<bool> configurationDataReceived = false;
     //GIVEN: a ConnectionManagerThread which is connected to a remote host and waits for a configuration data
     auto connectionInitializerThread = std::jthread([]() {
-        ConfigurationData configurationData;
-        configurationData.set_ip(
-            remoteAddressDataCollection.providerAddress.ip);
-        configurationData.set_provider_port(
-            remoteAddressDataCollection.providerAddress.port);
-        configurationData.set_consumer_port(
-            remoteAddressDataCollection.consumerAddress.port);
         boost::asio::io_context ioContext;
-        TcpHost host(ioContext,
-                     remoteAddressDataCollection.providerAddress.port);
+        TcpHost host(ioContext, remoteConfigurationData.host_port());
         host.setupSocket();
         // Send handshake before the consumer thread waits for it
-        host.initializeConnection(addressDataCollection.hostAddress.ip,
-                                  addressDataCollection.hostAddress.port);
+        host.initializeConnection(localConfigurationData.ip(),
+                                  localConfigurationData.host_port());
         std::string serializedData =
-            host.serializeConfigurationData(configurationData);
+            host.serializeConfigurationData(remoteConfigurationData);
         host.send(serializedData);
         std::cout << "connectionInitializerThread finishes" << std::endl;
     });
 
 
-    ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                    outputRingBuffer);
-    connectionManagerThread.setupHost(addressDataCollection.hostAddress);
+    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+                                                    inputRingBuffer,
+                                                    outputRingBuffer,
+                                                    startConnection,
+                                                    stopConnection);
+    connectionManagerThread.setupHost();
     connectionManagerThread.asyncWaitForConnection();
     connectionManagerThread.m_ioContext.run();
 
@@ -168,20 +195,16 @@ TEST_CASE("ConnectionManagerThread | receiveConfigurationData successfull")
     configurationDataReceived =
         connectionManagerThread.receiveConfigurationData();
 
-    std::cout << "Provider IP: "
-              << connectionManagerThread.getConfigurationData().ip()
-              << " Provider Port: "
-              << connectionManagerThread.getConfigurationData().provider_port()
-              << std::endl;
-
     // THEN: the configuration data should be received successfully and the data should be correct
     REQUIRE(configurationDataReceived);
-    REQUIRE(connectionManagerThread.getConfigurationData().ip() ==
-            remoteAddressDataCollection.providerAddress.ip);
-    REQUIRE(connectionManagerThread.getConfigurationData().provider_port() ==
-            remoteAddressDataCollection.providerAddress.port);
-    REQUIRE(connectionManagerThread.getConfigurationData().consumer_port() ==
-            remoteAddressDataCollection.consumerAddress.port);
+    REQUIRE(connectionManagerThread.getRemoteConfigurationData().ip() ==
+            remoteConfigurationData.ip());
+    REQUIRE(
+        connectionManagerThread.getRemoteConfigurationData().provider_port() ==
+        remoteConfigurationData.provider_port());
+    REQUIRE(
+        connectionManagerThread.getRemoteConfigurationData().consumer_port() ==
+        remoteConfigurationData.consumer_port());
 
     connectionInitializerThread.join();
 }
@@ -191,10 +214,13 @@ TEST_CASE("ConnectionManagerThread | receiveConfigurationData unsuccessfull")
     //GIVEN: a ConnectionManagerThread which is not connected to a remote host
     std::atomic<bool> configurationDataReceived = true;
 
-    ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                    outputRingBuffer);
+    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+                                                    inputRingBuffer,
+                                                    outputRingBuffer,
+                                                    startConnection,
+                                                    stopConnection);
 
-    connectionManagerThread.setupHost(addressDataCollection.hostAddress);
+    connectionManagerThread.setupHost();
     //WHEN: the ConnectionManagerThread tries to receive configuration data
     configurationDataReceived =
         connectionManagerThread.receiveConfigurationData();
@@ -208,9 +234,12 @@ TEST_CASE("ConnectionManagerThread | receiveConfigurationData receiver is "
     std::atomic<bool> configurationDataReceived = false;
     //GIVEN: a ConnectionManagerThread which is connected to a remote host and waits
     auto waitingThread = std::jthread([&]() {
-        ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                        outputRingBuffer);
-        connectionManagerThread.setupHost(addressDataCollection.hostAddress);
+        ConnectionManagerThread connectionManagerThread(localConfigurationData,
+                                                        inputRingBuffer,
+                                                        outputRingBuffer,
+                                                        startConnection,
+                                                        stopConnection);
+        connectionManagerThread.setupHost();
         connectionManagerThread.asyncWaitForConnection();
         connectionManagerThread.m_ioContext.run();
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -219,21 +248,13 @@ TEST_CASE("ConnectionManagerThread | receiveConfigurationData receiver is "
     });
     //WHEN: a remote host tries to connect
     auto connectionInitializerThread = std::jthread([]() {
-        ConfigurationData configurationData;
-        configurationData.set_ip(
-            remoteAddressDataCollection.providerAddress.ip);
-        configurationData.set_provider_port(
-            remoteAddressDataCollection.providerAddress.port);
-        configurationData.set_consumer_port(
-            remoteAddressDataCollection.consumerAddress.port);
         boost::asio::io_context ioContext;
-        TcpHost host(ioContext,
-                     remoteAddressDataCollection.providerAddress.port);
+        TcpHost host(ioContext, remoteConfigurationData.host_port());
         host.setupSocket();
-        host.initializeConnection(addressDataCollection.hostAddress.ip,
-                                  addressDataCollection.hostAddress.port);
+        host.initializeConnection(localConfigurationData.ip(),
+                                  localConfigurationData.host_port());
         std::string serializedData =
-            host.serializeConfigurationData(configurationData);
+            host.serializeConfigurationData(remoteConfigurationData);
         host.send(serializedData);
 
         std::cout << "connectionInitializerThread finishes" << std::endl;
@@ -250,28 +271,25 @@ TEST_CASE("ConnectionManagerThread | sendConfigurationData successfull")
     std::atomic<bool> configurationDataSent = false;
     //GIVEN: a ConnectionManagerThread which is connected to a remote host
     auto remoteThread = std::jthread([&]() {
-        ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                        outputRingBuffer);
-        connectionManagerThread.setupHost(addressDataCollection.hostAddress);
+        ConnectionManagerThread connectionManagerThread(remoteConfigurationData,
+                                                        inputRingBuffer,
+                                                        outputRingBuffer,
+                                                        startConnection,
+                                                        stopConnection);
+        connectionManagerThread.setupHost();
         connectionManagerThread.asyncWaitForConnection(
             std::chrono::milliseconds(1000));
         connectionManagerThread.m_ioContext.run();
-        ConfigurationData configurationData;
-        configurationData.set_ip(
-            remoteAddressDataCollection.providerAddress.ip);
-        configurationData.set_provider_port(
-            remoteAddressDataCollection.providerAddress.port);
-        configurationData.set_consumer_port(
-            remoteAddressDataCollection.consumerAddress.port);
+
         //WHEN: the ConnectionManagerThread sends configuration data
-        configurationDataSent =
-            connectionManagerThread.sendConfigurationData(configurationData);
+        configurationDataSent = connectionManagerThread.sendConfigurationData(
+            remoteConfigurationData);
     });
     boost::asio::io_context ioContext;
-    TcpHost host(ioContext, remoteAddressDataCollection.providerAddress.port);
+    TcpHost host(ioContext, localConfigurationData.host_port());
     host.setupSocket();
-    host.initializeConnection(addressDataCollection.hostAddress.ip,
-                              addressDataCollection.hostAddress.port);
+    host.initializeConnection(remoteConfigurationData.ip(),
+                              remoteConfigurationData.host_port());
     std::string msg = host.receiveConfiguration();
     ConfigurationData receivedConfigurationData;
     receivedConfigurationData = host.deserializeConfigurationData(msg);
@@ -284,31 +302,27 @@ TEST_CASE("ConnectionManagerThread | sendConfigurationData successfull")
               << std::endl;
 
     REQUIRE(configurationDataSent);
-    REQUIRE(receivedConfigurationData.ip() ==
-            remoteAddressDataCollection.providerAddress.ip);
+    REQUIRE(receivedConfigurationData.ip() == remoteConfigurationData.ip());
     REQUIRE(receivedConfigurationData.provider_port() ==
-            remoteAddressDataCollection.providerAddress.port);
+            remoteConfigurationData.provider_port());
     REQUIRE(receivedConfigurationData.consumer_port() ==
-            remoteAddressDataCollection.consumerAddress.port);
+            remoteConfigurationData.consumer_port());
 }
 
-TEST_CASE(
-    "ConnectionManagerThread | sendConfigurationData to a not connected remote")
+TEST_CASE("ConnectionManagerThread | sendConfigurationData to a not "
+          "connected remote")
 {
     //GIVEN: a ConnectionManagerThread which is not connected to a remote host
     std::atomic<bool> configurationDataSent = true;
-    ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                    outputRingBuffer);
-    connectionManagerThread.setupHost(addressDataCollection.hostAddress);
-    ConfigurationData configurationData;
-    configurationData.set_ip(remoteAddressDataCollection.providerAddress.ip);
-    configurationData.set_provider_port(
-        remoteAddressDataCollection.providerAddress.port);
-    configurationData.set_consumer_port(
-        remoteAddressDataCollection.consumerAddress.port);
+    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+                                                    inputRingBuffer,
+                                                    outputRingBuffer,
+                                                    startConnection,
+                                                    stopConnection);
+    connectionManagerThread.setupHost();
     //WHEN: the ConnectionManagerThread tries to send configuration data
     configurationDataSent =
-        connectionManagerThread.sendConfigurationData(configurationData);
+        connectionManagerThread.sendConfigurationData(localConfigurationData);
     //THEN: the configuration data should not be sent
     REQUIRE_FALSE(configurationDataSent);
 }
@@ -318,28 +332,25 @@ TEST_CASE("ConnectionManagerThread | sendConfiguration and "
 {
     //GIVEN: a ConnectionManagerThread which is connected to a remote host
     auto sendingThread = std::jthread([]() {
-        ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                        outputRingBuffer);
-        connectionManagerThread.setupHost(
-            remoteAddressDataCollection.providerAddress);
+        ConnectionManagerThread connectionManagerThread(remoteConfigurationData,
+                                                        inputRingBuffer,
+                                                        outputRingBuffer,
+                                                        startConnection,
+                                                        stopConnection);
+        connectionManagerThread.setupHost();
         connectionManagerThread.asyncWaitForConnection(
             std::chrono::milliseconds(1000));
         connectionManagerThread.m_ioContext.run();
-        ConfigurationData configurationData;
-        configurationData.set_ip(
-            remoteAddressDataCollection.providerAddress.ip);
-        configurationData.set_provider_port(
-            remoteAddressDataCollection.providerAddress.port);
-        configurationData.set_consumer_port(
-            remoteAddressDataCollection.consumerAddress.port);
-        connectionManagerThread.sendConfigurationData(configurationData);
+        connectionManagerThread.sendConfigurationData(remoteConfigurationData);
     });
 
-    ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                    outputRingBuffer);
-    connectionManagerThread.setupHost(addressDataCollection.hostAddress);
-    connectionManagerThread.initializeConnection(
-        remoteAddressDataCollection.providerAddress);
+    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+                                                    inputRingBuffer,
+                                                    outputRingBuffer,
+                                                    startConnection,
+                                                    stopConnection);
+    connectionManagerThread.setupHost();
+    connectionManagerThread.initializeConnection(remoteConfigurationData);
 
     //WHEN: the ConnectionManagerThread tries to receive configuration data
     bool received = connectionManagerThread.receiveConfigurationData();
@@ -348,22 +359,16 @@ TEST_CASE("ConnectionManagerThread | sendConfiguration and "
     REQUIRE(received);
 
     ConfigurationData receivedConfigurationData =
-        connectionManagerThread.getConfigurationData();
+        connectionManagerThread.getRemoteConfigurationData();
 
-    std::cout << "Provider IP: "
-              << connectionManagerThread.getConfigurationData().ip()
-              << " Provider Port: "
-              << connectionManagerThread.getConfigurationData().provider_port()
+    std::cout << "Provider IP: " << receivedConfigurationData.ip()
+              << " Provider Port: " << receivedConfigurationData.provider_port()
               << std::endl;
-    REQUIRE(connectionManagerThread.getConfigurationData().ip() ==
-
-            remoteAddressDataCollection.providerAddress.ip);
-    REQUIRE(connectionManagerThread.getConfigurationData().provider_port() ==
-
-            remoteAddressDataCollection.providerAddress.port);
-    REQUIRE(connectionManagerThread.getConfigurationData().consumer_port() ==
-
-            remoteAddressDataCollection.consumerAddress.port);
+    REQUIRE(receivedConfigurationData.ip() == remoteConfigurationData.ip());
+    REQUIRE(receivedConfigurationData.provider_port() ==
+            remoteConfigurationData.provider_port());
+    REQUIRE(receivedConfigurationData.consumer_port() ==
+            remoteConfigurationData.consumer_port());
     sendingThread.join();
 }
 
@@ -372,47 +377,43 @@ TEST_CASE("ConnectionManagerThread  | exchangeConfigurationDataWithRemote "
 {
     //GIVEN: a ConnectionManagerThread which is connected to a remote host
     auto remoteThread = std::jthread([]() {
-        ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                        outputRingBuffer);
-        connectionManagerThread.setupHost(
-            remoteAddressDataCollection.providerAddress);
-        connectionManagerThread.asyncWaitForConnection();
+        ConnectionManagerThread connectionManagerThread(remoteConfigurationData,
+                                                        inputRingBuffer,
+                                                        outputRingBuffer,
+                                                        startConnection,
+                                                        stopConnection);
+        connectionManagerThread.setupHost();
+        connectionManagerThread.asyncWaitForConnection(
+            std::chrono::milliseconds(1000));
         connectionManagerThread.m_ioContext.run();
-        ConfigurationData configurationData;
-        configurationData.set_ip(
-            remoteAddressDataCollection.providerAddress.ip);
-        configurationData.set_provider_port(
-            remoteAddressDataCollection.providerAddress.port);
-        configurationData.set_consumer_port(
-            remoteAddressDataCollection.consumerAddress.port);
         connectionManagerThread.exchangeConfigurationDataWithRemote(
-            configurationData);
+            remoteConfigurationData);
     });
 
-    ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                    outputRingBuffer);
-    connectionManagerThread.setupHost(addressDataCollection.hostAddress);
-    connectionManagerThread.initializeConnection(
-        remoteAddressDataCollection.providerAddress);
-    ConfigurationData configurationData;
-    configurationData.set_ip(remoteAddressDataCollection.providerAddress.ip);
-    configurationData.set_provider_port(
-        remoteAddressDataCollection.providerAddress.port);
-    configurationData.set_consumer_port(
-        remoteAddressDataCollection.consumerAddress.port);
-    //WHEN: the ConnectionManagerThread calls exchangeConfigurationDataWithRemote
-    //THEN: the configuration data should be exchanged successfully
-    bool success;
-    REQUIRE_NOTHROW(
-        success = connectionManagerThread.exchangeConfigurationDataWithRemote(
-            configurationData));
-    REQUIRE(success);
-    REQUIRE(connectionManagerThread.getConfigurationData().ip() ==
-            remoteAddressDataCollection.providerAddress.ip);
-    REQUIRE(connectionManagerThread.getConfigurationData().provider_port() ==
-            remoteAddressDataCollection.providerAddress.port);
-    REQUIRE(connectionManagerThread.getConfigurationData().consumer_port() ==
-            remoteAddressDataCollection.consumerAddress.port);
+    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+                                                    inputRingBuffer,
+                                                    outputRingBuffer,
+                                                    startConnection,
+                                                    stopConnection);
+    connectionManagerThread.setupHost();
+    connectionManagerThread.initializeConnection(remoteConfigurationData);
+
+    //WHEN: the ConnectionManagerThread tries to receive configuration data
+    REQUIRE_NOTHROW(connectionManagerThread.exchangeConfigurationDataWithRemote(
+        localConfigurationData));
+
+    //THEN: the configuration data should be received successfully and the data should be correct
+    ConfigurationData receivedConfigurationData =
+        connectionManagerThread.getRemoteConfigurationData();
+
+    std::cout << "Provider IP: " << receivedConfigurationData.ip()
+              << " Provider Port: " << receivedConfigurationData.provider_port()
+              << std::endl;
+    REQUIRE(receivedConfigurationData.ip() == remoteConfigurationData.ip());
+    REQUIRE(receivedConfigurationData.provider_port() ==
+            remoteConfigurationData.provider_port());
+    REQUIRE(receivedConfigurationData.consumer_port() ==
+            remoteConfigurationData.consumer_port());
     remoteThread.join();
 }
 
@@ -420,15 +421,13 @@ TEST_CASE("ConnectionManagerThread | exchangeConfigurationDataWithRemote "
           "unsuccessfull")
 {
     //GIVEN: a ConnectionManagerThread which is not connected to a remote host
-    ConnectionManagerThread connectionManagerThread(inputRingBuffer,
-                                                    outputRingBuffer);
-    connectionManagerThread.setupHost(addressDataCollection.hostAddress);
-    ConfigurationData configurationData;
-    configurationData.set_ip(remoteAddressDataCollection.providerAddress.ip);
-    configurationData.set_provider_port(
-        remoteAddressDataCollection.providerAddress.port);
-    configurationData.set_consumer_port(
-        remoteAddressDataCollection.consumerAddress.port);
+    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+                                                    inputRingBuffer,
+                                                    outputRingBuffer,
+                                                    startConnection,
+                                                    stopConnection);
+    connectionManagerThread.setupHost();
+
     //WHEN: the ConnectionManagerThread calls exchangeConfigurationDataWithRemote
     //THEN: the configuration data should not be exchanged
     bool success = true;
@@ -436,15 +435,49 @@ TEST_CASE("ConnectionManagerThread | exchangeConfigurationDataWithRemote "
     {
 
         success = connectionManagerThread.exchangeConfigurationDataWithRemote(
-            configurationData);
+            localConfigurationData);
     }
     catch (std::exception &e)
     {
         std::cout << "Exception caught: " << e.what() << std::endl;
         REQUIRE(true);
-        REQUIRE_FALSE(success);
     }
+    REQUIRE_FALSE(success);
 }
+
+
+TEST_CASE("ConnectionManagerThread | startUpProviderAndConsumerThreads "
+          "successfull start up of both threads")
+{
+
+    //GIVEN: a ConnectionManagerThread
+    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+                                                    inputRingBuffer,
+                                                    outputRingBuffer,
+                                                    startConnection,
+                                                    stopConnection);
+
+    bool success = false;
+    try
+    {
+        success = connectionManagerThread.startUpProviderAndConsumerThreads(
+            localConfigurationData,
+            remoteConfigurationData,
+            std::chrono::milliseconds(10));
+    }
+    catch (...)
+    {
+        FAIL("Exception thrown");
+    }
+    REQUIRE(success);
+}
+
+// TEST_CASE("ConnectionManagerThread | startUpProviderAndConsumerThreads send "
+//           "and receive audio then quit")
+// {
+
+
+// }
 
 
 // TEST_CASE("ConnectionManagerThread | startUpProviderAndConsumerThreads only "
@@ -487,7 +520,7 @@ TEST_CASE("ConnectionManagerThread | exchangeConfigurationDataWithRemote "
 //     auto startUpProviderAndConsumerThread = std::thread([]() {
 //         ConnectionManagerThread connectionManagerThread(inputRingBuffer,
 //                                                         outputRingBuffer);
-//         // connectionManagerThread.setupHost(addressDataCollection.hostAddress); //!! WHY DOES THIS CAUSE THE TEST TO FAIL???
+//         // connectionManagerThread.setupHost(); //!! WHY DOES THIS CAUSE THE TEST TO FAIL???
 //         connectionManagerThread.onlyStartConsumerThread(
 //             addressDataCollection.consumerAddress);
 //     });
@@ -522,7 +555,7 @@ TEST_CASE("ConnectionManagerThread | exchangeConfigurationDataWithRemote "
 //         bool success = false;
 //         ConnectionManagerThread connectionManagerThread(inputRingBuffer,
 //                                                         outputRingBuffer);
-//         // connectionManagerThread.setupHost(addressDataCollection.hostAddress);
+//         // connectionManagerThread.setupHost();
 //         success = connectionManagerThread.startUpProviderAndConsumerThreads(
 //             addressDataCollection.providerAddress,
 //             addressDataCollection.consumerAddress,

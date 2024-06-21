@@ -2,19 +2,6 @@
 #include <chrono>
 #include <iostream>
 
-void printBuffer(auto &buffer)
-{
-    for (int channel = 0; channel < buffer.getNumChannels(); channel++)
-    {
-        std::cout << "Channel " << channel << ": ";
-        for (int i = 0; i < buffer.getNumSamples(); i++)
-        {
-            std::cout << buffer.getSample(channel, i) << " ";
-        }
-        std::cout << std::endl;
-    }
-}
-
 
 Host::Host() {};
 
@@ -66,8 +53,7 @@ void Host::sendAudioBuffer(juce::AudioBuffer<float> buffer,
 
     try
     {
-        std::cout << "Sending data..." << std::endl;
-        printBuffer(buffer);
+
         std::size_t len = m_socket->send_to(boost::asio::buffer(data, length),
                                             remoteEndpoint,
                                             0,
@@ -106,8 +92,7 @@ bool Host::receiveAudioBuffer(juce::AudioBuffer<float> &buffer)
     if (!m_ignoredError && len > 0)
     {
         std::cout << "Received " << len << " bytes" << std::endl;
-        std::cout << "Received data..." << std::endl;
-        printBuffer(buffer);
+
         return true;
     }
     else
