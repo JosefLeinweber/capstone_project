@@ -23,7 +23,7 @@ LowpassHighpassFilterAudioProcessor::LowpassHighpassFilterAudioProcessor()
               .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
               ),
-      visualiser(2), audioBufferFIFO(2, 100000),
+      visualiser(2),
       parameters(*this,
                  nullptr,
                  juce::Identifier("LowpassAndHighpassPlugin"),
@@ -43,12 +43,26 @@ LowpassHighpassFilterAudioProcessor::LowpassHighpassFilterAudioProcessor()
     cutoffFrequencyParameter =
         parameters.getRawParameterValue("cutoff_frequency");
     highpassParameter = parameters.getRawParameterValue("highpass");
-
-    AudioBufferFIFO outaudioBufferFIFO(2, 100000);
+    inputBufferFIFO = std::make_shared<AudioBufferFIFO>(2, 100000);
+    outputBufferFIFO = std::make_shared<AudioBufferFIFO>(2, 100000);
+    ConfigurationData localConfigurationData;
+    localConfigurationData.set_ip("127.0.0.1");
+    localConfigurationData.set_host_port(8000);
+    localConfigurationData.set_consumer_port(8001);
+    localConfigurationData.set_provider_port(8002);
+    connectionManagerThread =
+        std::make_unique<ConnectionManagerThread>(localConfigurationData,
+                                                  *inputBufferFIFO,
+                                                  *outputBufferFIFO,
+                                                  startConnection,
+                                                  stopConnection);
+    connectionManagerThread->startThread();
 }
 
 LowpassHighpassFilterAudioProcessor::~LowpassHighpassFilterAudioProcessor()
 {
+    connectionManagerThread->signalThreadShouldExit();
+    connectionManagerThread->waitForThreadToExit(1000);
 }
 
 //==============================================================================
@@ -128,9 +142,8 @@ void LowpassHighpassFilterAudioProcessor::prepareToPlay(double sampleRate,
     // initialisation that you need..
     juce::ignoreUnused(samplesPerBlock);
     filter.setSamplingRate(static_cast<float>(sampleRate));
-    currentSampleRate = sampleRate;
-    auto cyclesPerSample = 150 / currentSampleRate; // [2]
-    angleDelta = cyclesPerSample * 2.0 * juce::MathConstants<double>::pi;
+
+    //TODO: make the init arguments dependent on plugin parameters
 }
 
 void LowpassHighpassFilterAudioProcessor::releaseResources()
@@ -170,6 +183,7 @@ void LowpassHighpassFilterAudioProcessor::processBlock(
     juce::AudioBuffer<float> &buffer,
     juce::MidiBuffer &midiMessages)
 {
+    juce::ignoreUnused(midiMessages);
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -183,28 +197,8 @@ void LowpassHighpassFilterAudioProcessor::processBlock(
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-
-    const auto cutoffFrequency = cutoffFrequencyParameter->load();
-    const auto highpass = *highpassParameter < 0.5f ? false : true;
-    filter.setCutoffFrequency(cutoffFrequency);
-    filter.setHighpass(highpass);
-    juce::ignoreUnused(midiMessages);
-
-    auto level = 0.125f;
-    auto *leftBuffer = buffer.getWritePointer(0);
-    auto *rightBuffer = buffer.getWritePointer(1);
-
-    for (auto sample = 0; sample < buffer.getNumSamples(); ++sample)
-    {
-        auto currentSample = (float)std::sin(currentAngle);
-        currentAngle += angleDelta;
-        leftBuffer[sample] = currentSample * level;
-        rightBuffer[sample] = currentSample * level;
-    }
-
     // filter.processBlock(buffer, midiMessages);
     visualiser.pushBuffer(buffer);
-    audioBufferFIFO.writeToInternalBufferFrom(buffer);
 }
 
 //==============================================================================
@@ -242,4 +236,19 @@ void LowpassHighpassFilterAudioProcessor::setStateInformation(const void *data,
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter()
 {
     return new LowpassHighpassFilterAudioProcessor();
+}
+
+
+void LowpassHighpassFilterAudioProcessor::sendNetworkDetails(
+    const juce::String &ip,
+    int port)
+{
+    std::cout << "Current Thread ID 1: " << std::this_thread::get_id()
+              << std::endl;
+    juce::MessageManager::callAsync([this, ip, port]() {
+        std::cout << "Current Thread ID 2: " << std::this_thread::get_id()
+                  << std::endl;
+        MyCustomMessage *message = new MyCustomMessage(ip, port);
+        connectionManagerThread->postMessage(message);
+    });
 }

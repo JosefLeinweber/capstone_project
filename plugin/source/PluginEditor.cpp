@@ -6,80 +6,84 @@
   ==============================================================================
 */
 
-#include "YourPluginName/PluginProcessor.h"
 #include "YourPluginName/PluginEditor.h"
-
-
+#include "YourPluginName/PluginProcessor.h"
 
 
 //==============================================================================
-LowpassHighpassFilterAudioProcessorEditor::LowpassHighpassFilterAudioProcessorEditor (LowpassHighpassFilterAudioProcessor& p, juce::AudioProcessorValueTreeState& vts)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+LowpassHighpassFilterAudioProcessorEditor::
+    LowpassHighpassFilterAudioProcessorEditor(
+        LowpassHighpassFilterAudioProcessor &p,
+        juce::AudioProcessorValueTreeState &vts)
+    : AudioProcessorEditor(&p), audioProcessor(p)
 {
     constexpr auto HEIGHT = 500;
     constexpr auto WIDTH = 500;
 
-    addAndMakeVisible(cutoffFrequencySlider);
-    cutoffFrequencySlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
-    cutoffFrequencyAttachment.reset(
-        new juce::AudioProcessorValueTreeState::SliderAttachment(
-            vts, "cutoff_frequency", cutoffFrequencySlider));
-    
-    addAndMakeVisible(cutoffFrequencyLabel);
-    cutoffFrequencyLabel.setText("RANDOM SHIT", juce::dontSendNotification);
+    // Set up IP text editor
+    ipLabel.attachToComponent(&ipEditor, true);
+    ipEditor.setMultiLine(false);
+    ipEditor.setTextToShowWhenEmpty("Enter IP address", juce::Colours::grey);
+    addAndMakeVisible(ipEditor);
 
-    addAndMakeVisible(highpassButton);
-    highpassAttachment.reset(
-        new juce::AudioProcessorValueTreeState::ButtonAttachment(
-            vts, "highpass", highpassButton));
+    // Set up Port text editor
+    portLabel.attachToComponent(&portEditor, true);
+    portEditor.setMultiLine(false);
+    portEditor.setInputFilter(
+        new juce::TextEditor::LengthAndCharacterRestriction(5, "0123456789"),
+        true);
+    portEditor.setTextToShowWhenEmpty("Enter Port", juce::Colours::grey);
+    addAndMakeVisible(portEditor);
 
-    addAndMakeVisible(highpassButtonLabel);
-    highpassButtonLabel.setText("Highpass", juce::dontSendNotification);
+    // Set up Submit button
+    sendButton.setButtonText("Connect");
+    sendButton.addListener(this);
+    addAndMakeVisible(sendButton);
 
-    addAndMakeVisible(networkButton);
-    networkAttachment.reset(
-        new juce::AudioProcessorValueTreeState::ButtonAttachment(
-            vts, "network", networkButton));
-    
-    addAndMakeVisible(networkButtonLabel);
-    networkButtonLabel.setText("Network Button", juce::dontSendNotification);
-
-    addAndMakeVisible(audioProcessor.visualiser);
-    audioProcessor.visualiser.setColours(juce::Colours::black, juce::Colours::whitesmoke.withAlpha(0.5f));
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (WIDTH, HEIGHT);
 
+    setSize(WIDTH, HEIGHT);
 }
 
-LowpassHighpassFilterAudioProcessorEditor::~LowpassHighpassFilterAudioProcessorEditor()
+LowpassHighpassFilterAudioProcessorEditor::
+    ~LowpassHighpassFilterAudioProcessorEditor()
 {
+    sendButton.removeListener(this);
 }
 
 //==============================================================================
-void LowpassHighpassFilterAudioProcessorEditor::paint (juce::Graphics& g)
+void LowpassHighpassFilterAudioProcessorEditor::paint(juce::Graphics &g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    g.fillAll(
+        getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
-    g.setColour (juce::Colours::white);
-    g.setFont (15.0f);
-    //g.drawFittedText ("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
-    cutoffFrequencySlider.setBounds({ 15, 35, 100, 300 });
-    cutoffFrequencyLabel.setBounds({ cutoffFrequencySlider.getX() + 30, cutoffFrequencySlider.getY() - 30, 
-        200, 50 });
-    highpassButton.setBounds({ cutoffFrequencySlider.getX(), 
-        cutoffFrequencySlider.getY() + cutoffFrequencySlider.getHeight() + 15, 30, 50 });
-    highpassButtonLabel.setBounds({ cutoffFrequencySlider.getX() + highpassButton.getWidth() + 15, highpassButton.getY(), 
-        cutoffFrequencySlider.getWidth() - highpassButton.getWidth(), 
-        highpassButton.getHeight() });
-
-    audioProcessor.visualiser.setBounds(getLocalBounds().withSizeKeepingCentre(250, 250));
+    g.setColour(juce::Colours::white);
+    g.setFont(15.0f);
 }
 
 void LowpassHighpassFilterAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
+    auto area = getLocalBounds().reduced(20);
+    auto textFieldHeight = 30;
+
+    ipEditor.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
+    portEditor.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
+    sendButton.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
+}
+
+void LowpassHighpassFilterAudioProcessorEditor::buttonClicked(
+    juce::Button *button)
+{
+
+    if (button == &sendButton)
+    {
+        juce::String ip = ipEditor.getText();
+        int port = portEditor.getText().getIntValue();
+        audioProcessor.sendNetworkDetails(ip, port);
+    }
 }

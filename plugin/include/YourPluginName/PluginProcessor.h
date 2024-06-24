@@ -8,26 +8,24 @@
 
 #pragma once
 
+#include <boost/asio.hpp>
+#include <boost/asio/error.hpp>
+#include <boost/system/error_code.hpp>
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_core/juce_core.h>
 #include <juce_events/juce_events.h>
-#include <boost/asio.hpp>
-#include <boost/system/error_code.hpp>
-#include <boost/asio/error.hpp> 
 
 
-#include "LowpassHighpassFilter.h"
 #include "AudioBuffer.h"
-
- 
-
+#include "ConnectionManagerThread.h"
+#include "LowpassHighpassFilter.h"
 
 
 //==============================================================================
 /**
 */
-class LowpassHighpassFilterAudioProcessor  : public juce::AudioProcessor
+class LowpassHighpassFilterAudioProcessor : public juce::AudioProcessor
 {
 public:
     //==============================================================================
@@ -35,17 +33,17 @@ public:
     ~LowpassHighpassFilterAudioProcessor() override;
 
     //==============================================================================
-    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
+    void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
 
-   #ifndef JucePlugin_PreferredChannelConfigurations
-    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
-   #endif
+#ifndef JucePlugin_PreferredChannelConfigurations
+    bool isBusesLayoutSupported(const BusesLayout &layouts) const override;
+#endif
 
-    void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+    void processBlock(juce::AudioBuffer<float> &, juce::MidiBuffer &) override;
 
     //==============================================================================
-    juce::AudioProcessorEditor* createEditor() override;
+    juce::AudioProcessorEditor *createEditor() override;
     bool hasEditor() const override;
 
     //==============================================================================
@@ -59,29 +57,31 @@ public:
     //==============================================================================
     int getNumPrograms() override;
     int getCurrentProgram() override;
-    void setCurrentProgram (int index) override;
-    const juce::String getProgramName (int index) override;
-    void changeProgramName (int index, const juce::String& newName) override;
+    void setCurrentProgram(int index) override;
+    const juce::String getProgramName(int index) override;
+    void changeProgramName(int index, const juce::String &newName) override;
 
     //==============================================================================
-    void getStateInformation (juce::MemoryBlock& destData) override;
-    void setStateInformation (const void* data, int sizeInBytes) override;
+    void getStateInformation(juce::MemoryBlock &destData) override;
+    void setStateInformation(const void *data, int sizeInBytes) override;
 
     // void connectToClient();
     juce::AudioVisualiserComponent visualiser;
+    void sendNetworkDetails(const juce::String &ip, int port);
 
-    AudioBufferFIFO audioBufferFIFO;
 private:
+    std::atomic<bool> startConnection = false;
+    std::atomic<bool> stopConnection = false;
     juce::AudioProcessorValueTreeState parameters;
-    std::atomic<float>* cutoffFrequencyParameter = nullptr;
-    std::atomic<float>* highpassParameter = nullptr;
+    std::atomic<float> *cutoffFrequencyParameter = nullptr;
+    std::atomic<float> *highpassParameter = nullptr;
+    std::unique_ptr<ConnectionManagerThread> connectionManagerThread;
+    std::shared_ptr<AudioBufferFIFO> outputBufferFIFO;
+    std::shared_ptr<AudioBufferFIFO> inputBufferFIFO;
     LowpassHighpassFilter filter;
-    double currentSampleRate;
-    double angleDelta;
-    double currentAngle = 0.0;
-
 
 
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LowpassHighpassFilterAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(
+        LowpassHighpassFilterAudioProcessor)
 };

@@ -1,6 +1,12 @@
 #include "ConnectionManagerThread.h"
 #include <iostream>
 
+MyCustomMessage::MyCustomMessage(const juce::String &ipAddress, int port)
+    : ip(ipAddress), port(port)
+{
+}
+
+
 ConnectionManagerThread::ConnectionManagerThread(
     ConfigurationData localConfigurationData,
     AudioBufferFIFO &inputRingBuffer,
@@ -321,4 +327,23 @@ bool ConnectionManagerThread::incomingConnection() const
 ConfigurationData ConnectionManagerThread::getRemoteConfigurationData() const
 {
     return m_remoteConfigurationData;
+}
+
+void ConnectionManagerThread::sendMessageToGUI(const juce::String &ip, int port)
+{
+    juce::MessageManager::callAsync([this, ip, port]() {
+        MyCustomMessage *message = new MyCustomMessage(ip, port);
+        postMessage(message);
+    });
+}
+
+void ConnectionManagerThread::handleMessage(const juce::Message &message)
+{
+    if (auto *customMessage = dynamic_cast<const MyCustomMessage *>(&message))
+    {
+        std::cout << "ConnectionManagerThread::handleMessage | "
+                     "Received message from GUI: "
+                  << customMessage->ip << " " << customMessage->port
+                  << std::endl;
+    }
 }

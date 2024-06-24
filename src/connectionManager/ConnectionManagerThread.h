@@ -12,8 +12,18 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_core/juce_core.h>
 
+class MyCustomMessage : public juce::Message
+{
+public:
+    MyCustomMessage(const juce::String &ipAddress, int port);
 
-class ConnectionManagerThread : public juce::Thread
+    juce::String ip;
+    int port;
+};
+
+
+class ConnectionManagerThread : public juce::Thread,
+                                public juce::MessageListener
 {
 public:
     ConnectionManagerThread(ConfigurationData localConfigurationData,
@@ -62,6 +72,10 @@ public:
     ConfigurationData getRemoteConfigurationData() const;
 
     bool incomingConnection() const;
+
+    void sendMessageToGUI(const juce::String &ip, int port);
+
+    void handleMessage(const juce::Message &message) override;
 
     boost::asio::io_context m_ioContext;
     std::jthread m_ioContextThread;
