@@ -26,7 +26,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 message(STATUS "Installing with VCPKG")
 include(    ${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake)
-find_package(JUCE CONFIG REQUIRED)
+find_package(juce 7.0.12 REQUIRED)
 find_package(Boost 1.83.0 REQUIRED COMPONENTS system coroutine context)
 find_package(Protobuf REQUIRED)
 message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
@@ -44,9 +44,9 @@ if(protobuf_FOUND)
     target_link_libraries(protobufGenerated PUBLIC protobuf::libprotobuf)
 endif()
 
-
-add_subdirectory(plugin)
 add_subdirectory(src)
+add_subdirectory(plugin)
+
 
 
 if (ENABLE_TESTING)

@@ -39,7 +39,7 @@ target_sources(${PROJECT_NAME}
 # Sets the include directories of the plugin project.
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-        include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 
