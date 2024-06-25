@@ -5,7 +5,6 @@
 #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
 #include <boost/system/error_code.hpp>
-#include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_core/juce_core.h>
 
 class ProviderThread : public juce::Thread

@@ -17,7 +17,7 @@ juce_add_plugin(${PROJECT_NAME}
     NEEDS_MIDI_OUTPUT FALSE # may change this
     PLUGIN_MANUFACTURER_CODE MCMP # change this
     PLUGIN_CODE EXPL # change this
-    FORMATS Standalone  # may change this
+    FORMATS VST3 # may change this
     PRODUCT_NAME "YourPluginName" # change this
     PLUGIN_NAME "LOOOOCK"
 )
@@ -39,14 +39,17 @@ target_sources(${PROJECT_NAME}
 # Sets the include directories of the plugin project.
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        include
 )
+
 
 # Links to all necessary dependencies. The present ones are recommended by JUCE.
 # If you use one of the additional modules, like the DSP module, you need to specify it here.
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         juce::juce_audio_utils
+        Boost::boost
+        Boost::system
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
@@ -65,15 +68,15 @@ target_compile_definitions(${PROJECT_NAME}
 
 # # Enables all warnings and treats warnings as errors.
 # # This needs to be set up only for your projects, not 3rd party
-# if (MSVC)
-#     target_compile_options(${PROJECT_NAME} PRIVATE /Wall /WX)
-#     # Silences some deprecation warnings that (hopefully) will be fixed in a future release of JUCE.
-#     target_compile_definitions(${PROJECT_NAME}
-#         PRIVATE
-#             _SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING)
-# else()
-#     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
-# endif()
+if (MSVC)
+    # target_compile_options(${PROJECT_NAME} PRIVATE /Wall /WX)
+    # Silences some deprecation warnings that (hopefully) will be fixed in a future release of JUCE.
+    target_compile_definitions(${PROJECT_NAME}
+        PRIVATE
+            _SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING)
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+endif()
 
 message(STATUS "Configuring Plugin CMakeLists.txt done")
 

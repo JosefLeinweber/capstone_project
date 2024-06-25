@@ -9,15 +9,14 @@
 #include <boost/asio/error.hpp>
 #include <boost/system/error_code.hpp>
 #include <functional>
-#include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_core/juce_core.h>
 
 class MyCustomMessage : public juce::Message
 {
 public:
-    MyCustomMessage(const juce::String &ipAddress, int port);
+    MyCustomMessage(const std::string &ipAddress, int port);
 
-    juce::String ip;
+    std::string ip;
     int port;
 };
 
@@ -73,9 +72,11 @@ public:
 
     bool incomingConnection() const;
 
-    void sendMessageToGUI(const juce::String &ip, int port);
+    void sendMessageToGUI(const std::string &ip, int port);
 
     void handleMessage(const juce::Message &message) override;
+
+    void setAudioProcessor(juce::AudioProcessor *audioProcessor);
 
     boost::asio::io_context m_ioContext;
     std::jthread m_ioContextThread;
@@ -89,7 +90,7 @@ private:
     std::unique_ptr<ConsumerThread> m_consumerThread;
 
     std::unique_ptr<TcpHost> m_host;
-
+    juce::AudioProcessor *m_audioProcessor;
 
     AudioBufferFIFO &m_inputRingBuffer;
     AudioBufferFIFO &m_outputRingBuffer;

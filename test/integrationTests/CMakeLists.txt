@@ -7,7 +7,6 @@ set(TEST_INCLUDES "./")
 add_executable(${TEST_NAME} ${TESTS_SOURCES})
 target_include_directories(${TEST_NAME} PUBLIC ${TEST_INCLUDES})
 target_link_libraries(${TEST_NAME} PUBLIC
-    ${LIBRARY_NAME}
     Catch2::Catch2WithMain
     "AudioBuffer"
     "Host"

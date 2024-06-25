@@ -1,3 +1,5 @@
+message("Building tests")
+
 add_subdirectory(integrationTests)
 add_subdirectory(helpers)
 include(Catch)
@@ -10,7 +12,7 @@ set(TEST_INCLUDES "./")
 add_executable(${TEST_AUDIOBUFFER} ${TESTS_SOURCES})
 target_include_directories(${TEST_AUDIOBUFFER} PUBLIC ${TEST_INCLUDES})
 target_link_libraries(${TEST_AUDIOBUFFER} PUBLIC
-    ${LIBRARY_NAME}
+
     Catch2::Catch2WithMain
     "AudioBuffer"
     "SharedValuesForTests"
@@ -28,7 +30,7 @@ set(TEST_INCLUDES "./")
 add_executable(${TEST_HOST} ${TESTS_SOURCES})
 target_include_directories(${TEST_HOST} PUBLIC ${TEST_INCLUDES})
 target_link_libraries(${TEST_HOST} PUBLIC
-    ${LIBRARY_NAME}
+
     Catch2::Catch2WithMain
     "AudioBuffer"
     "Host"
@@ -49,7 +51,7 @@ set(TEST_INCLUDES "./")
 add_executable(${TEST_PROVIDERTHREAD} ${TESTS_SOURCES})
 target_include_directories(${TEST_PROVIDERTHREAD} PUBLIC ${TEST_INCLUDES})
 target_link_libraries(${TEST_PROVIDERTHREAD} PUBLIC
-    ${LIBRARY_NAME}
+
     Catch2::Catch2WithMain
     "AudioBuffer"
     "Host"
@@ -69,7 +71,7 @@ set(TEST_INCLUDES "./")
 add_executable(${TEST_CONSUMERTHREAD} ${TESTS_SOURCES})
 target_include_directories(${TEST_CONSUMERTHREAD} PUBLIC ${TEST_INCLUDES})
 target_link_libraries(${TEST_CONSUMERTHREAD} PUBLIC
-    ${LIBRARY_NAME}
+
     Catch2::Catch2WithMain
     "AudioBuffer"
     "Host"
@@ -89,7 +91,6 @@ set(TEST_INCLUDES "./")
 add_executable(${TEST_CONNCETIONMANAGERTHREAD} ${TESTS_SOURCES})
 target_include_directories(${TEST_CONNCETIONMANAGERTHREAD} PUBLIC ${TEST_INCLUDES})
 target_link_libraries(${TEST_CONNCETIONMANAGERTHREAD} PUBLIC
-    ${LIBRARY_NAME}
     Catch2::Catch2WithMain
     "AudioBuffer"
     "Host"
@@ -109,7 +110,6 @@ set(TEST_INCLUDES "./")
 add_executable(${TEST_TCPHOST} ${TESTS_SOURCES})
 target_include_directories(${TEST_TCPHOST} PUBLIC ${TEST_INCLUDES})
 target_link_libraries(${TEST_TCPHOST} PUBLIC
-    ${LIBRARY_NAME}
     Catch2::Catch2WithMain
     "TcpHost"
     juce::juce_recommended_config_flags

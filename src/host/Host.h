@@ -6,7 +6,6 @@
 #include <boost/asio/error.hpp>
 #include <boost/system/error_code.hpp>
 #include <functional>
-#include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_core/juce_core.h>
 
 typedef boost::asio::detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>

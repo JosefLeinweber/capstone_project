@@ -7,7 +7,6 @@
 */
 
 #include "YourPluginName/PluginProcessor.h"
-#include "AudioBuffer.h"
 #include "YourPluginName/PluginEditor.h"
 
 
@@ -47,15 +46,16 @@ LowpassHighpassFilterAudioProcessor::LowpassHighpassFilterAudioProcessor()
     outputBufferFIFO = std::make_shared<AudioBufferFIFO>(2, 100000);
     ConfigurationData localConfigurationData;
     localConfigurationData.set_ip("127.0.0.1");
-    localConfigurationData.set_host_port(8000);
-    localConfigurationData.set_consumer_port(8001);
-    localConfigurationData.set_provider_port(8002);
+    localConfigurationData.set_host_port(7000);
+    localConfigurationData.set_consumer_port(7001);
+    localConfigurationData.set_provider_port(7002);
     connectionManagerThread =
         std::make_unique<ConnectionManagerThread>(localConfigurationData,
                                                   *inputBufferFIFO,
                                                   *outputBufferFIFO,
                                                   startConnection,
                                                   stopConnection);
+    connectionManagerThread->setAudioProcessor(this);
     connectionManagerThread->startThread();
 }
 
@@ -141,7 +141,6 @@ void LowpassHighpassFilterAudioProcessor::prepareToPlay(double sampleRate,
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     juce::ignoreUnused(samplesPerBlock);
-    filter.setSamplingRate(static_cast<float>(sampleRate));
 
     //TODO: make the init arguments dependent on plugin parameters
 }
@@ -209,6 +208,7 @@ bool LowpassHighpassFilterAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor *LowpassHighpassFilterAudioProcessor::createEditor()
 {
+    //TODO: why can I pass *connectionManagerThread here?
     return new LowpassHighpassFilterAudioProcessorEditor(*this, parameters);
 }
 
@@ -239,8 +239,8 @@ juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter()
 }
 
 
-void LowpassHighpassFilterAudioProcessor::sendNetworkDetails(
-    const juce::String &ip,
+void LowpassHighpassFilterAudioProcessor::sendToConnectionManagerThread(
+    const std::string &ip,
     int port)
 {
     std::cout << "Current Thread ID 1: " << std::this_thread::get_id()
@@ -250,5 +250,17 @@ void LowpassHighpassFilterAudioProcessor::sendNetworkDetails(
                   << std::endl;
         MyCustomMessage *message = new MyCustomMessage(ip, port);
         connectionManagerThread->postMessage(message);
+    });
+}
+
+void LowpassHighpassFilterAudioProcessor::sendToPluginEditor(
+    const std::string &ip,
+    int port)
+{
+    juce::MessageManager::callAsync([this, ip, port]() {
+        MyCustomMessage *message = new MyCustomMessage(ip, port);
+        dynamic_cast<LowpassHighpassFilterAudioProcessorEditor *>(
+            getActiveEditor())
+            ->postMessage(message);
     });
 }

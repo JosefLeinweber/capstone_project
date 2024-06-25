@@ -82,8 +82,18 @@ void LowpassHighpassFilterAudioProcessorEditor::buttonClicked(
 
     if (button == &sendButton)
     {
-        juce::String ip = ipEditor.getText();
+        std::string ip = ipEditor.getText().toStdString();
         int port = portEditor.getText().getIntValue();
-        audioProcessor.sendNetworkDetails(ip, port);
+        audioProcessor.sendToConnectionManagerThread(ip, port);
+    }
+}
+
+void LowpassHighpassFilterAudioProcessorEditor::handleMessage(
+    const juce::Message &message)
+{
+    if (auto *m = dynamic_cast<const MyCustomMessage *>(&message))
+    {
+        std::cout << "Message received in PluginEditor: " << m->ip << " "
+                  << m->port << std::endl;
     }
 }

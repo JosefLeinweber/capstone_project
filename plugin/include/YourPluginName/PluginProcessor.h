@@ -19,7 +19,6 @@
 
 #include "AudioBuffer.h"
 #include "ConnectionManagerThread.h"
-#include "LowpassHighpassFilter.h"
 
 
 //==============================================================================
@@ -67,7 +66,8 @@ public:
 
     // void connectToClient();
     juce::AudioVisualiserComponent visualiser;
-    void sendNetworkDetails(const juce::String &ip, int port);
+    void sendToConnectionManagerThread(const std::string &ip, int port);
+    void sendToPluginEditor(const std::string &ip, int port);
 
 private:
     std::atomic<bool> startConnection = false;
@@ -78,7 +78,6 @@ private:
     std::unique_ptr<ConnectionManagerThread> connectionManagerThread;
     std::shared_ptr<AudioBufferFIFO> outputBufferFIFO;
     std::shared_ptr<AudioBufferFIFO> inputBufferFIFO;
-    LowpassHighpassFilter filter;
 
 
     //==============================================================================

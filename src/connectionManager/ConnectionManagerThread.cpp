@@ -1,7 +1,8 @@
 #include "ConnectionManagerThread.h"
+
 #include <iostream>
 
-MyCustomMessage::MyCustomMessage(const juce::String &ipAddress, int port)
+MyCustomMessage::MyCustomMessage(const std::string &ipAddress, int port)
     : ip(ipAddress), port(port)
 {
 }
@@ -54,7 +55,7 @@ void ConnectionManagerThread::run()
 
     setupHost();
 
-    asyncWaitForConnection(std::chrono::milliseconds(20000));
+    asyncWaitForConnection(std::chrono::milliseconds(2000000));
 
     while (!m_incomingConnection && !m_startConnection)
     {
@@ -71,7 +72,6 @@ void ConnectionManagerThread::run()
                      "thread, shoudl start connection"
                   << std::endl;
 
-        m_remoteConfigurationData = remoteConfigurationDataFromGUI();
         initializeConnection(m_remoteConfigurationData);
     }
 
@@ -154,8 +154,6 @@ ConfigurationData ConnectionManagerThread::remoteConfigurationDataFromGUI()
     //! only placeholder
     ConfigurationData remoteConfigurationData;
 
-    remoteConfigurationData.set_ip("127.0.0.1");
-    remoteConfigurationData.set_host_port(7000);
     remoteConfigurationData.set_consumer_port(7001);
     remoteConfigurationData.set_provider_port(7002);
 
@@ -329,11 +327,14 @@ ConfigurationData ConnectionManagerThread::getRemoteConfigurationData() const
     return m_remoteConfigurationData;
 }
 
-void ConnectionManagerThread::sendMessageToGUI(const juce::String &ip, int port)
+void ConnectionManagerThread::sendMessageToGUI(const std::string &ip, int port)
 {
+    std::cout << "ConnectionManagerThread::sendMessageToGUI | "
+                 "Sending message to GUI"
+              << std::endl;
     juce::MessageManager::callAsync([this, ip, port]() {
         MyCustomMessage *message = new MyCustomMessage(ip, port);
-        postMessage(message);
+        this->postMessage(message);
     });
 }
 
@@ -345,5 +346,16 @@ void ConnectionManagerThread::handleMessage(const juce::Message &message)
                      "Received message from GUI: "
                   << customMessage->ip << " " << customMessage->port
                   << std::endl;
+        m_remoteConfigurationData.set_ip("127.0.0.1");
+        m_remoteConfigurationData.set_host_port(8000);
+        m_remoteConfigurationData.set_consumer_port(8001);
+        m_remoteConfigurationData.set_provider_port(8002);
+        m_startConnection = true;
     }
+}
+
+void ConnectionManagerThread::setAudioProcessor(
+    juce::AudioProcessor *audioProcessor)
+{
+    m_audioProcessor = audioProcessor;
 }

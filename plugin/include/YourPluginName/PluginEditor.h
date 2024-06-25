@@ -23,7 +23,8 @@
 */
 class LowpassHighpassFilterAudioProcessorEditor
     : public juce::AudioProcessorEditor,
-      public juce::Button::Listener
+      public juce::Button::Listener,
+      public juce::MessageListener
 {
 public:
     LowpassHighpassFilterAudioProcessorEditor(
@@ -35,6 +36,7 @@ public:
     void paint(juce::Graphics &) override;
     void resized() override;
     void buttonClicked(juce::Button *button) override;
+    void handleMessage(const juce::Message &message) override;
 
 private:
     // This reference is provided as a quick way for your editor to

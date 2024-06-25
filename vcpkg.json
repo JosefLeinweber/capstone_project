@@ -11,10 +11,6 @@
             "version>=": "1.84.0"
         },
         {
-            "name": "boost-regex",
-            "version>=": "1.84.0"
-        },
-        {
             "name": "boost-coroutine",
             "version>=": "1.84.0"
         },
