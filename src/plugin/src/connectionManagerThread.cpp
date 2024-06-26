@@ -1,4 +1,4 @@
-#include "ConnectionManagerThread.h"
+#include "ConnectDAWs/connectionManagerThread.h"
 
 #include <iostream>
 

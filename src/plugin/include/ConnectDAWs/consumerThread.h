@@ -1,6 +1,6 @@
 #pragma once
-#include "AudioBuffer.h"
-#include "Host.h"
+#include "audioBuffer.h"
+#include "udpHost.h"
 #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
 #include <boost/system/error_code.hpp>

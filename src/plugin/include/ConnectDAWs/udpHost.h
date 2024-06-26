@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AudioBuffer.h"
+#include "audioBuffer.h"
 #include "datagram.pb.h"
 #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>

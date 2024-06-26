@@ -15,8 +15,8 @@
 #include <boost/asio/error.hpp>
 #include <boost/system/error_code.hpp>
 
-#include "ConnectionManagerThread.h"
-#include "PluginProcessor.h"
+#include "connectionManagerThread.h"
+#include "pluginProcessor.h"
 
 //==============================================================================
 /**

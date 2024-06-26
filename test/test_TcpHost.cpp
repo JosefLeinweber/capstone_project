@@ -1,5 +1,5 @@
-#include "Host.h"
-#include "TcpHost.h"
+
+#include "ConnectDAWs/tcpHost.h"
 #include "datagram.pb.h"
 #include <catch2/catch_test_macros.hpp>
 #include <thread>

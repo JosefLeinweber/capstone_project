@@ -6,8 +6,8 @@
   ==============================================================================
 */
 
-#include "YourPluginName/PluginProcessor.h"
-#include "YourPluginName/PluginEditor.h"
+#include "ConnectDAWs/pluginProcessor.h"
+#include "ConnectDAWs/pluginEditor.h"
 
 
 //==============================================================================

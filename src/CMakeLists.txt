@@ -1,7 +1,5 @@
-message(STATUS "Building src")
-add_subdirectory(audioBuffer)
-add_subdirectory(host)
-add_subdirectory(provider)
-add_subdirectory(consumer)
-add_subdirectory(connectionManager)
-add_subdirectory(tcpHost)
+if(Protobuf_FOUND)
+    add_subdirectory(protobufMessages)
+endif()
+
+add_subdirectory(plugin)

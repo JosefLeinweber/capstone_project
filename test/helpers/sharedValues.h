@@ -1,6 +1,6 @@
 #pragma once
 #include "datagram.pb.h"
-#include <juce_core/juce_core.h>
+#include <juce_audio_basics/juce_audio_basics.h>
 
 
 ConfigurationData setConfigurationData(const std::string ip,

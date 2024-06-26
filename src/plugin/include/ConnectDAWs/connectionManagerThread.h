@@ -1,10 +1,10 @@
 #pragma once
-#include "AudioBuffer.h"
-#include "ConsumerThread.h"
-#include "Host.h"
-#include "ProviderThread.h"
-#include "TcpHost.h"
+#include "audioBuffer.h"
+#include "consumerThread.h"
 #include "datagram.pb.h"
+#include "providerThread.h"
+#include "tcpHost.h"
+#include "udpHost.h"
 #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
 #include <boost/system/error_code.hpp>

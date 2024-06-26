@@ -17,8 +17,8 @@
 #include <juce_events/juce_events.h>
 
 
-#include "AudioBuffer.h"
-#include "ConnectionManagerThread.h"
+#include "audioBuffer.h"
+#include "connectionManagerThread.h"
 
 
 //==============================================================================

@@ -1,6 +1,6 @@
 #pragma once
-#include "Host.h"
 #include "datagram.pb.h"
+#include "udpHost.h"
 #include <boost/asio.hpp>
 #include <iostream>
 
