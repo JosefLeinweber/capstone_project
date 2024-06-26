@@ -1,15 +1,10 @@
-#include "AudioBuffer.h"
-#include "ConnectionManagerThread.h"
+#include "ConnectDAWs/audioBuffer.h"
+#include "ConnectDAWs/connectionManagerThread.h"
 #include "sharedValues.h"
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 #include <juce_core/juce_core.h>
 #include <thread>
-
-ConfigurationData localConfigurationData =
-    setConfigurationData("127.0.0.1", 5000, 5001, 5002);
-ConfigurationData remoteConfigurationData =
-    setConfigurationData("127.0.0.1", 7000, 7001, 7002);
 
 TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
           "send data between two threads")

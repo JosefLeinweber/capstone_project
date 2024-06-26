@@ -1,5 +1,5 @@
-#include "AudioBuffer.h"
-#include "Host.h"
+#include "ConnectDAWs/audioBuffer.h"
+#include "ConnectDAWs/udpHost.h"
 #include <catch2/catch_test_macros.hpp>
 #include <thread>
 

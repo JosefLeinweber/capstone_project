@@ -1,0 +1,25 @@
+message("Building Unit tests")
+
+set(TEST_NAME "ConnectDAWsUnitTests")
+
+set(TESTS_SOURCES
+    test_AudioBuffer.cpp
+    test_UdpHost.cpp
+    test_ProviderThread.cpp
+    test_ConsumerThread.cpp
+    test_ConnectionManagerThread.cpp
+    test_TcpHost.cpp
+)
+
+add_executable(${TEST_NAME} ${TESTS_SOURCES})
+
+target_link_libraries(${TEST_NAME}
+PRIVATE
+    "SharedValuesForTests"
+    "ConnectDAWs"
+PUBLIC
+    Catch2::Catch2WithMain
+
+)
+
+catch_discover_tests(${TEST_NAME} OUTPUT_DIR "UnitTests" TEST_PREFIX "unit: ")

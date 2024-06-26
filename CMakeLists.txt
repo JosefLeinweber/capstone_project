@@ -52,11 +52,12 @@ if (ENABLE_TESTING)
     message(STATUS "Testing enabled")
     find_package(catch2 3.5.4 REQUIRED)
     list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+
     include(CTest)
     include(Catch)
-
     enable_testing()
-    add_subdirectory(test)
+
+    add_subdirectory(tests)
 endif()
 
 if (ENABLE_SANITIZERS)

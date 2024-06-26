@@ -196,8 +196,8 @@ void ConnectionManagerThread::callbackFunction(
     {
         m_incomingConnection = false;
         std::cout << "callback > no data received" << std::endl;
-        throw std::runtime_error("Failed to receive data! With error: " +
-                                 error.message());
+        // throw std::runtime_error("Failed to receive data! With error: " +
+        //                          error.message());
     }
 }
 

@@ -1,18 +1,12 @@
-#include "AudioBuffer.h"
-#include "ConsumerThread.h"
-#include "ProviderThread.h"
+#include "ConnectDAWs/audioBuffer.h"
+#include "ConnectDAWs/consumerThread.h"
+#include "ConnectDAWs/providerThread.h"
 #include "datagram.pb.h"
 #include "sharedValues.h"
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 #include <juce_core/juce_core.h>
 #include <thread>
-
-ConfigurationData localConfigurationData =
-    setConfigurationData("127.0.0.1", 5000, 5001, 5002);
-
-ConfigurationData remoteConfigurationData =
-    setConfigurationData("127.0.0.1", 6000, 6001, 6002);
 
 
 TEST_CASE("Provider & Consumer Thread | send and receive audio buffer")

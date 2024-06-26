@@ -35,3 +35,10 @@ void printBuffer(juce::AudioBuffer<float> &buffer)
         std::cout << std::endl;
     }
 }
+
+
+ConfigurationData localConfigurationData =
+    setConfigurationData("127.0.0.1", 5000, 5001, 5002);
+
+ConfigurationData remoteConfigurationData =
+    setConfigurationData("127.0.0.1", 6000, 6001, 6002);

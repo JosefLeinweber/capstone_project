@@ -10,3 +10,8 @@ ConfigurationData setConfigurationData(const std::string ip,
 
 void printBuffer(juce::AudioBuffer<float> &buffer);
 void fillBuffer(juce::AudioBuffer<float> &buffer, float value);
+
+
+extern ConfigurationData localConfigurationData;
+
+extern ConfigurationData remoteConfigurationData;
