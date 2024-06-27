@@ -9,7 +9,6 @@
 #include <iostream>
 #include <thread>
 
-
 AudioBufferFIFO inputRingBuffer(2, 1024);
 AudioBufferFIFO outputRingBuffer(2, 1024);
 
@@ -24,7 +23,8 @@ TEST_CASE("ConnectionManagerThread | Constructor")
     bool success = false;
     try
     {
-        ConnectionManagerThread connectionManagerThread(localConfigurationData,
+        ConnectionManagerThread connectionManagerThread(audioProcessor1,
+                                                        localConfigurationData,
                                                         inputRingBuffer,
                                                         outputRingBuffer,
                                                         startConnection,
@@ -42,7 +42,8 @@ TEST_CASE("ConnectionManagerThread | Constructor")
 TEST_CASE("ConnectionManagerThread | setupHost")
 {
     // GIVEN: a ConnectionManagerThread
-    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+    ConnectionManagerThread connectionManagerThread(audioProcessor1,
+                                                    localConfigurationData,
                                                     inputRingBuffer,
                                                     outputRingBuffer,
                                                     startConnection,
@@ -59,7 +60,8 @@ TEST_CASE("ConnectionManagerThread | asyncWaitForConnection successfull")
     REQUIRE_FALSE(stopConnection);
     //GIVEN: a ConnectionManagerThread which is waiting for a connection
     auto waitingThread = std::jthread([&]() {
-        ConnectionManagerThread connectionManagerThread(localConfigurationData,
+        ConnectionManagerThread connectionManagerThread(audioProcessor1,
+                                                        localConfigurationData,
                                                         inputRingBuffer,
                                                         outputRingBuffer,
                                                         startConnection,
@@ -90,7 +92,8 @@ TEST_CASE("ConnectionManagerThread | asyncWaitForConnection unsuccessfull")
 {
     std::atomic<bool> connectionEstablished = true;
     auto waitingThread = std::jthread([&]() {
-        ConnectionManagerThread connectionManagerThread(localConfigurationData,
+        ConnectionManagerThread connectionManagerThread(audioProcessor1,
+                                                        localConfigurationData,
                                                         inputRingBuffer,
                                                         outputRingBuffer,
                                                         startConnection,
@@ -110,7 +113,8 @@ TEST_CASE("ConnectionManagerThread | initializeConnection successfull")
 {
     //GIVEN: a remote host waits for a connection
     auto connectionInitializerThread = std::jthread([]() {
-        ConnectionManagerThread connectionManagerThread(remoteConfigurationData,
+        ConnectionManagerThread connectionManagerThread(audioProcessor1,
+                                                        remoteConfigurationData,
                                                         inputRingBuffer,
                                                         outputRingBuffer,
                                                         startConnection,
@@ -121,7 +125,8 @@ TEST_CASE("ConnectionManagerThread | initializeConnection successfull")
     });
 
     //WHEN: a ConnectionManagerThread tries to connect to the remote host
-    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+    ConnectionManagerThread connectionManagerThread(audioProcessor2,
+                                                    localConfigurationData,
                                                     inputRingBuffer,
                                                     outputRingBuffer,
                                                     startConnection,
@@ -138,7 +143,8 @@ TEST_CASE("ConnectionManagerThread | initializeConnection unsuccessfully")
     //GIVEN: the remote host is not waiting for a connection
 
     //WHEN: a ConnectionManagerThread tries to connect to the remote host
-    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+    ConnectionManagerThread connectionManagerThread(audioProcessor1,
+                                                    localConfigurationData,
                                                     inputRingBuffer,
                                                     outputRingBuffer,
                                                     startConnection,
@@ -175,7 +181,8 @@ TEST_CASE("ConnectionManagerThread | receiveConfigurationData successfull")
     });
 
 
-    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+    ConnectionManagerThread connectionManagerThread(audioProcessor1,
+                                                    localConfigurationData,
                                                     inputRingBuffer,
                                                     outputRingBuffer,
                                                     startConnection,
@@ -207,7 +214,8 @@ TEST_CASE("ConnectionManagerThread | receiveConfigurationData unsuccessfull")
     //GIVEN: a ConnectionManagerThread which is not connected to a remote host
     std::atomic<bool> configurationDataReceived = true;
 
-    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+    ConnectionManagerThread connectionManagerThread(audioProcessor1,
+                                                    localConfigurationData,
                                                     inputRingBuffer,
                                                     outputRingBuffer,
                                                     startConnection,
@@ -227,7 +235,8 @@ TEST_CASE("ConnectionManagerThread | receiveConfigurationData receiver is "
     std::atomic<bool> configurationDataReceived = false;
     //GIVEN: a ConnectionManagerThread which is connected to a remote host and waits
     auto waitingThread = std::jthread([&]() {
-        ConnectionManagerThread connectionManagerThread(localConfigurationData,
+        ConnectionManagerThread connectionManagerThread(audioProcessor1,
+                                                        localConfigurationData,
                                                         inputRingBuffer,
                                                         outputRingBuffer,
                                                         startConnection,
@@ -264,7 +273,8 @@ TEST_CASE("ConnectionManagerThread | sendConfigurationData successfull")
     std::atomic<bool> configurationDataSent = false;
     //GIVEN: a ConnectionManagerThread which is connected to a remote host
     auto remoteThread = std::jthread([&]() {
-        ConnectionManagerThread connectionManagerThread(remoteConfigurationData,
+        ConnectionManagerThread connectionManagerThread(audioProcessor1,
+                                                        remoteConfigurationData,
                                                         inputRingBuffer,
                                                         outputRingBuffer,
                                                         startConnection,
@@ -307,7 +317,8 @@ TEST_CASE("ConnectionManagerThread | sendConfigurationData to a not "
 {
     //GIVEN: a ConnectionManagerThread which is not connected to a remote host
     std::atomic<bool> configurationDataSent = true;
-    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+    ConnectionManagerThread connectionManagerThread(audioProcessor1,
+                                                    localConfigurationData,
                                                     inputRingBuffer,
                                                     outputRingBuffer,
                                                     startConnection,
@@ -325,7 +336,8 @@ TEST_CASE("ConnectionManagerThread | sendConfiguration and "
 {
     //GIVEN: a ConnectionManagerThread which is connected to a remote host
     auto sendingThread = std::jthread([]() {
-        ConnectionManagerThread connectionManagerThread(remoteConfigurationData,
+        ConnectionManagerThread connectionManagerThread(audioProcessor1,
+                                                        remoteConfigurationData,
                                                         inputRingBuffer,
                                                         outputRingBuffer,
                                                         startConnection,
@@ -337,7 +349,8 @@ TEST_CASE("ConnectionManagerThread | sendConfiguration and "
         connectionManagerThread.sendConfigurationData(remoteConfigurationData);
     });
 
-    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+    ConnectionManagerThread connectionManagerThread(audioProcessor2,
+                                                    localConfigurationData,
                                                     inputRingBuffer,
                                                     outputRingBuffer,
                                                     startConnection,
@@ -370,7 +383,8 @@ TEST_CASE("ConnectionManagerThread  | exchangeConfigurationDataWithRemote "
 {
     //GIVEN: a ConnectionManagerThread which is connected to a remote host
     auto remoteThread = std::jthread([]() {
-        ConnectionManagerThread connectionManagerThread(remoteConfigurationData,
+        ConnectionManagerThread connectionManagerThread(audioProcessor1,
+                                                        remoteConfigurationData,
                                                         inputRingBuffer,
                                                         outputRingBuffer,
                                                         startConnection,
@@ -383,7 +397,8 @@ TEST_CASE("ConnectionManagerThread  | exchangeConfigurationDataWithRemote "
             remoteConfigurationData);
     });
 
-    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+    ConnectionManagerThread connectionManagerThread(audioProcessor2,
+                                                    localConfigurationData,
                                                     inputRingBuffer,
                                                     outputRingBuffer,
                                                     startConnection,
@@ -414,7 +429,8 @@ TEST_CASE("ConnectionManagerThread | exchangeConfigurationDataWithRemote "
           "unsuccessfull")
 {
     //GIVEN: a ConnectionManagerThread which is not connected to a remote host
-    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+    ConnectionManagerThread connectionManagerThread(audioProcessor2,
+                                                    localConfigurationData,
                                                     inputRingBuffer,
                                                     outputRingBuffer,
                                                     startConnection,
@@ -444,7 +460,8 @@ TEST_CASE("ConnectionManagerThread | startUpProviderAndConsumerThreads "
 {
 
     //GIVEN: a ConnectionManagerThread
-    ConnectionManagerThread connectionManagerThread(localConfigurationData,
+    ConnectionManagerThread connectionManagerThread(audioProcessor2,
+                                                    localConfigurationData,
                                                     inputRingBuffer,
                                                     outputRingBuffer,
                                                     startConnection,

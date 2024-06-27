@@ -13,8 +13,8 @@ ProviderThread::ProviderThread(ConfigurationData remoteConfigurationData,
       m_localConfigurationData(localConfigurationData),
       m_outputRingBuffer(outputRingBuffer)
 {
-    m_outputBuffer.setSize(m_outputRingBuffer.buffer.getNumChannels(),
-                           m_outputRingBuffer.buffer.getNumSamples() / 4);
+    m_outputBuffer.setSize(m_localConfigurationData.num_output_channels(),
+                           m_localConfigurationData.samples_per_block());
     m_outputBuffer.clear();
 };
 

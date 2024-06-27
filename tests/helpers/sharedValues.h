@@ -1,4 +1,5 @@
 #pragma once
+#include "ConnectDAWs/pluginProcessor.h"
 #include "datagram.pb.h"
 #include <juce_audio_basics/juce_audio_basics.h>
 
@@ -13,5 +14,8 @@ void fillBuffer(juce::AudioBuffer<float> &buffer, float value);
 
 
 extern ConfigurationData localConfigurationData;
-
 extern ConfigurationData remoteConfigurationData;
+
+
+extern LowpassHighpassFilterAudioProcessor audioProcessor1;
+extern LowpassHighpassFilterAudioProcessor audioProcessor2;

@@ -1,5 +1,5 @@
 #include "ConnectDAWs/connectionManagerThread.h"
-
+#include "ConnectDAWs/pluginProcessor.h"
 #include <iostream>
 
 MyCustomMessage::MyCustomMessage(const std::string &ipAddress, int port)
@@ -9,12 +9,13 @@ MyCustomMessage::MyCustomMessage(const std::string &ipAddress, int port)
 
 
 ConnectionManagerThread::ConnectionManagerThread(
+    LowpassHighpassFilterAudioProcessor &audioProcessor,
     ConfigurationData localConfigurationData,
     AudioBufferFIFO &inputRingBuffer,
     AudioBufferFIFO &outputRingBuffer,
     std::atomic<bool> &startConnection,
     std::atomic<bool> &stopConnection)
-    : juce::Thread("ConnectionManagerThread"),
+    : juce::Thread("ConnectionManagerThread"), m_audioProcessor(audioProcessor),
       m_localConfigurationData(localConfigurationData),
       m_inputRingBuffer(inputRingBuffer), m_outputRingBuffer(outputRingBuffer),
       m_startConnection(startConnection), m_stopConnection(stopConnection)
@@ -52,6 +53,8 @@ ConnectionManagerThread::~ConnectionManagerThread()
 void ConnectionManagerThread::run()
 {
     std::cout << "ConnectionManagerThread | run" << std::endl;
+
+    sendMessageToGUI("SOME IP", 8000);
 
     setupHost();
 
@@ -332,10 +335,7 @@ void ConnectionManagerThread::sendMessageToGUI(const std::string &ip, int port)
     std::cout << "ConnectionManagerThread::sendMessageToGUI | "
                  "Sending message to GUI"
               << std::endl;
-    juce::MessageManager::callAsync([this, ip, port]() {
-        MyCustomMessage *message = new MyCustomMessage(ip, port);
-        this->postMessage(message);
-    });
+    m_audioProcessor.sendToPluginEditor(ip, port);
 }
 
 void ConnectionManagerThread::handleMessage(const juce::Message &message)
@@ -352,10 +352,4 @@ void ConnectionManagerThread::handleMessage(const juce::Message &message)
         m_remoteConfigurationData.set_provider_port(8002);
         m_startConnection = true;
     }
-}
-
-void ConnectionManagerThread::setAudioProcessor(
-    juce::AudioProcessor *audioProcessor)
-{
-    m_audioProcessor = audioProcessor;
 }

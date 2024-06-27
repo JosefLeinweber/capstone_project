@@ -8,6 +8,7 @@
 
 #pragma once
 
+
 #include <boost/asio.hpp>
 #include <boost/asio/error.hpp>
 #include <boost/system/error_code.hpp>
@@ -16,10 +17,8 @@
 #include <juce_core/juce_core.h>
 #include <juce_events/juce_events.h>
 
-
 #include "audioBuffer.h"
 #include "connectionManagerThread.h"
-
 
 //==============================================================================
 /**

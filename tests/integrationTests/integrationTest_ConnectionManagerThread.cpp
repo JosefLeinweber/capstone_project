@@ -21,8 +21,8 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
         outputRingBuffer.writeToInternalBufferFrom(audioBuffer);
         outputRingBuffer.writeToInternalBufferFrom(audioBuffer);
 
-
-        ConnectionManagerThread remoteThread(remoteConfigurationData,
+        ConnectionManagerThread remoteThread(audioProcessor1,
+                                             remoteConfigurationData,
                                              inputRingBuffer,
                                              outputRingBuffer,
                                              startConnection,
@@ -50,8 +50,8 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
     fillBuffer(audioBuffer, 2.0f);
     outputRingBuffer.writeToInternalBufferFrom(audioBuffer);
     outputRingBuffer.writeToInternalBufferFrom(audioBuffer);
-
-    ConnectionManagerThread localThread(localConfigurationData,
+    ConnectionManagerThread localThread(audioProcessor2,
+                                        localConfigurationData,
                                         inputRingBuffer,
                                         outputRingBuffer,
                                         startConnection,

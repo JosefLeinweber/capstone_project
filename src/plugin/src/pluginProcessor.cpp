@@ -9,7 +9,6 @@
 #include "ConnectDAWs/pluginProcessor.h"
 #include "ConnectDAWs/pluginEditor.h"
 
-
 //==============================================================================
 LowpassHighpassFilterAudioProcessor::LowpassHighpassFilterAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -42,21 +41,6 @@ LowpassHighpassFilterAudioProcessor::LowpassHighpassFilterAudioProcessor()
     cutoffFrequencyParameter =
         parameters.getRawParameterValue("cutoff_frequency");
     highpassParameter = parameters.getRawParameterValue("highpass");
-    inputBufferFIFO = std::make_shared<AudioBufferFIFO>(2, 100000);
-    outputBufferFIFO = std::make_shared<AudioBufferFIFO>(2, 100000);
-    ConfigurationData localConfigurationData;
-    localConfigurationData.set_ip("127.0.0.1");
-    localConfigurationData.set_host_port(7000);
-    localConfigurationData.set_consumer_port(7001);
-    localConfigurationData.set_provider_port(7002);
-    connectionManagerThread =
-        std::make_unique<ConnectionManagerThread>(localConfigurationData,
-                                                  *inputBufferFIFO,
-                                                  *outputBufferFIFO,
-                                                  startConnection,
-                                                  stopConnection);
-    connectionManagerThread->setAudioProcessor(this);
-    connectionManagerThread->startThread();
 }
 
 LowpassHighpassFilterAudioProcessor::~LowpassHighpassFilterAudioProcessor()
@@ -138,11 +122,33 @@ void LowpassHighpassFilterAudioProcessor::changeProgramName(
 void LowpassHighpassFilterAudioProcessor::prepareToPlay(double sampleRate,
                                                         int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-    juce::ignoreUnused(samplesPerBlock);
+    int numInputChannels = getTotalNumInputChannels();
+    int numOutputChannels = getTotalNumOutputChannels();
+    //TODO: remove magic number (10) determin what the best value is and set a constant
+    int bufferSize = samplesPerBlock * 10;
 
-    //TODO: make the init arguments dependent on plugin parameters
+    inputBufferFIFO =
+        std::make_shared<AudioBufferFIFO>(numInputChannels, bufferSize);
+    outputBufferFIFO =
+        std::make_shared<AudioBufferFIFO>(numOutputChannels, bufferSize);
+    ConfigurationData localConfigurationData;
+    localConfigurationData.set_ip("127.0.0.1");
+    localConfigurationData.set_host_port(7000);
+    localConfigurationData.set_consumer_port(7001);
+    localConfigurationData.set_provider_port(7002);
+    localConfigurationData.set_samples_per_block(samplesPerBlock);
+    localConfigurationData.set_sample_rate(sampleRate);
+    localConfigurationData.set_num_input_channels(numInputChannels);
+    localConfigurationData.set_num_output_channels(numOutputChannels);
+    connectionManagerThread =
+        std::make_unique<ConnectionManagerThread>(*this,
+                                                  localConfigurationData,
+                                                  *inputBufferFIFO,
+                                                  *outputBufferFIFO,
+                                                  startConnection,
+                                                  stopConnection);
+    // connectionManagerThread->setAudioProcessor(this);
+    connectionManagerThread->startThread();
 }
 
 void LowpassHighpassFilterAudioProcessor::releaseResources()

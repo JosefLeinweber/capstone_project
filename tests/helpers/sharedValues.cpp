@@ -42,3 +42,8 @@ ConfigurationData localConfigurationData =
 
 ConfigurationData remoteConfigurationData =
     setConfigurationData("127.0.0.1", 6000, 6001, 6002);
+
+LowpassHighpassFilterAudioProcessor audioProcessor1 =
+    LowpassHighpassFilterAudioProcessor();
+LowpassHighpassFilterAudioProcessor audioProcessor2 =
+    LowpassHighpassFilterAudioProcessor();

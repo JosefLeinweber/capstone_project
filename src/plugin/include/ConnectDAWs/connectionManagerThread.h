@@ -11,6 +11,9 @@
 #include <functional>
 #include <juce_core/juce_core.h>
 
+
+class LowpassHighpassFilterAudioProcessor;
+
 class MyCustomMessage : public juce::Message
 {
 public:
@@ -25,7 +28,8 @@ class ConnectionManagerThread : public juce::Thread,
                                 public juce::MessageListener
 {
 public:
-    ConnectionManagerThread(ConfigurationData localConfigurationData,
+    ConnectionManagerThread(LowpassHighpassFilterAudioProcessor &audioProcessor,
+                            ConfigurationData localConfigurationData,
                             AudioBufferFIFO &inputRingBuffer,
                             AudioBufferFIFO &outputRingBuffer,
                             std::atomic<bool> &startConnection,
@@ -76,8 +80,6 @@ public:
 
     void handleMessage(const juce::Message &message) override;
 
-    void setAudioProcessor(juce::AudioProcessor *audioProcessor);
-
     boost::asio::io_context m_ioContext;
     std::jthread m_ioContextThread;
     std::atomic<bool> &m_startConnection;
@@ -90,7 +92,8 @@ private:
     std::unique_ptr<ConsumerThread> m_consumerThread;
 
     std::unique_ptr<TcpHost> m_host;
-    juce::AudioProcessor *m_audioProcessor;
+
+    LowpassHighpassFilterAudioProcessor &m_audioProcessor;
 
     AudioBufferFIFO &m_inputRingBuffer;
     AudioBufferFIFO &m_outputRingBuffer;

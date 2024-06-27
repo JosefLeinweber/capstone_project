@@ -10,4 +10,8 @@ message ConfigurationData {
     int32 provider_port = 2;
     int32 consumer_port = 3;
     int32 host_port = 4;
+    int32 samples_per_block = 5;
+    double sample_rate = 6;
+    int32 num_input_channels = 7;
+    int32 num_output_channels = 8;
 }

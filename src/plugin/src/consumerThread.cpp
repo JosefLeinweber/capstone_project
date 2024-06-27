@@ -13,8 +13,8 @@ ConsumerThread::ConsumerThread(ConfigurationData remoteConfigurationData,
       m_localConfigurationData(localConfigurationData),
       m_inputRingBuffer(inputRingBuffer)
 {
-    m_inputBuffer.setSize(m_inputRingBuffer.buffer.getNumChannels(),
-                          m_inputRingBuffer.buffer.getNumSamples() / 4);
+    m_inputBuffer.setSize(localConfigurationData.num_input_channels(),
+                          localConfigurationData.samples_per_block());
     m_inputBuffer.clear();
 };
 
