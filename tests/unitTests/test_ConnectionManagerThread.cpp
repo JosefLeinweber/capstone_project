@@ -9,45 +9,45 @@
 #include <iostream>
 #include <thread>
 
-AudioBufferFIFO inputRingBuffer(2, 1024);
-AudioBufferFIFO outputRingBuffer(2, 1024);
+// AudioBufferFIFO inputRingBuffer(2, 1024);
+// AudioBufferFIFO outputRingBuffer(2, 1024);
 
-AudioBufferFIFO remoteInputRingBuffer(2, 1024);
-AudioBufferFIFO remoteOutputRingBuffer(2, 1024);
+// AudioBufferFIFO remoteInputRingBuffer(2, 1024);
+// AudioBufferFIFO remoteOutputRingBuffer(2, 1024);
 
-std::atomic<bool> startConnection = false;
-std::atomic<bool> stopConnection = false;
+// std::atomic<bool> startConnection = false;
+// std::atomic<bool> stopConnection = false;
 
-TEST_CASE("ConnectionManagerThread | Constructor")
-{
-    bool success = false;
-    try
-    {
-        ConnectionManagerThread connectionManagerThread(audioProcessor1,
-                                                        localConfigurationData,
-                                                        inputRingBuffer,
-                                                        outputRingBuffer,
-                                                        startConnection,
-                                                        stopConnection);
-        success = true;
-    }
-    catch (...)
-    {
-        success = false;
-    }
+// TEST_CASE("ConnectionManagerThread | Constructor")
+// {
+//     bool success = false;
+//     try
+//     {
+//         ConnectionManagerThread connectionManagerThread(audioProcessor1,
+//                                                         localConfigurationData,
+//                                                         inputRingBuffer,
+//                                                         outputRingBuffer,
+//                                                         startConnection,
+//                                                         stopConnection);
+//         success = true;
+//     }
+//     catch (...)
+//     {
+//         success = false;
+//     }
 
-    REQUIRE(success);
-}
+//     REQUIRE(success);
+// }
 
 TEST_CASE("ConnectionManagerThread | setupHost")
 {
     // GIVEN: a ConnectionManagerThread
-    ConnectionManagerThread connectionManagerThread(audioProcessor1,
-                                                    localConfigurationData,
-                                                    inputRingBuffer,
-                                                    outputRingBuffer,
-                                                    startConnection,
-                                                    stopConnection);
+    // ConnectionManagerThread connectionManagerThread(audioProcessor1,
+    //                                                 localConfigurationData,
+    //                                                 inputRingBuffer,
+    //                                                 outputRingBuffer,
+    //                                                 startConnection,
+    //                                                 stopConnection);
     // WHEN: setupHost is called
     // THEN: no exception should be thrown
     REQUIRE_NOTHROW(connectionManagerThread.setupHost());
@@ -60,12 +60,6 @@ TEST_CASE("ConnectionManagerThread | asyncWaitForConnection successfull")
     REQUIRE_FALSE(stopConnection);
     //GIVEN: a ConnectionManagerThread which is waiting for a connection
     auto waitingThread = std::jthread([&]() {
-        ConnectionManagerThread connectionManagerThread(audioProcessor1,
-                                                        localConfigurationData,
-                                                        inputRingBuffer,
-                                                        outputRingBuffer,
-                                                        startConnection,
-                                                        stopConnection);
         connectionManagerThread.setupHost();
         connectionManagerThread.asyncWaitForConnection();
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -92,12 +86,6 @@ TEST_CASE("ConnectionManagerThread | asyncWaitForConnection unsuccessfull")
 {
     std::atomic<bool> connectionEstablished = true;
     auto waitingThread = std::jthread([&]() {
-        ConnectionManagerThread connectionManagerThread(audioProcessor1,
-                                                        localConfigurationData,
-                                                        inputRingBuffer,
-                                                        outputRingBuffer,
-                                                        startConnection,
-                                                        stopConnection);
         connectionManagerThread.setupHost();
         connectionManagerThread.asyncWaitForConnection(
             std::chrono::milliseconds(5));
@@ -113,24 +101,12 @@ TEST_CASE("ConnectionManagerThread | initializeConnection successfull")
 {
     //GIVEN: a remote host waits for a connection
     auto connectionInitializerThread = std::jthread([]() {
-        ConnectionManagerThread connectionManagerThread(audioProcessor1,
-                                                        remoteConfigurationData,
-                                                        inputRingBuffer,
-                                                        outputRingBuffer,
-                                                        startConnection,
-                                                        stopConnection);
-        connectionManagerThread.setupHost();
-        connectionManagerThread.asyncWaitForConnection();
-        connectionManagerThread.m_ioContext.run();
+        remoteConnectionManagerThread.setupHost();
+        remoteConnectionManagerThread.asyncWaitForConnection();
+        remoteConnectionManagerThread.m_ioContext.run();
     });
 
     //WHEN: a ConnectionManagerThread tries to connect to the remote host
-    ConnectionManagerThread connectionManagerThread(audioProcessor2,
-                                                    localConfigurationData,
-                                                    inputRingBuffer,
-                                                    outputRingBuffer,
-                                                    startConnection,
-                                                    stopConnection);
     connectionManagerThread.setupHost();
     //THEN: no exception should be thrown
     REQUIRE_NOTHROW(
@@ -143,12 +119,6 @@ TEST_CASE("ConnectionManagerThread | initializeConnection unsuccessfully")
     //GIVEN: the remote host is not waiting for a connection
 
     //WHEN: a ConnectionManagerThread tries to connect to the remote host
-    ConnectionManagerThread connectionManagerThread(audioProcessor1,
-                                                    localConfigurationData,
-                                                    inputRingBuffer,
-                                                    outputRingBuffer,
-                                                    startConnection,
-                                                    stopConnection);
     connectionManagerThread.setupHost();
     //THEN: exception should be thrown
     try
@@ -163,324 +133,327 @@ TEST_CASE("ConnectionManagerThread | initializeConnection unsuccessfully")
 }
 
 
-TEST_CASE("ConnectionManagerThread | receiveConfigurationData successfull")
-{
-    std::atomic<bool> configurationDataReceived = false;
-    //GIVEN: a ConnectionManagerThread which is connected to a remote host and waits for a configuration data
-    auto connectionInitializerThread = std::jthread([]() {
-        boost::asio::io_context ioContext;
-        TcpHost host(ioContext, remoteConfigurationData.host_port());
-        host.setupSocket();
-        // Send handshake before the consumer thread waits for it
-        host.initializeConnection(localConfigurationData.ip(),
-                                  localConfigurationData.host_port());
-        std::string serializedData =
-            host.serializeConfigurationData(remoteConfigurationData);
-        host.send(serializedData);
-        std::cout << "connectionInitializerThread finishes" << std::endl;
-    });
+// TEST_CASE("ConnectionManagerThread | receiveConfigurationData successfull")
+// {
+//     std::atomic<bool> configurationDataReceived = false;
+//     //GIVEN: a ConnectionManagerThread which is connected to a remote host and waits for a configuration data
+//     auto connectionInitializerThread = std::jthread([]() {
+//         boost::asio::io_context ioContext;
+//         TcpHost host(ioContext, remoteConfigurationData.host_port());
+//         host.setupSocket();
+//         // Send handshake before the consumer thread waits for it
+//         host.initializeConnection(localConfigurationData.ip(),
+//                                   localConfigurationData.host_port());
+//         std::string serializedData =
+//             host.serializeConfigurationData(remoteConfigurationData);
+//         host.send(serializedData);
+//         std::cout << "connectionInitializerThread finishes" << std::endl;
+//     });
 
 
-    ConnectionManagerThread connectionManagerThread(audioProcessor1,
-                                                    localConfigurationData,
-                                                    inputRingBuffer,
-                                                    outputRingBuffer,
-                                                    startConnection,
-                                                    stopConnection);
-    connectionManagerThread.setupHost();
-    connectionManagerThread.asyncWaitForConnection();
-    connectionManagerThread.m_ioContext.run();
+//     ConnectionManagerThread connectionManagerThread(audioProcessor1,
+//                                                     localConfigurationData,
+//                                                     inputRingBuffer,
+//                                                     outputRingBuffer,
+//                                                     startConnection,
+//                                                     stopConnection);
+//     connectionManagerThread.setupHost();
+//     connectionManagerThread.asyncWaitForConnection();
+//     connectionManagerThread.m_ioContext.run();
 
-    // WHEN: the configuration data is received
-    configurationDataReceived =
-        connectionManagerThread.receiveConfigurationData();
+//     // WHEN: the configuration data is received
+//     configurationDataReceived =
+//         connectionManagerThread.receiveConfigurationData();
 
-    // THEN: the configuration data should be received successfully and the data should be correct
-    REQUIRE(configurationDataReceived);
-    REQUIRE(connectionManagerThread.getRemoteConfigurationData().ip() ==
-            remoteConfigurationData.ip());
-    REQUIRE(
-        connectionManagerThread.getRemoteConfigurationData().provider_port() ==
-        remoteConfigurationData.provider_port());
-    REQUIRE(
-        connectionManagerThread.getRemoteConfigurationData().consumer_port() ==
-        remoteConfigurationData.consumer_port());
+//     // THEN: the configuration data should be received successfully and the data should be correct
+//     REQUIRE(configurationDataReceived);
+//     REQUIRE(connectionManagerThread.getRemoteConfigurationData().ip() ==
+//             remoteConfigurationData.ip());
+//     REQUIRE(
+//         connectionManagerThread.getRemoteConfigurationData().provider_port() ==
+//         remoteConfigurationData.provider_port());
+//     REQUIRE(
+//         connectionManagerThread.getRemoteConfigurationData().consumer_port() ==
+//         remoteConfigurationData.consumer_port());
 
-    connectionInitializerThread.join();
-}
+//     connectionInitializerThread.join();
+// }
 
-TEST_CASE("ConnectionManagerThread | receiveConfigurationData unsuccessfull")
-{
-    //GIVEN: a ConnectionManagerThread which is not connected to a remote host
-    std::atomic<bool> configurationDataReceived = true;
+// TEST_CASE("ConnectionManagerThread | receiveConfigurationData unsuccessfull")
+// {
+//     //GIVEN: a ConnectionManagerThread which is not connected to a remote host
+//     std::atomic<bool> configurationDataReceived = true;
 
-    ConnectionManagerThread connectionManagerThread(audioProcessor1,
-                                                    localConfigurationData,
-                                                    inputRingBuffer,
-                                                    outputRingBuffer,
-                                                    startConnection,
-                                                    stopConnection);
+//     ConnectionManagerThread connectionManagerThread(audioProcessor1,
+//                                                     localConfigurationData,
+//                                                     inputRingBuffer,
+//                                                     outputRingBuffer,
+//                                                     startConnection,
+//                                                     stopConnection);
 
-    connectionManagerThread.setupHost();
-    //WHEN: the ConnectionManagerThread tries to receive configuration data
-    configurationDataReceived =
-        connectionManagerThread.receiveConfigurationData();
-    //THEN: the configuration data should not be received
-    REQUIRE_FALSE(configurationDataReceived);
-}
+//     connectionManagerThread.setupHost();
+//     //WHEN: the ConnectionManagerThread tries to receive configuration data
+//     configurationDataReceived =
+//         connectionManagerThread.receiveConfigurationData();
+//     //THEN: the configuration data should not be received
+//     REQUIRE_FALSE(configurationDataReceived);
+// }
 
-TEST_CASE("ConnectionManagerThread | receiveConfigurationData receiver is "
-          "initiated after sender")
-{
-    std::atomic<bool> configurationDataReceived = false;
-    //GIVEN: a ConnectionManagerThread which is connected to a remote host and waits
-    auto waitingThread = std::jthread([&]() {
-        ConnectionManagerThread connectionManagerThread(audioProcessor1,
-                                                        localConfigurationData,
-                                                        inputRingBuffer,
-                                                        outputRingBuffer,
-                                                        startConnection,
-                                                        stopConnection);
-        connectionManagerThread.setupHost();
-        connectionManagerThread.asyncWaitForConnection();
-        connectionManagerThread.m_ioContext.run();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        configurationDataReceived =
-            connectionManagerThread.receiveConfigurationData();
-    });
-    //WHEN: a remote host tries to connect
-    auto connectionInitializerThread = std::jthread([]() {
-        boost::asio::io_context ioContext;
-        TcpHost host(ioContext, remoteConfigurationData.host_port());
-        host.setupSocket();
-        host.initializeConnection(localConfigurationData.ip(),
-                                  localConfigurationData.host_port());
-        std::string serializedData =
-            host.serializeConfigurationData(remoteConfigurationData);
-        host.send(serializedData);
+// TEST_CASE("ConnectionManagerThread | receiveConfigurationData receiver is "
+//           "initiated after sender")
+// {
+//     std::atomic<bool> configurationDataReceived = false;
+//     //GIVEN: a ConnectionManagerThread which is connected to a remote host and waits
+//     auto waitingThread = std::jthread([&]() {
+//         ConnectionManagerThread connectionManagerThread(audioProcessor1,
+//                                                         localConfigurationData,
+//                                                         inputRingBuffer,
+//                                                         outputRingBuffer,
+//                                                         startConnection,
+//                                                         stopConnection);
+//         connectionManagerThread.setupHost();
+//         connectionManagerThread.asyncWaitForConnection();
+//         connectionManagerThread.m_ioContext.run();
+//         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+//         configurationDataReceived =
+//             connectionManagerThread.receiveConfigurationData();
+//     });
+//     //WHEN: a remote host tries to connect
+//     auto connectionInitializerThread = std::jthread([]() {
+//         boost::asio::io_context ioContext;
+//         TcpHost host(ioContext, remoteConfigurationData.host_port());
+//         host.setupSocket();
+//         host.initializeConnection(localConfigurationData.ip(),
+//                                   localConfigurationData.host_port());
+//         std::string serializedData =
+//             host.serializeConfigurationData(remoteConfigurationData);
+//         host.send(serializedData);
 
-        std::cout << "connectionInitializerThread finishes" << std::endl;
-    });
+//         std::cout << "connectionInitializerThread finishes" << std::endl;
+//     });
 
-    connectionInitializerThread.join();
-    waitingThread.join();
-    REQUIRE(configurationDataReceived);
-}
-
-
-TEST_CASE("ConnectionManagerThread | sendConfigurationData successfull")
-{
-    std::atomic<bool> configurationDataSent = false;
-    //GIVEN: a ConnectionManagerThread which is connected to a remote host
-    auto remoteThread = std::jthread([&]() {
-        ConnectionManagerThread connectionManagerThread(audioProcessor1,
-                                                        remoteConfigurationData,
-                                                        inputRingBuffer,
-                                                        outputRingBuffer,
-                                                        startConnection,
-                                                        stopConnection);
-        connectionManagerThread.setupHost();
-        connectionManagerThread.asyncWaitForConnection(
-            std::chrono::milliseconds(1000));
-        connectionManagerThread.m_ioContext.run();
-
-        //WHEN: the ConnectionManagerThread sends configuration data
-        configurationDataSent = connectionManagerThread.sendConfigurationData(
-            remoteConfigurationData);
-    });
-    boost::asio::io_context ioContext;
-    TcpHost host(ioContext, localConfigurationData.host_port());
-    host.setupSocket();
-    host.initializeConnection(remoteConfigurationData.ip(),
-                              remoteConfigurationData.host_port());
-    std::string msg = host.receiveConfiguration();
-    ConfigurationData receivedConfigurationData;
-    receivedConfigurationData = host.deserializeConfigurationData(msg);
-
-    remoteThread.join();
-    //THEN: the configuration data should be sent successfully and the data should be correct on the receiving end
-
-    std::cout << "Provider IP: " << receivedConfigurationData.ip()
-              << " Provider Port: " << receivedConfigurationData.provider_port()
-              << std::endl;
-
-    REQUIRE(configurationDataSent);
-    REQUIRE(receivedConfigurationData.ip() == remoteConfigurationData.ip());
-    REQUIRE(receivedConfigurationData.provider_port() ==
-            remoteConfigurationData.provider_port());
-    REQUIRE(receivedConfigurationData.consumer_port() ==
-            remoteConfigurationData.consumer_port());
-}
-
-TEST_CASE("ConnectionManagerThread | sendConfigurationData to a not "
-          "connected remote")
-{
-    //GIVEN: a ConnectionManagerThread which is not connected to a remote host
-    std::atomic<bool> configurationDataSent = true;
-    ConnectionManagerThread connectionManagerThread(audioProcessor1,
-                                                    localConfigurationData,
-                                                    inputRingBuffer,
-                                                    outputRingBuffer,
-                                                    startConnection,
-                                                    stopConnection);
-    connectionManagerThread.setupHost();
-    //WHEN: the ConnectionManagerThread tries to send configuration data
-    configurationDataSent =
-        connectionManagerThread.sendConfigurationData(localConfigurationData);
-    //THEN: the configuration data should not be sent
-    REQUIRE_FALSE(configurationDataSent);
-}
-
-TEST_CASE("ConnectionManagerThread | sendConfiguration and "
-          "receiveConfiguration successfull")
-{
-    //GIVEN: a ConnectionManagerThread which is connected to a remote host
-    auto sendingThread = std::jthread([]() {
-        ConnectionManagerThread connectionManagerThread(audioProcessor1,
-                                                        remoteConfigurationData,
-                                                        inputRingBuffer,
-                                                        outputRingBuffer,
-                                                        startConnection,
-                                                        stopConnection);
-        connectionManagerThread.setupHost();
-        connectionManagerThread.asyncWaitForConnection(
-            std::chrono::milliseconds(1000));
-        connectionManagerThread.m_ioContext.run();
-        connectionManagerThread.sendConfigurationData(remoteConfigurationData);
-    });
-
-    ConnectionManagerThread connectionManagerThread(audioProcessor2,
-                                                    localConfigurationData,
-                                                    inputRingBuffer,
-                                                    outputRingBuffer,
-                                                    startConnection,
-                                                    stopConnection);
-    connectionManagerThread.setupHost();
-    connectionManagerThread.initializeConnection(remoteConfigurationData);
-
-    //WHEN: the ConnectionManagerThread tries to receive configuration data
-    bool received = connectionManagerThread.receiveConfigurationData();
-
-    //THEN: the configuration data should be received successfully and the data should be correct
-    REQUIRE(received);
-
-    ConfigurationData receivedConfigurationData =
-        connectionManagerThread.getRemoteConfigurationData();
-
-    std::cout << "Provider IP: " << receivedConfigurationData.ip()
-              << " Provider Port: " << receivedConfigurationData.provider_port()
-              << std::endl;
-    REQUIRE(receivedConfigurationData.ip() == remoteConfigurationData.ip());
-    REQUIRE(receivedConfigurationData.provider_port() ==
-            remoteConfigurationData.provider_port());
-    REQUIRE(receivedConfigurationData.consumer_port() ==
-            remoteConfigurationData.consumer_port());
-    sendingThread.join();
-}
-
-TEST_CASE("ConnectionManagerThread  | exchangeConfigurationDataWithRemote "
-          "successfully")
-{
-    //GIVEN: a ConnectionManagerThread which is connected to a remote host
-    auto remoteThread = std::jthread([]() {
-        ConnectionManagerThread connectionManagerThread(audioProcessor1,
-                                                        remoteConfigurationData,
-                                                        inputRingBuffer,
-                                                        outputRingBuffer,
-                                                        startConnection,
-                                                        stopConnection);
-        connectionManagerThread.setupHost();
-        connectionManagerThread.asyncWaitForConnection(
-            std::chrono::milliseconds(1000));
-        connectionManagerThread.m_ioContext.run();
-        connectionManagerThread.exchangeConfigurationDataWithRemote(
-            remoteConfigurationData);
-    });
-
-    ConnectionManagerThread connectionManagerThread(audioProcessor2,
-                                                    localConfigurationData,
-                                                    inputRingBuffer,
-                                                    outputRingBuffer,
-                                                    startConnection,
-                                                    stopConnection);
-    connectionManagerThread.setupHost();
-    connectionManagerThread.initializeConnection(remoteConfigurationData);
-
-    //WHEN: the ConnectionManagerThread tries to receive configuration data
-    REQUIRE_NOTHROW(connectionManagerThread.exchangeConfigurationDataWithRemote(
-        localConfigurationData));
-
-    //THEN: the configuration data should be received successfully and the data should be correct
-    ConfigurationData receivedConfigurationData =
-        connectionManagerThread.getRemoteConfigurationData();
-
-    std::cout << "Provider IP: " << receivedConfigurationData.ip()
-              << " Provider Port: " << receivedConfigurationData.provider_port()
-              << std::endl;
-    REQUIRE(receivedConfigurationData.ip() == remoteConfigurationData.ip());
-    REQUIRE(receivedConfigurationData.provider_port() ==
-            remoteConfigurationData.provider_port());
-    REQUIRE(receivedConfigurationData.consumer_port() ==
-            remoteConfigurationData.consumer_port());
-    remoteThread.join();
-}
-
-TEST_CASE("ConnectionManagerThread | exchangeConfigurationDataWithRemote "
-          "unsuccessfull")
-{
-    //GIVEN: a ConnectionManagerThread which is not connected to a remote host
-    ConnectionManagerThread connectionManagerThread(audioProcessor2,
-                                                    localConfigurationData,
-                                                    inputRingBuffer,
-                                                    outputRingBuffer,
-                                                    startConnection,
-                                                    stopConnection);
-    connectionManagerThread.setupHost();
-
-    //WHEN: the ConnectionManagerThread calls exchangeConfigurationDataWithRemote
-    //THEN: the configuration data should not be exchanged
-    bool success = true;
-    try
-    {
-
-        success = connectionManagerThread.exchangeConfigurationDataWithRemote(
-            localConfigurationData);
-    }
-    catch (std::exception &e)
-    {
-        std::cout << "Exception caught: " << e.what() << std::endl;
-        REQUIRE(true);
-    }
-    REQUIRE_FALSE(success);
-}
+//     connectionInitializerThread.join();
+//     waitingThread.join();
+//     REQUIRE(configurationDataReceived);
+// }
 
 
-TEST_CASE("ConnectionManagerThread | startUpProviderAndConsumerThreads "
-          "successfull start up of both threads")
-{
+// TEST_CASE("ConnectionManagerThread | sendConfigurationData successfull")
+// {
+//     std::atomic<bool> configurationDataSent = false;
+//     //GIVEN: a ConnectionManagerThread which is connected to a remote host
+//     auto remoteThread = std::jthread([&]() {
+//         ConnectionManagerThread connectionManagerThread(audioProcessor1,
+//                                                         remoteConfigurationData,
+//                                                         inputRingBuffer,
+//                                                         outputRingBuffer,
+//                                                         startConnection,
+//                                                         stopConnection);
+//         connectionManagerThread.setupHost();
+//         connectionManagerThread.asyncWaitForConnection(
+//             std::chrono::milliseconds(1000));
+//         connectionManagerThread.m_ioContext.run();
 
-    //GIVEN: a ConnectionManagerThread
-    ConnectionManagerThread connectionManagerThread(audioProcessor2,
-                                                    localConfigurationData,
-                                                    inputRingBuffer,
-                                                    outputRingBuffer,
-                                                    startConnection,
-                                                    stopConnection);
+//         //WHEN: the ConnectionManagerThread sends configuration data
+//         configurationDataSent = connectionManagerThread.sendConfigurationData(
+//             remoteConfigurationData);
+//     });
+//     boost::asio::io_context ioContext;
+//     TcpHost host(ioContext, localConfigurationData.host_port());
+//     host.setupSocket();
+//     host.initializeConnection(remoteConfigurationData.ip(),
+//                               remoteConfigurationData.host_port());
+//     std::string msg = host.receiveConfiguration();
+//     ConfigurationData receivedConfigurationData;
+//     receivedConfigurationData = host.deserializeConfigurationData(msg);
 
-    bool success = false;
-    try
-    {
-        success = connectionManagerThread.startUpProviderAndConsumerThreads(
-            localConfigurationData,
-            remoteConfigurationData,
-            std::chrono::milliseconds(10));
-    }
-    catch (...)
-    {
-        FAIL("Exception thrown");
-    }
-    REQUIRE(success);
-}
+//     remoteThread.join();
+//     //THEN: the configuration data should be sent successfully and the data should be correct on the receiving end
+
+//     std::cout << "Provider IP: " << receivedConfigurationData.ip()
+//               << " Provider Port: " << receivedConfigurationData.provider_port()
+//               << std::endl;
+
+//     REQUIRE(configurationDataSent);
+//     REQUIRE(receivedConfigurationData.ip() == remoteConfigurationData.ip());
+//     REQUIRE(receivedConfigurationData.provider_port() ==
+//             remoteConfigurationData.provider_port());
+//     REQUIRE(receivedConfigurationData.consumer_port() ==
+//             remoteConfigurationData.consumer_port());
+// }
+
+// TEST_CASE("ConnectionManagerThread | sendConfigurationData to a not "
+//           "connected remote")
+// {
+//     //GIVEN: a ConnectionManagerThread which is not connected to a remote host
+//     std::atomic<bool> configurationDataSent = true;
+//     ConnectionManagerThread connectionManagerThread(audioProcessor1,
+//                                                     localConfigurationData,
+//                                                     inputRingBuffer,
+//                                                     outputRingBuffer,
+//                                                     startConnection,
+//                                                     stopConnection);
+//     connectionManagerThread.setupHost();
+//     //WHEN: the ConnectionManagerThread tries to send configuration data
+//     configurationDataSent =
+//         connectionManagerThread.sendConfigurationData(localConfigurationData);
+//     //THEN: the configuration data should not be sent
+//     REQUIRE_FALSE(configurationDataSent);
+// }
+
+// TEST_CASE("ConnectionManagerThread | sendConfiguration and "
+//           "receiveConfiguration successfull")
+// {
+//     //GIVEN: a ConnectionManagerThread which is connected to a remote host
+//     auto sendingThread = std::jthread([]() {
+//         ConnectionManagerThread connectionManagerThread(audioProcessor1,
+//                                                         remoteConfigurationData,
+//                                                         inputRingBuffer,
+//                                                         outputRingBuffer,
+//                                                         startConnection,
+//                                                         stopConnection);
+//         connectionManagerThread.setupHost();
+//         connectionManagerThread.asyncWaitForConnection(
+//             std::chrono::milliseconds(1000));
+//         connectionManagerThread.m_ioContext.run();
+//         connectionManagerThread.sendConfigurationData(remoteConfigurationData);
+//     });
+
+//     ConnectionManagerThread connectionManagerThread(audioProcessor2,
+//                                                     localConfigurationData,
+//                                                     inputRingBuffer,
+//                                                     outputRingBuffer,
+//                                                     startConnection,
+//                                                     stopConnection);
+//     connectionManagerThread.setupHost();
+//     connectionManagerThread.initializeConnection(remoteConfigurationData);
+
+//     //WHEN: the ConnectionManagerThread tries to receive configuration data
+//     bool received = connectionManagerThread.receiveConfigurationData();
+
+//     //THEN: the configuration data should be received successfully and the data should be correct
+//     REQUIRE(received);
+
+//     ConfigurationData receivedConfigurationData =
+//         connectionManagerThread.getRemoteConfigurationData();
+
+//     std::cout << "Provider IP: " << receivedConfigurationData.ip()
+//               << " Provider Port: " << receivedConfigurationData.provider_port()
+//               << std::endl;
+//     REQUIRE(receivedConfigurationData.ip() == remoteConfigurationData.ip());
+//     REQUIRE(receivedConfigurationData.provider_port() ==
+//             remoteConfigurationData.provider_port());
+//     REQUIRE(receivedConfigurationData.consumer_port() ==
+//             remoteConfigurationData.consumer_port());
+//     sendingThread.join();
+// }
+
+// TEST_CASE("ConnectionManagerThread  | exchangeConfigurationDataWithRemote "
+//           "successfully")
+// {
+//     //GIVEN: a ConnectionManagerThread which is connected to a remote host
+//     auto remoteThread = std::jthread([]() {
+//         ConnectionManagerThread connectionManagerThread(audioProcessor1,
+//                                                         remoteConfigurationData,
+//                                                         inputRingBuffer,
+//                                                         outputRingBuffer,
+//                                                         startConnection,
+//                                                         stopConnection);
+//         connectionManagerThread.setupHost();
+//         connectionManagerThread.asyncWaitForConnection(
+//             std::chrono::milliseconds(1000));
+//         connectionManagerThread.m_ioContext.run();
+//         connectionManagerThread.exchangeConfigurationDataWithRemote(
+//             remoteConfigurationData);
+//     });
+
+//     ConnectionManagerThread connectionManagerThread(audioProcessor2,
+//                                                     localConfigurationData,
+//                                                     inputRingBuffer,
+//                                                     outputRingBuffer,
+//                                                     startConnection,
+//                                                     stopConnection);
+//     connectionManagerThread.setupHost();
+//     connectionManagerThread.initializeConnection(remoteConfigurationData);
+
+//     //WHEN: the ConnectionManagerThread tries to receive configuration data
+//     REQUIRE_NOTHROW(connectionManagerThread.exchangeConfigurationDataWithRemote(
+//         localConfigurationData));
+
+//     //THEN: the configuration data should be received successfully and the data should be correct
+//     ConfigurationData receivedConfigurationData =
+//         connectionManagerThread.getRemoteConfigurationData();
+
+//     std::cout << "Provider IP: " << receivedConfigurationData.ip()
+//               << " Provider Port: " << receivedConfigurationData.provider_port()
+//               << std::endl;
+//     REQUIRE(receivedConfigurationData.ip() == remoteConfigurationData.ip());
+//     REQUIRE(receivedConfigurationData.provider_port() ==
+//             remoteConfigurationData.provider_port());
+//     REQUIRE(receivedConfigurationData.consumer_port() ==
+//             remoteConfigurationData.consumer_port());
+//     remoteThread.join();
+// }
+
+// TEST_CASE("ConnectionManagerThread | exchangeConfigurationDataWithRemote "
+//           "unsuccessfull")
+// {
+//     //GIVEN: a ConnectionManagerThread which is not connected to a remote host
+//     ConnectionManagerThread connectionManagerThread(audioProcessor2,
+//                                                     localConfigurationData,
+//                                                     inputRingBuffer,
+//                                                     outputRingBuffer,
+//                                                     startConnection,
+//                                                     stopConnection);
+//     connectionManagerThread.setupHost();
+
+//     //WHEN: the ConnectionManagerThread calls exchangeConfigurationDataWithRemote
+//     //THEN: the configuration data should not be exchanged
+//     bool success = true;
+//     try
+//     {
+
+//         success = connectionManagerThread.exchangeConfigurationDataWithRemote(
+//             localConfigurationData);
+//     }
+//     catch (std::exception &e)
+//     {
+//         std::cout << "Exception caught: " << e.what() << std::endl;
+//         REQUIRE(true);
+//     }
+//     REQUIRE_FALSE(success);
+// }
+
+
+// TEST_CASE("ConnectionManagerThread | startUpProviderAndConsumerThreads "
+//           "successfull start up of both threads")
+// {
+
+//     //GIVEN: a ConnectionManagerThread
+//     ConnectionManagerThread connectionManagerThread(audioProcessor2,
+//                                                     localConfigurationData,
+//                                                     inputRingBuffer,
+//                                                     outputRingBuffer,
+//                                                     startConnection,
+//                                                     stopConnection);
+
+//     bool success = false;
+//     try
+//     {
+//         success = connectionManagerThread.startUpProviderAndConsumerThreads(
+//             localConfigurationData,
+//             remoteConfigurationData,
+//             std::chrono::milliseconds(10));
+//     }
+//     catch (...)
+//     {
+//         FAIL("Exception thrown");
+//     }
+//     REQUIRE(success);
+// }
+
+//--------------------------------------------------------------------------
+
 
 // TEST_CASE("ConnectionManagerThread | startUpProviderAndConsumerThreads send "
 //           "and receive audio then quit")

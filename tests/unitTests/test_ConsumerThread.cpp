@@ -35,9 +35,7 @@ TEST_CASE("ConsumerThread | setupHost")
 TEST_CASE("ConsumerThread | writeToFIFOBuffer")
 {
 
-    AudioBufferFIFO inputRingBuffer(2, 1024);
-
-
+    printBuffer(inputRingBuffer.buffer);
     ConsumerThread consumerThread(remoteConfigurationData,
                                   localConfigurationData,
                                   inputRingBuffer);

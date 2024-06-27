@@ -190,8 +190,11 @@ bool MainAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor *MainAudioProcessor::createEditor()
 {
-    //TODO: why can I pass *connectionManagerThread here?
-    return new MainAudioProcessorEditor(*this, parameters);
+
+    return new MainAudioProcessorEditor(*this,
+                                        parameters,
+                                        connectDAWs.m_guiMessenger,
+                                        connectDAWs.m_cmtMessenger);
 }
 
 //==============================================================================

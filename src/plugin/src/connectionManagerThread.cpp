@@ -14,13 +14,15 @@ MessageToGUI::MessageToGUI(const std::string &ipAddress, int port)
 
 
 ConnectionManagerThread::ConnectionManagerThread(
-    ConnectDAWs &audioProcessor,
+    std::shared_ptr<Messenger> &guiMessenger,
+    std::shared_ptr<Messenger> &cmtMessenger,
     ConfigurationData localConfigurationData,
     AudioBufferFIFO &inputRingBuffer,
     AudioBufferFIFO &outputRingBuffer,
     std::atomic<bool> &startConnection,
     std::atomic<bool> &stopConnection)
-    : juce::Thread("ConnectionManagerThread"), m_audioProcessor(audioProcessor),
+    : juce::Thread("ConnectionManagerThread"), m_guiMessenger(guiMessenger),
+      m_cmtMessenger(cmtMessenger),
       m_localConfigurationData(localConfigurationData),
       m_inputRingBuffer(inputRingBuffer), m_outputRingBuffer(outputRingBuffer),
       m_startConnection(startConnection), m_stopConnection(stopConnection)
@@ -58,8 +60,9 @@ ConnectionManagerThread::~ConnectionManagerThread()
 void ConnectionManagerThread::run()
 {
     std::cout << "ConnectionManagerThread | run" << std::endl;
-
-    sendMessageToGUI("SOME IP", 8000);
+    initCMTMessenger();
+    MessageToGUI *message = new MessageToGUI("SOME IP", 8000);
+    sendMessageToGUI(message);
 
     setupHost();
 
@@ -335,12 +338,10 @@ ConfigurationData ConnectionManagerThread::getRemoteConfigurationData() const
     return m_remoteConfigurationData;
 }
 
-void ConnectionManagerThread::sendMessageToGUI(const std::string &ip, int port)
+void ConnectionManagerThread::sendMessageToGUI(juce::Message *message)
 {
-    std::cout << "ConnectionManagerThread::sendMessageToGUI | "
-                 "Sending message to GUI"
-              << std::endl;
-    // m_audioProcessor.sendToPluginEditor(ip, port);
+    juce::MessageManager::callAsync(
+        [this, message]() { m_guiMessenger->postMessage(message); });
 }
 
 void ConnectionManagerThread::handleMessage(const juce::Message &message)
@@ -357,4 +358,18 @@ void ConnectionManagerThread::handleMessage(const juce::Message &message)
         m_remoteConfigurationData.set_provider_port(8002);
         m_startConnection = true;
     }
+    else
+    {
+        std::cout << "ConnectionManagerThread::handleMessage | "
+                     "Received unknown message from GUI"
+                  << std::endl;
+    }
+}
+
+void ConnectionManagerThread::initCMTMessenger()
+{
+    m_cmtMessenger = std::make_shared<Messenger>(
+        std::bind(&ConnectionManagerThread::handleMessage,
+                  this,
+                  std::placeholders::_1));
 }

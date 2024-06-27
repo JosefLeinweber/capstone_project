@@ -15,7 +15,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 
-option(ENABLE_TESTING "Enable building tests" OFF)
+option(ENABLE_TESTING "Enable building tests" ON)
 
 option(ENABLE_WARNINGS "Enable compiler warnings" ON)
 

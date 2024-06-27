@@ -2,6 +2,7 @@
 #include "audioBuffer.h"
 #include "consumerThread.h"
 #include "datagram.pb.h"
+#include "messenger.h"
 #include "providerThread.h"
 #include "tcpHost.h"
 #include "udpHost.h"
@@ -13,30 +14,12 @@
 
 class ConnectDAWs;
 
-class MessageToGUI : public juce::Message
+
+class ConnectionManagerThread : public juce::Thread
 {
 public:
-    MessageToGUI(const std::string &ipAddress, int port);
-
-    std::string ip;
-    int port;
-};
-
-class MessageToCMT : public juce::Message
-{
-public:
-    MessageToCMT(const std::string &ipAddress, int port);
-
-    std::string ip;
-    int port;
-};
-
-
-class ConnectionManagerThread : public juce::Thread,
-                                public juce::MessageListener
-{
-public:
-    ConnectionManagerThread(ConnectDAWs &audioProcessor,
+    ConnectionManagerThread(std::shared_ptr<Messenger> &guiMessenger,
+                            std::shared_ptr<Messenger> &cmtMessenger,
                             ConfigurationData localConfigurationData,
                             AudioBufferFIFO &inputRingBuffer,
                             AudioBufferFIFO &outputRingBuffer,
@@ -84,9 +67,11 @@ public:
 
     bool incomingConnection() const;
 
-    void sendMessageToGUI(const std::string &ip, int port);
+    void sendMessageToGUI(juce::Message *message);
 
-    void handleMessage(const juce::Message &message) override;
+    void handleMessage(const juce::Message &message);
+
+    void initCMTMessenger();
 
     boost::asio::io_context m_ioContext;
     std::jthread m_ioContextThread;
@@ -98,10 +83,10 @@ private:
 
     std::unique_ptr<ProviderThread> m_providerThread;
     std::unique_ptr<ConsumerThread> m_consumerThread;
-
     std::unique_ptr<TcpHost> m_host;
 
-    ConnectDAWs &m_audioProcessor;
+    std::shared_ptr<Messenger> &m_guiMessenger;
+    std::shared_ptr<Messenger> &m_cmtMessenger;
 
     AudioBufferFIFO &m_inputRingBuffer;
     AudioBufferFIFO &m_outputRingBuffer;

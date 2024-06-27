@@ -5,6 +5,7 @@
 #include "audioBuffer.h"
 #include "connectionManagerThread.h"
 #include "datagram.pb.h"
+#include "messenger.h"
 
 
 class ConnectDAWs
@@ -21,8 +22,15 @@ public:
                        int numOutputChannels);
     void releaseResources();
     void processBlock(juce::AudioBuffer<float> &);
-    void sendToConnectionManagerThread(const std::string &ip, int port);
-    void sendToPluginEditor(const std::string &ip, int port);
+
+    // void sendToConnectionManagerThread(const std::string &ip, int port);
+    // void sendToPluginEditor(const std::string &ip, int port);
+    // void setPluginEditor(std::unique_ptr<juce::MessageListener> pluginEditor);
+
+    //==============================================================================
+
+    std::shared_ptr<Messenger> m_guiMessenger;
+    std::shared_ptr<Messenger> m_cmtMessenger;
 
 private:
     std::string getIp();

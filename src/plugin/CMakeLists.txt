@@ -26,6 +26,7 @@ target_sources(${PROJECT_NAME}
         src/consumerThread.cpp
         src/mainPluginEditor.cpp
         src/mainPluginProcessor.cpp
+        src/messenger.cpp
         src/connectDAWs.cpp
         src/providerThread.cpp
         src/tcpHost.cpp
@@ -37,6 +38,7 @@ target_sources(${PROJECT_NAME}
         ${INCLUDE_DIR}/consumerThread.h
         ${INCLUDE_DIR}/mainPluginEditor.h
         ${INCLUDE_DIR}/mainPluginProcessor.h
+        ${INCLUDE_DIR}/messenger.h
         ${INCLUDE_DIR}/connectDAWs.h
         ${INCLUDE_DIR}/providerThread.h
         ${INCLUDE_DIR}/tcpHost.h

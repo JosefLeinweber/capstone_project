@@ -58,7 +58,8 @@ void ConnectDAWs::prepareToPlay(double sampleRate,
                               numOutputChannels);
 
     m_connectionManagerThread =
-        std::make_unique<ConnectionManagerThread>(*this,
+        std::make_unique<ConnectionManagerThread>(m_guiMessenger,
+                                                  m_cmtMessenger,
                                                   m_localConfigurationData,
                                                   *m_inputBufferFIFO,
                                                   *m_outputBufferFIFO,
@@ -82,20 +83,26 @@ void ConnectDAWs::processBlock(juce::AudioBuffer<float> &buffer)
     // write and read from fifo buffers
 }
 
-void ConnectDAWs::sendToConnectionManagerThread(const std::string &ip, int port)
-{
-    std::cout << "ConnectDAWs::sendToConnectionManagerThread" << std::endl;
-    juce::MessageManager::callAsync([this, ip, port]() {
-        MessageToCMT *newMessage =
-            new MessageToCMT(ip, port); // Use copy constructor
-        m_connectionManagerThread->postMessage(newMessage);
-    });
-}
+// void ConnectDAWs::sendToConnectionManagerThread(const std::string &ip, int port)
+// {
+//     std::cout << "ConnectDAWs::sendToConnectionManagerThread" << std::endl;
+//     juce::MessageManager::callAsync([this, ip, port]() {
+//         MessageToCMT *message = new MessageToCMT(ip, port);
+//         m_connectionManagerThread->postMessage(message);
+//     });
+// }
 
-void ConnectDAWs::sendToPluginEditor(const std::string &ip, int port)
-{
-    juce::MessageManager::callAsync([this, ip, port]() {
-        MessageToGUI *newMessage =
-            new MessageToGUI(ip, port); // Use copy constructor
-    });
-}
+// void ConnectDAWs::sendToPluginEditor(const std::string &ip, int port)
+// {
+//     juce::MessageManager::callAsync([this, ip, port]() {
+//         MessageToGUI *message = new MessageToGUI(ip, port);
+//         dynamic_cast<MainAudioProcessorEditor *>(getActiveEditor())
+//             ->postMessage(message);
+//     });
+// }
+
+// void ConnectDAWs::setPluginEditor(
+//     std::unique_ptr<juce::MessageListener> pluginEditor)
+// {
+//     m_pluginEditor = pluginEditor;
+// }

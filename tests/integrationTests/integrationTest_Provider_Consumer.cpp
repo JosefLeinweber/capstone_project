@@ -14,14 +14,11 @@ TEST_CASE("Provider & Consumer Thread | send and receive audio buffer")
     ConfigurationData providerConfigurationData = localConfigurationData;
     ConfigurationData consumerConfigurationData = remoteConfigurationData;
 
-    juce::AudioBuffer<float> tempBuffer(2, 20);
+    juce::AudioBuffer<float> tempBuffer(2, 512);
     fillBuffer(tempBuffer, 0.5);
 
-    AudioBufferFIFO outputRingBuffer(2, 80);
     outputRingBuffer.writeToInternalBufferFrom(tempBuffer);
 
-
-    AudioBufferFIFO inputRingBuffer(2, 80);
 
     ProviderThread providerThread(consumerConfigurationData,
                                   providerConfigurationData,

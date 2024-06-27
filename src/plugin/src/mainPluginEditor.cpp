@@ -13,9 +13,13 @@
 //==============================================================================
 MainAudioProcessorEditor::MainAudioProcessorEditor(
     MainAudioProcessor &p,
-    juce::AudioProcessorValueTreeState &vts)
-    : AudioProcessorEditor(&p), audioProcessor(p)
+    juce::AudioProcessorValueTreeState &vts,
+    std::shared_ptr<Messenger> &guiMessenger,
+    std::shared_ptr<Messenger> &cmtMessenger)
+    : AudioProcessorEditor(&p), audioProcessor(p), m_guiMessenger(guiMessenger),
+      m_cmtMessenger(cmtMessenger)
 {
+    initGUIMessenger();
     constexpr auto HEIGHT = 500;
     constexpr auto WIDTH = 500;
 
@@ -81,9 +85,15 @@ void MainAudioProcessorEditor::buttonClicked(juce::Button *button)
     {
         std::string ip = ipEditor.getText().toStdString();
         int port = portEditor.getText().getIntValue();
-        MessageToCMT message(ip, port);
-        audioProcessor.connectDAWs.sendToConnectionManagerThread(message);
+        MessageToCMT *message = new MessageToCMT("Hello world!", 1234);
+        sendMessageToCMT(message);
     }
+}
+
+void MainAudioProcessorEditor::sendMessageToCMT(juce::Message *message)
+{
+    juce::MessageManager::callAsync(
+        [this, message]() { m_cmtMessenger->postMessage(message); });
 }
 
 void MainAudioProcessorEditor::handleMessage(const juce::Message &message)
@@ -93,4 +103,18 @@ void MainAudioProcessorEditor::handleMessage(const juce::Message &message)
         std::cout << "Message received in PluginEditor: " << m->ip << " "
                   << m->port << std::endl;
     }
+    else
+    {
+        std::cout << "MainAudioProcessorEditor::handleMessage | Received "
+                     "unknown message from CMT"
+                  << std::endl;
+    }
+}
+
+void MainAudioProcessorEditor::initGUIMessenger()
+{
+    m_guiMessenger = std::make_shared<Messenger>(
+        std::bind(&MainAudioProcessorEditor::handleMessage,
+                  this,
+                  std::placeholders::_1));
 }
