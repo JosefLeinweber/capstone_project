@@ -18,17 +18,18 @@
 #include <juce_events/juce_events.h>
 
 #include "audioBuffer.h"
+#include "connectDAWS.h"
 #include "connectionManagerThread.h"
 
 //==============================================================================
 /**
 */
-class LowpassHighpassFilterAudioProcessor : public juce::AudioProcessor
+class MainAudioProcessor : public juce::AudioProcessor
 {
 public:
     //==============================================================================
-    LowpassHighpassFilterAudioProcessor();
-    ~LowpassHighpassFilterAudioProcessor() override;
+    MainAudioProcessor();
+    ~MainAudioProcessor() override;
 
     //==============================================================================
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -68,18 +69,19 @@ public:
     void sendToConnectionManagerThread(const std::string &ip, int port);
     void sendToPluginEditor(const std::string &ip, int port);
 
+    ConnectDAWs connectDAWs;
+
 private:
-    std::atomic<bool> startConnection = false;
-    std::atomic<bool> stopConnection = false;
+    // std::atomic<bool> startConnection = false;
+    // std::atomic<bool> stopConnection = false;
     juce::AudioProcessorValueTreeState parameters;
     std::atomic<float> *cutoffFrequencyParameter = nullptr;
     std::atomic<float> *highpassParameter = nullptr;
-    std::unique_ptr<ConnectionManagerThread> connectionManagerThread;
-    std::shared_ptr<AudioBufferFIFO> outputBufferFIFO;
-    std::shared_ptr<AudioBufferFIFO> inputBufferFIFO;
+    // std::unique_ptr<ConnectionManagerThread> connectionManagerThread;
+    // std::shared_ptr<AudioBufferFIFO> outputBufferFIFO;
+    // std::shared_ptr<AudioBufferFIFO> inputBufferFIFO;
 
 
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(
-        LowpassHighpassFilterAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainAudioProcessor)
 };

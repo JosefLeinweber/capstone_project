@@ -6,11 +6,11 @@
   ==============================================================================
 */
 
-#include "ConnectDAWs/pluginProcessor.h"
-#include "ConnectDAWs/pluginEditor.h"
+#include "ConnectDAWs/mainPluginProcessor.h"
+#include "ConnectDAWs/mainPluginEditor.h"
 
 //==============================================================================
-LowpassHighpassFilterAudioProcessor::LowpassHighpassFilterAudioProcessor()
+MainAudioProcessor::MainAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
     : AudioProcessor(
           BusesProperties()
@@ -43,19 +43,19 @@ LowpassHighpassFilterAudioProcessor::LowpassHighpassFilterAudioProcessor()
     highpassParameter = parameters.getRawParameterValue("highpass");
 }
 
-LowpassHighpassFilterAudioProcessor::~LowpassHighpassFilterAudioProcessor()
+MainAudioProcessor::~MainAudioProcessor()
 {
-    connectionManagerThread->signalThreadShouldExit();
-    connectionManagerThread->waitForThreadToExit(1000);
+    // connectionManagerThread->signalThreadShouldExit();
+    // connectionManagerThread->waitForThreadToExit(1000);
 }
 
 //==============================================================================
-const juce::String LowpassHighpassFilterAudioProcessor::getName() const
+const juce::String MainAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool LowpassHighpassFilterAudioProcessor::acceptsMidi() const
+bool MainAudioProcessor::acceptsMidi() const
 {
 #if JucePlugin_WantsMidiInput
     return true;
@@ -64,7 +64,7 @@ bool LowpassHighpassFilterAudioProcessor::acceptsMidi() const
 #endif
 }
 
-bool LowpassHighpassFilterAudioProcessor::producesMidi() const
+bool MainAudioProcessor::producesMidi() const
 {
 #if JucePlugin_ProducesMidiOutput
     return true;
@@ -73,7 +73,7 @@ bool LowpassHighpassFilterAudioProcessor::producesMidi() const
 #endif
 }
 
-bool LowpassHighpassFilterAudioProcessor::isMidiEffect() const
+bool MainAudioProcessor::isMidiEffect() const
 {
 #if JucePlugin_IsMidiEffect
     return true;
@@ -82,83 +82,60 @@ bool LowpassHighpassFilterAudioProcessor::isMidiEffect() const
 #endif
 }
 
-double LowpassHighpassFilterAudioProcessor::getTailLengthSeconds() const
+double MainAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int LowpassHighpassFilterAudioProcessor::getNumPrograms()
+int MainAudioProcessor::getNumPrograms()
 {
     return 1; // NB: some hosts don't cope very well if you tell them there are 0 programs,
         // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int LowpassHighpassFilterAudioProcessor::getCurrentProgram()
+int MainAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void LowpassHighpassFilterAudioProcessor::setCurrentProgram(int index)
+void MainAudioProcessor::setCurrentProgram(int index)
 {
     juce::ignoreUnused(index);
 }
 
-const juce::String LowpassHighpassFilterAudioProcessor::getProgramName(
-    int index)
+const juce::String MainAudioProcessor::getProgramName(int index)
 {
     juce::ignoreUnused(index);
     return {};
 }
 
-void LowpassHighpassFilterAudioProcessor::changeProgramName(
-    int index,
-    const juce::String &newName)
+void MainAudioProcessor::changeProgramName(int index,
+                                           const juce::String &newName)
 {
     juce::ignoreUnused(index);
     juce::ignoreUnused(newName);
 }
 
 //==============================================================================
-void LowpassHighpassFilterAudioProcessor::prepareToPlay(double sampleRate,
-                                                        int samplesPerBlock)
+void MainAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     int numInputChannels = getTotalNumInputChannels();
     int numOutputChannels = getTotalNumOutputChannels();
-    //TODO: remove magic number (10) determin what the best value is and set a constant
-    int bufferSize = samplesPerBlock * 10;
-
-    inputBufferFIFO =
-        std::make_shared<AudioBufferFIFO>(numInputChannels, bufferSize);
-    outputBufferFIFO =
-        std::make_shared<AudioBufferFIFO>(numOutputChannels, bufferSize);
-    ConfigurationData localConfigurationData;
-    localConfigurationData.set_ip("127.0.0.1");
-    localConfigurationData.set_host_port(7000);
-    localConfigurationData.set_consumer_port(7001);
-    localConfigurationData.set_provider_port(7002);
-    localConfigurationData.set_samples_per_block(samplesPerBlock);
-    localConfigurationData.set_sample_rate(sampleRate);
-    localConfigurationData.set_num_input_channels(numInputChannels);
-    localConfigurationData.set_num_output_channels(numOutputChannels);
-    connectionManagerThread =
-        std::make_unique<ConnectionManagerThread>(*this,
-                                                  localConfigurationData,
-                                                  *inputBufferFIFO,
-                                                  *outputBufferFIFO,
-                                                  startConnection,
-                                                  stopConnection);
-    // connectionManagerThread->setAudioProcessor(this);
-    connectionManagerThread->startThread();
+    connectDAWs.prepareToPlay(sampleRate,
+                              samplesPerBlock,
+                              numInputChannels,
+                              numOutputChannels);
 }
 
-void LowpassHighpassFilterAudioProcessor::releaseResources()
+void MainAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
+    connectDAWs.releaseResources();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool LowpassHighpassFilterAudioProcessor::isBusesLayoutSupported(
+bool MainAudioProcessor::isBusesLayoutSupported(
     const BusesLayout &layouts) const
 {
 #if JucePlugin_IsMidiEffect
@@ -184,9 +161,8 @@ bool LowpassHighpassFilterAudioProcessor::isBusesLayoutSupported(
 }
 #endif
 
-void LowpassHighpassFilterAudioProcessor::processBlock(
-    juce::AudioBuffer<float> &buffer,
-    juce::MidiBuffer &midiMessages)
+void MainAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
+                                      juce::MidiBuffer &midiMessages)
 {
     juce::ignoreUnused(midiMessages);
     juce::ScopedNoDenormals noDenormals;
@@ -207,20 +183,19 @@ void LowpassHighpassFilterAudioProcessor::processBlock(
 }
 
 //==============================================================================
-bool LowpassHighpassFilterAudioProcessor::hasEditor() const
+bool MainAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor *LowpassHighpassFilterAudioProcessor::createEditor()
+juce::AudioProcessorEditor *MainAudioProcessor::createEditor()
 {
     //TODO: why can I pass *connectionManagerThread here?
-    return new LowpassHighpassFilterAudioProcessorEditor(*this, parameters);
+    return new MainAudioProcessorEditor(*this, parameters);
 }
 
 //==============================================================================
-void LowpassHighpassFilterAudioProcessor::getStateInformation(
-    juce::MemoryBlock &destData)
+void MainAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
 {
     juce::ignoreUnused(destData);
     // You should use this method to store your parameters in the memory block.
@@ -228,8 +203,7 @@ void LowpassHighpassFilterAudioProcessor::getStateInformation(
     // as intermediaries to make it easy to save and load complex data.
 }
 
-void LowpassHighpassFilterAudioProcessor::setStateInformation(const void *data,
-                                                              int sizeInBytes)
+void MainAudioProcessor::setStateInformation(const void *data, int sizeInBytes)
 {
     juce::ignoreUnused(data);
     juce::ignoreUnused(sizeInBytes);
@@ -241,32 +215,28 @@ void LowpassHighpassFilterAudioProcessor::setStateInformation(const void *data,
 // This creates new instances of the plugin..
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter()
 {
-    return new LowpassHighpassFilterAudioProcessor();
+    return new MainAudioProcessor();
 }
 
 
-void LowpassHighpassFilterAudioProcessor::sendToConnectionManagerThread(
-    const std::string &ip,
-    int port)
-{
-    std::cout << "Current Thread ID 1: " << std::this_thread::get_id()
-              << std::endl;
-    juce::MessageManager::callAsync([this, ip, port]() {
-        std::cout << "Current Thread ID 2: " << std::this_thread::get_id()
-                  << std::endl;
-        MyCustomMessage *message = new MyCustomMessage(ip, port);
-        connectionManagerThread->postMessage(message);
-    });
-}
+// void MainAudioProcessor::sendToConnectionManagerThread(const std::string &ip,
+//                                                        int port)
+// {
+//     std::cout << "Current Thread ID 1: " << std::this_thread::get_id()
+//               << std::endl;
+//     juce::MessageManager::callAsync([this, ip, port]() {
+//         std::cout << "Current Thread ID 2: " << std::this_thread::get_id()
+//                   << std::endl;
+//         MyCustomMessage *message = new MyCustomMessage(ip, port);
+//         connectionManagerThread->postMessage(message);
+//     });
+// }
 
-void LowpassHighpassFilterAudioProcessor::sendToPluginEditor(
-    const std::string &ip,
-    int port)
-{
-    juce::MessageManager::callAsync([this, ip, port]() {
-        MyCustomMessage *message = new MyCustomMessage(ip, port);
-        dynamic_cast<LowpassHighpassFilterAudioProcessorEditor *>(
-            getActiveEditor())
-            ->postMessage(message);
-    });
-}
+// void MainAudioProcessor::sendToPluginEditor(const std::string &ip, int port)
+// {
+//     juce::MessageManager::callAsync([this, ip, port]() {
+//         MyCustomMessage *message = new MyCustomMessage(ip, port);
+//         dynamic_cast<MainAudioProcessorEditor *>(getActiveEditor())
+//             ->postMessage(message);
+//     });
+// }

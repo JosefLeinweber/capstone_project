@@ -15,21 +15,21 @@
 #include <boost/asio/error.hpp>
 #include <boost/system/error_code.hpp>
 
-#include "pluginProcessor.h"
+#include "mainPluginProcessor.h"
 
 //==============================================================================
 /**
 */
-class LowpassHighpassFilterAudioProcessorEditor
+class MainAudioProcessorEditor
     : public juce::AudioProcessorEditor,
       public juce::Button::Listener,
       public juce::MessageListener
 {
 public:
-    LowpassHighpassFilterAudioProcessorEditor(
-        LowpassHighpassFilterAudioProcessor &,
+    MainAudioProcessorEditor(
+        MainAudioProcessor &,
         juce::AudioProcessorValueTreeState &vts);
-    ~LowpassHighpassFilterAudioProcessorEditor() override;
+    ~MainAudioProcessorEditor() override;
 
     //==============================================================================
     void paint(juce::Graphics &) override;
@@ -40,7 +40,7 @@ public:
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
-    LowpassHighpassFilterAudioProcessor &audioProcessor;
+    MainAudioProcessor &audioProcessor;
 
     juce::TextEditor ipEditor;
     juce::TextEditor portEditor;
@@ -50,5 +50,5 @@ private:
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(
-        LowpassHighpassFilterAudioProcessorEditor)
+        MainAudioProcessorEditor)
 };

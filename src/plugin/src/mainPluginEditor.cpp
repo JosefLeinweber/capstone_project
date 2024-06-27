@@ -6,15 +6,14 @@
   ==============================================================================
 */
 
-#include "ConnectDAWs/pluginEditor.h"
-#include "ConnectDAWs/pluginProcessor.h"
+#include "ConnectDAWs/mainPluginEditor.h"
+#include "ConnectDAWs/mainPluginProcessor.h"
 
 
 //==============================================================================
-LowpassHighpassFilterAudioProcessorEditor::
-    LowpassHighpassFilterAudioProcessorEditor(
-        LowpassHighpassFilterAudioProcessor &p,
-        juce::AudioProcessorValueTreeState &vts)
+MainAudioProcessorEditor::MainAudioProcessorEditor(
+    MainAudioProcessor &p,
+    juce::AudioProcessorValueTreeState &vts)
     : AudioProcessorEditor(&p), audioProcessor(p)
 {
     constexpr auto HEIGHT = 500;
@@ -47,14 +46,13 @@ LowpassHighpassFilterAudioProcessorEditor::
     setSize(WIDTH, HEIGHT);
 }
 
-LowpassHighpassFilterAudioProcessorEditor::
-    ~LowpassHighpassFilterAudioProcessorEditor()
+MainAudioProcessorEditor::~MainAudioProcessorEditor()
 {
     sendButton.removeListener(this);
 }
 
 //==============================================================================
-void LowpassHighpassFilterAudioProcessorEditor::paint(juce::Graphics &g)
+void MainAudioProcessorEditor::paint(juce::Graphics &g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll(
@@ -64,7 +62,7 @@ void LowpassHighpassFilterAudioProcessorEditor::paint(juce::Graphics &g)
     g.setFont(15.0f);
 }
 
-void LowpassHighpassFilterAudioProcessorEditor::resized()
+void MainAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
@@ -76,22 +74,21 @@ void LowpassHighpassFilterAudioProcessorEditor::resized()
     sendButton.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
 }
 
-void LowpassHighpassFilterAudioProcessorEditor::buttonClicked(
-    juce::Button *button)
+void MainAudioProcessorEditor::buttonClicked(juce::Button *button)
 {
 
     if (button == &sendButton)
     {
         std::string ip = ipEditor.getText().toStdString();
         int port = portEditor.getText().getIntValue();
-        audioProcessor.sendToConnectionManagerThread(ip, port);
+        MessageToCMT message(ip, port);
+        audioProcessor.connectDAWs.sendToConnectionManagerThread(message);
     }
 }
 
-void LowpassHighpassFilterAudioProcessorEditor::handleMessage(
-    const juce::Message &message)
+void MainAudioProcessorEditor::handleMessage(const juce::Message &message)
 {
-    if (auto *m = dynamic_cast<const MyCustomMessage *>(&message))
+    if (auto *m = dynamic_cast<const MessageToGUI *>(&message))
     {
         std::cout << "Message received in PluginEditor: " << m->ip << " "
                   << m->port << std::endl;

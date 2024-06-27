@@ -11,13 +11,21 @@
 #include <functional>
 #include <juce_core/juce_core.h>
 
+class ConnectDAWs;
 
-class LowpassHighpassFilterAudioProcessor;
-
-class MyCustomMessage : public juce::Message
+class MessageToGUI : public juce::Message
 {
 public:
-    MyCustomMessage(const std::string &ipAddress, int port);
+    MessageToGUI(const std::string &ipAddress, int port);
+
+    std::string ip;
+    int port;
+};
+
+class MessageToCMT : public juce::Message
+{
+public:
+    MessageToCMT(const std::string &ipAddress, int port);
 
     std::string ip;
     int port;
@@ -28,7 +36,7 @@ class ConnectionManagerThread : public juce::Thread,
                                 public juce::MessageListener
 {
 public:
-    ConnectionManagerThread(LowpassHighpassFilterAudioProcessor &audioProcessor,
+    ConnectionManagerThread(ConnectDAWs &audioProcessor,
                             ConfigurationData localConfigurationData,
                             AudioBufferFIFO &inputRingBuffer,
                             AudioBufferFIFO &outputRingBuffer,
@@ -93,7 +101,7 @@ private:
 
     std::unique_ptr<TcpHost> m_host;
 
-    LowpassHighpassFilterAudioProcessor &m_audioProcessor;
+    ConnectDAWs &m_audioProcessor;
 
     AudioBufferFIFO &m_inputRingBuffer;
     AudioBufferFIFO &m_outputRingBuffer;

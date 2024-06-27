@@ -1,15 +1,20 @@
 #include "ConnectDAWs/connectionManagerThread.h"
-#include "ConnectDAWs/pluginProcessor.h"
+#include "ConnectDAWs/mainPluginProcessor.h"
 #include <iostream>
 
-MyCustomMessage::MyCustomMessage(const std::string &ipAddress, int port)
+MessageToCMT::MessageToCMT(const std::string &ipAddress, int port)
+    : ip(ipAddress), port(port)
+{
+}
+
+MessageToGUI::MessageToGUI(const std::string &ipAddress, int port)
     : ip(ipAddress), port(port)
 {
 }
 
 
 ConnectionManagerThread::ConnectionManagerThread(
-    LowpassHighpassFilterAudioProcessor &audioProcessor,
+    ConnectDAWs &audioProcessor,
     ConfigurationData localConfigurationData,
     AudioBufferFIFO &inputRingBuffer,
     AudioBufferFIFO &outputRingBuffer,
@@ -335,12 +340,12 @@ void ConnectionManagerThread::sendMessageToGUI(const std::string &ip, int port)
     std::cout << "ConnectionManagerThread::sendMessageToGUI | "
                  "Sending message to GUI"
               << std::endl;
-    m_audioProcessor.sendToPluginEditor(ip, port);
+    // m_audioProcessor.sendToPluginEditor(ip, port);
 }
 
 void ConnectionManagerThread::handleMessage(const juce::Message &message)
 {
-    if (auto *customMessage = dynamic_cast<const MyCustomMessage *>(&message))
+    if (auto *customMessage = dynamic_cast<const MessageToCMT *>(&message))
     {
         std::cout << "ConnectionManagerThread::handleMessage | "
                      "Received message from GUI: "

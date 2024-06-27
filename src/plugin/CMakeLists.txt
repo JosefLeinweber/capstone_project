@@ -24,8 +24,9 @@ target_sources(${PROJECT_NAME}
         src/audioBuffer.cpp
         src/connectionManagerThread.cpp
         src/consumerThread.cpp
-        src/pluginEditor.cpp
-        src/pluginProcessor.cpp
+        src/mainPluginEditor.cpp
+        src/mainPluginProcessor.cpp
+        src/connectDAWs.cpp
         src/providerThread.cpp
         src/tcpHost.cpp
         src/udpHost.cpp
@@ -34,8 +35,9 @@ target_sources(${PROJECT_NAME}
         ${INCLUDE_DIR}/audioBuffer.h
         ${INCLUDE_DIR}/connectionManagerThread.h
         ${INCLUDE_DIR}/consumerThread.h
-        ${INCLUDE_DIR}/pluginEditor.h
-        ${INCLUDE_DIR}/pluginProcessor.h
+        ${INCLUDE_DIR}/mainPluginEditor.h
+        ${INCLUDE_DIR}/mainPluginProcessor.h
+        ${INCLUDE_DIR}/connectDAWs.h
         ${INCLUDE_DIR}/providerThread.h
         ${INCLUDE_DIR}/tcpHost.h
         ${INCLUDE_DIR}/udpHost.h
