@@ -5,15 +5,8 @@
 #include "messenger.h"
 #include "providerThread.h"
 #include "tcpHost.h"
-#include "udpHost.h"
-#include <boost/asio.hpp>
-#include <boost/asio/error.hpp>
-#include <boost/system/error_code.hpp>
 #include <functional>
 #include <juce_core/juce_core.h>
-
-class ConnectDAWs;
-
 
 class ConnectionManagerThread : public juce::Thread
 {

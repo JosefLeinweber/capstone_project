@@ -1,6 +1,4 @@
 #include "ConnectDAWs/connectionManagerThread.h"
-#include "ConnectDAWs/mainPluginProcessor.h"
-#include <iostream>
 
 MessageToCMT::MessageToCMT(const std::string &ipAddress, int port)
     : ip(ipAddress), port(port)

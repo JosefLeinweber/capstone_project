@@ -11,12 +11,8 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_utils/juce_audio_utils.h>
 
-#include <boost/asio.hpp>
-#include <boost/asio/error.hpp>
-#include <boost/system/error_code.hpp>
-
+#include "connectDAWS.h"
 #include "mainPluginProcessor.h"
-#include "messenger.h"
 
 //==============================================================================
 /**

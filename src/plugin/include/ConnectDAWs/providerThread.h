@@ -3,8 +3,6 @@
 #include "datagram.pb.h"
 #include "udpHost.h"
 #include <boost/asio.hpp>
-#include <boost/asio/error.hpp>
-#include <boost/system/error_code.hpp>
 #include <juce_core/juce_core.h>
 
 class ProviderThread : public juce::Thread
@@ -33,7 +31,7 @@ public:
 
 private:
     boost::asio::io_context m_ioContext;
-    std::unique_ptr<Host> m_host;
+    std::unique_ptr<UdpHost> m_udpHost;
 
     ConfigurationData m_remoteConfigurationData;
     ConfigurationData m_localConfigurationData;

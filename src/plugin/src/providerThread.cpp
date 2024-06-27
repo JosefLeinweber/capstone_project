@@ -1,6 +1,4 @@
 #include "ConnectDAWs/providerThread.h"
-#include <chrono>
-#include <iostream>
 
 
 ProviderThread::ProviderThread(ConfigurationData remoteConfigurationData,
@@ -89,11 +87,12 @@ bool ProviderThread::sendAudioToRemoteConsumer()
         std::cout << "ProviderThread | sendAudioToRemoteConsumer | "
                      "send the following buffer: "
                   << std::endl;
-        m_host->sendAudioBuffer(m_outputBuffer,
-                                boost::asio::ip::udp::endpoint(
-                                    boost::asio::ip::address::from_string(
-                                        m_remoteConfigurationData.ip()),
-                                    m_remoteConfigurationData.consumer_port()));
+        m_udpHost->sendAudioBuffer(
+            m_outputBuffer,
+            boost::asio::ip::udp::endpoint(
+                boost::asio::ip::address::from_string(
+                    m_remoteConfigurationData.ip()),
+                m_remoteConfigurationData.consumer_port()));
         return true;
     }
     catch (const std::exception &e)
@@ -109,9 +108,9 @@ void ProviderThread::setupHost()
 {
     try
     {
-        m_host = std::make_unique<Host>();
-        m_host->setupSocket(m_ioContext,
-                            m_localConfigurationData.provider_port());
+        m_udpHost = std::make_unique<UdpHost>();
+        m_udpHost->setupSocket(m_ioContext,
+                               m_localConfigurationData.provider_port());
     }
     catch (const std::exception &e)
     {

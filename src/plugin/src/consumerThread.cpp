@@ -1,6 +1,4 @@
 #include "ConnectDAWs/consumerThread.h"
-#include <iostream>
-#include <thread>
 
 
 ConsumerThread::ConsumerThread(ConfigurationData remoteConfigurationData,
@@ -48,10 +46,10 @@ void ConsumerThread::setupHost(std::chrono::milliseconds timeout)
 {
     try
     {
-        m_host = std::make_unique<Host>();
-        m_host->setupSocket(m_ioContext,
-                            m_localConfigurationData.consumer_port(),
-                            timeout.count());
+        m_udpHost = std::make_unique<UdpHost>();
+        m_udpHost->setupSocket(m_ioContext,
+                               m_localConfigurationData.consumer_port(),
+                               timeout.count());
     }
     catch (std::exception &e)
     {
@@ -66,7 +64,7 @@ bool ConsumerThread::receiveAudioFromRemoteProvider()
     std::cout << "ConsumerThread | receiveAudioFromRemoteProvider" << std::endl;
     try
     {
-        bool success = m_host->receiveAudioBuffer(m_inputBuffer);
+        bool success = m_udpHost->receiveAudioBuffer(m_inputBuffer);
         if (!success)
         {
             std::cout << "ConsumerThread | receiveAudioFromRemoteProvider | "

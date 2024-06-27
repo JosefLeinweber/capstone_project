@@ -1,22 +1,18 @@
 #pragma once
 
-#include "audioBuffer.h"
 #include "datagram.pb.h"
 #include <boost/asio.hpp>
-#include <boost/asio/error.hpp>
-#include <boost/system/error_code.hpp>
-#include <functional>
-#include <juce_core/juce_core.h>
+#include <juce_audio_basics/juce_audio_basics.h>
 
 typedef boost::asio::detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>
     rcv_timeout_option;
 
-class Host
+class UdpHost
 {
 public:
-    Host();
+    UdpHost();
 
-    ~Host();
+    ~UdpHost();
 
     void setupSocket(boost::asio::io_context &ioContext,
                      unsigned short port,

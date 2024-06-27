@@ -1,11 +1,8 @@
-#include "ConnectDAWs/udpHost.h"
-#include <chrono>
-#include <iostream>
+#include "ConnectDAWs/UdpHost.h"
 
+UdpHost::UdpHost() {};
 
-Host::Host() {};
-
-Host::~Host()
+UdpHost::~UdpHost()
 {
     if (m_socket)
     {
@@ -20,9 +17,9 @@ Host::~Host()
     }
 };
 
-void Host::setupSocket(boost::asio::io_context &ioContext,
-                       unsigned short port,
-                       unsigned short rec_timeout)
+void UdpHost::setupSocket(boost::asio::io_context &ioContext,
+                          unsigned short port,
+                          unsigned short rec_timeout)
 {
     try
     {
@@ -43,8 +40,8 @@ void Host::setupSocket(boost::asio::io_context &ioContext,
 };
 
 
-void Host::sendAudioBuffer(juce::AudioBuffer<float> buffer,
-                           boost::asio::ip::udp::endpoint remoteEndpoint)
+void UdpHost::sendAudioBuffer(juce::AudioBuffer<float> buffer,
+                              boost::asio::ip::udp::endpoint remoteEndpoint)
 {
     const float *data = buffer.getReadPointer(0);
     // float* data2 = tempBuffer.getReadPointer(1);
@@ -75,7 +72,7 @@ void Host::sendAudioBuffer(juce::AudioBuffer<float> buffer,
     }
 };
 
-bool Host::receiveAudioBuffer(juce::AudioBuffer<float> &buffer)
+bool UdpHost::receiveAudioBuffer(juce::AudioBuffer<float> &buffer)
 {
 
     float *data = buffer.getWritePointer(0);
@@ -97,7 +94,7 @@ bool Host::receiveAudioBuffer(juce::AudioBuffer<float> &buffer)
     }
     else
     {
-        std::cout << "Failed to receive data" << std::endl;
+        std::cout << "Failed to receive data from remote" << std::endl;
         return false;
     }
 };

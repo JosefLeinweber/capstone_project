@@ -1,5 +1,4 @@
 #include "ConnectDAWs/tcpHost.h"
-#include <iostream>
 
 
 TcpHost::TcpHost(boost::asio::io_context &ioContext, unsigned short port)
