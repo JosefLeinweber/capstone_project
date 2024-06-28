@@ -23,10 +23,6 @@ public:
     void releaseResources();
     void processBlock(juce::AudioBuffer<float> &);
 
-    // void sendToConnectionManagerThread(const std::string &ip, int port);
-    // void sendToPluginEditor(const std::string &ip, int port);
-    // void setPluginEditor(std::unique_ptr<juce::MessageListener> pluginEditor);
-
     //==============================================================================
 
     std::shared_ptr<Messenger> m_guiMessenger;
