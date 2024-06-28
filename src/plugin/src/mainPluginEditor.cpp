@@ -43,6 +43,13 @@ MainAudioProcessorEditor::MainAudioProcessorEditor(
     sendButton.addListener(this);
     addAndMakeVisible(sendButton);
 
+    statusLabel.setText("Status: Loading...", juce::dontSendNotification);
+    addAndMakeVisible(statusLabel);
+
+    localIpAndPortLabel.setText("Local IP and Port: Loading...",
+                                juce::dontSendNotification);
+    addAndMakeVisible(localIpAndPortLabel);
+
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -70,12 +77,15 @@ void MainAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
-    auto area = getLocalBounds().reduced(20);
+    auto area = getLocalBounds();
     auto textFieldHeight = 30;
 
     ipEditor.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
     portEditor.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
     sendButton.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
+    statusLabel.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
+    localIpAndPortLabel.setBounds(
+        area.removeFromTop(textFieldHeight).reduced(0, 5));
 }
 
 void MainAudioProcessorEditor::buttonClicked(juce::Button *button)
@@ -85,7 +95,7 @@ void MainAudioProcessorEditor::buttonClicked(juce::Button *button)
     {
         std::string ip = ipEditor.getText().toStdString();
         int port = portEditor.getText().getIntValue();
-        MessageToCMT *message = new MessageToCMT("Hello world!", 1234);
+        MessageToCMT *message = new MessageToCMT(ip, port);
         sendMessageToCMT(message);
     }
 }
@@ -100,8 +110,21 @@ void MainAudioProcessorEditor::handleMessage(const juce::Message &message)
 {
     if (auto *m = dynamic_cast<const MessageToGUI *>(&message))
     {
-        std::cout << "Message received in PluginEditor: " << m->ip << " "
-                  << m->port << std::endl;
+        if (m->m_messageType == "status")
+        {
+            statusLabel.setText(m->m_message, juce::dontSendNotification);
+        }
+        else if (m->m_messageType == "localIpAndPort")
+        {
+            localIpAndPortLabel.setText(m->m_message,
+                                        juce::dontSendNotification);
+        }
+        else
+        {
+            std::cout << "MainAudioProcessorEditor::handleMessage | Received "
+                         "unknown message type from CMT"
+                      << std::endl;
+        }
     }
     else
     {

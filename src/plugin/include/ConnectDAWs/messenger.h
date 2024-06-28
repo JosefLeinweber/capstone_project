@@ -6,10 +6,10 @@
 class MessageToGUI : public juce::Message
 {
 public:
-    MessageToGUI(const std::string &ipAddress, int port);
+    MessageToGUI(const std::string &messageType, const std::string &message);
 
-    std::string ip;
-    int port;
+    std::string m_messageType;
+    std::string m_message;
 };
 
 class MessageToCMT : public juce::Message

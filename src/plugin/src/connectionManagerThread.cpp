@@ -1,15 +1,5 @@
 #include "ConnectDAWs/connectionManagerThread.h"
 
-MessageToCMT::MessageToCMT(const std::string &ipAddress, int port)
-    : ip(ipAddress), port(port)
-{
-}
-
-MessageToGUI::MessageToGUI(const std::string &ipAddress, int port)
-    : ip(ipAddress), port(port)
-{
-}
-
 
 ConnectionManagerThread::ConnectionManagerThread(
     std::shared_ptr<Messenger> &guiMessenger,
@@ -59,8 +49,6 @@ void ConnectionManagerThread::run()
 {
     std::cout << "ConnectionManagerThread | run" << std::endl;
     initCMTMessenger();
-    MessageToGUI *message = new MessageToGUI("SOME IP", 8000);
-    sendMessageToGUI(message);
 
     setupHost();
 
@@ -89,6 +77,9 @@ void ConnectionManagerThread::run()
                                           m_remoteConfigurationData,
                                           std::chrono::milliseconds(20000)))
     {
+        MessageToGUI *start_message =
+            new MessageToGUI("status", "Start streaming...");
+        sendMessageToGUI(start_message);
         while (m_providerThread->isThreadRunning() &&
                m_consumerThread->isThreadRunning() && !m_stopConnection &&
                !threadShouldExit())
@@ -97,6 +88,9 @@ void ConnectionManagerThread::run()
             wait(100);
         }
         stopProviderAndConsumerThreads(std::chrono::seconds(5));
+        MessageToGUI *stop_message =
+            new MessageToGUI("status", "Stoped streaming!");
+        sendMessageToGUI(stop_message);
         resetToStartState();
         if (threadShouldExit())
         {
@@ -175,6 +169,10 @@ void ConnectionManagerThread::setupHost()
     m_host = std::make_unique<TcpHost>(m_ioContext,
                                        m_localConfigurationData.host_port());
     m_host->setupSocket();
+    MessageToGUI *message = new MessageToGUI(
+        "localIpAndPort",
+        ":" + std::to_string(m_localConfigurationData.host_port()));
+    sendMessageToGUI(message);
 }
 
 void ConnectionManagerThread::resetToStartState()
@@ -213,7 +211,9 @@ void ConnectionManagerThread::callbackFunction(
 void ConnectionManagerThread::asyncWaitForConnection(
     std::chrono::milliseconds timeout)
 {
-
+    MessageToGUI *message =
+        new MessageToGUI("status", "Waiting for connection...");
+    sendMessageToGUI(message);
     std::cout << "ConncectionManager::asyncWaitForConnection" << std::endl;
     m_host->asyncWaitForConnection(
         std::bind(&ConnectionManagerThread::callbackFunction,
@@ -246,14 +246,29 @@ void ConnectionManagerThread::initializeConnection(
 {
     try
     {
+        MessageToGUI *message1 = new MessageToGUI(
+            "status",
+            "Trying to connected to remote: " + remoteConfigurationData.ip() +
+                ":" + std::to_string(remoteConfigurationData.host_port()));
+        sendMessageToGUI(message1);
         m_host->initializeConnection(remoteConfigurationData.ip(),
                                      remoteConfigurationData.host_port());
+        MessageToGUI *message = new MessageToGUI(
+            "status",
+            "Connected to remote: " + remoteConfigurationData.ip() + ":" +
+                std::to_string(remoteConfigurationData.host_port()));
+        sendMessageToGUI(message);
     }
     catch (std::exception &e)
     {
         std::cout << "ConnectionManagerThread::initializeConnection | "
                      "Failed to initialize connection"
                   << std::endl;
+        MessageToGUI *message = new MessageToGUI(
+            "status",
+            "Failed to connect to remote: " + remoteConfigurationData.ip() +
+                ":" + std::to_string(remoteConfigurationData.host_port()));
+        sendMessageToGUI(message);
         throw std::runtime_error(
             "Failed to initialize connection! With error: " +
             std::string(e.what()));
@@ -350,10 +365,8 @@ void ConnectionManagerThread::handleMessage(const juce::Message &message)
                      "Received message from GUI: "
                   << customMessage->ip << " " << customMessage->port
                   << std::endl;
-        m_remoteConfigurationData.set_ip("127.0.0.1");
-        m_remoteConfigurationData.set_host_port(8000);
-        m_remoteConfigurationData.set_consumer_port(8001);
-        m_remoteConfigurationData.set_provider_port(8002);
+        m_remoteConfigurationData.set_ip(customMessage->ip);
+        m_remoteConfigurationData.set_host_port(customMessage->port);
         m_startConnection = true;
     }
     else

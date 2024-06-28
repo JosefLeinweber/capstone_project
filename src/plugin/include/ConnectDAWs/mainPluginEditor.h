@@ -48,6 +48,8 @@ private:
     juce::TextButton sendButton{"Send IP and Port"};
     juce::Label ipLabel{"IP", "IP Address:"};
     juce::Label portLabel{"Port", "Port:"};
+    juce::Label statusLabel{"Status", "Status:"};
+    juce::Label localIpAndPortLabel{"Local", "Local IP and Port:"};
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainAudioProcessorEditor)

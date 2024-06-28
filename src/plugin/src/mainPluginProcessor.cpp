@@ -180,6 +180,8 @@ void MainAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
     // filter.processBlock(buffer, midiMessages);
     visualiser.pushBuffer(buffer);
+
+    connectDAWs.processBlock(buffer);
 }
 
 //==============================================================================
