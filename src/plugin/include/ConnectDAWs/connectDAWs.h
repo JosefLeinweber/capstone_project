@@ -29,6 +29,7 @@ public:
     std::shared_ptr<Messenger> m_cmtMessenger;
 
 private:
+    // TODO: is this the best place to get the ip???
     std::string getIp();
     void initFIFOBuffers(int numInputChannels,
                          int numOutputChannels,

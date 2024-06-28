@@ -8,10 +8,42 @@ ConnectDAWs::~ConnectDAWs()
 {
 }
 
+
 std::string ConnectDAWs::getIp()
 {
-    //TODO: implement this function
-    return "127.0.0.1";
+    //TODO: implement this function to get the public ip address?
+    try
+    {
+        // Step 1: Create a context and resolver
+        boost::asio::io_context io_context;
+        boost::asio::ip::tcp::resolver resolver(io_context);
+
+        // Step 2: Get the hostname of the current machine
+        std::string hostname = boost::asio::ip::host_name();
+
+        // Step 3: Resolve the hostname to get a list of endpoints
+        boost::asio::ip::tcp::resolver::results_type endpoints =
+            resolver.resolve(hostname, "");
+
+        for (const auto &endpoint : endpoints)
+        {
+            // Step 4: Filter out loopback addresses and IPv6 addresses
+            auto address = endpoint.endpoint().address();
+            if (address.is_loopback() || address.is_v6())
+            {
+                continue;
+            }
+            // Return the first non-loopback IPv4 address
+            return address.to_string();
+        }
+        return std::string();
+        // If no non-loopback IPv4 addresses are found, return an empty string
+    }
+    catch (std::exception &e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+        std::string();
+    }
 }
 
 
