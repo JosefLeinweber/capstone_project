@@ -1,7 +1,10 @@
+# Testing
+Testing/
 .vs
 .vscode
 libs/
 build/
+vcpkg_installed/
 
 # Prerequisites
 *.d
