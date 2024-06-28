@@ -80,5 +80,9 @@ void ConnectDAWs::releaseResources()
 
 void ConnectDAWs::processBlock(juce::AudioBuffer<float> &buffer)
 {
-    // write and read from fifo buffers
+    m_outputBufferFIFO->writeToInternalBufferFrom(buffer);
+
+    buffer.clear();
+
+    m_inputBufferFIFO->readFromInternalBufferTo(buffer);
 }

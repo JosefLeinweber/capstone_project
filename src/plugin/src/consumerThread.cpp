@@ -88,5 +88,14 @@ bool ConsumerThread::receiveAudioFromRemoteProvider()
 
 void ConsumerThread::writeToFIFOBuffer()
 {
+    std::cout << "ConsumerThread | writeToFIFOBuffer | m_inputBuffer: ";
+    for (int channel = 0; channel < m_inputBuffer.getNumChannels(); ++channel)
+    {
+        for (int sample = 0; sample < m_inputBuffer.getNumSamples(); ++sample)
+        {
+            std::cout << m_inputBuffer.getSample(channel, sample) << " ";
+        }
+        std::cout << std::endl;
+    }
     return m_inputRingBuffer.writeToInternalBufferFrom(m_inputBuffer);
 };

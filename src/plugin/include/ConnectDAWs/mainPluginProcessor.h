@@ -60,6 +60,7 @@ public:
 
     // void connectToClient();
     juce::AudioVisualiserComponent visualiser;
+    juce::AudioVisualiserComponent outputVisualiser;
     void sendToConnectionManagerThread(const std::string &ip, int port);
     void sendToPluginEditor(const std::string &ip, int port);
 

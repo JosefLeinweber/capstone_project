@@ -50,6 +50,16 @@ MainAudioProcessorEditor::MainAudioProcessorEditor(
                                 juce::dontSendNotification);
     addAndMakeVisible(localIpAndPortLabel);
 
+    addAndMakeVisible(audioProcessor.visualiser);
+    audioProcessor.visualiser.setColours(
+        juce::Colours::black,
+        juce::Colours::whitesmoke.withAlpha(0.5f));
+
+    addAndMakeVisible(audioProcessor.outputVisualiser);
+    audioProcessor.outputVisualiser.setColours(
+        juce::Colours::black,
+        juce::Colours::whitesmoke.withAlpha(0.5f));
+
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -86,6 +96,9 @@ void MainAudioProcessorEditor::resized()
     statusLabel.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
     localIpAndPortLabel.setBounds(
         area.removeFromTop(textFieldHeight).reduced(0, 5));
+    audioProcessor.visualiser.setBounds(area.removeFromTop(150).reduced(0, 5));
+    audioProcessor.outputVisualiser.setBounds(
+        area.removeFromTop(150).reduced(0, 5));
 }
 
 void MainAudioProcessorEditor::buttonClicked(juce::Button *button)

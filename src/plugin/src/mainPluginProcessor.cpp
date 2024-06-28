@@ -21,7 +21,7 @@ MainAudioProcessor::MainAudioProcessor()
               .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
               ),
-      visualiser(2),
+      visualiser(2), outputVisualiser(2),
       parameters(*this,
                  nullptr,
                  juce::Identifier("LowpassAndHighpassPlugin"),
@@ -36,7 +36,10 @@ MainAudioProcessor::MainAudioProcessor()
 #endif
 {
     visualiser.setRepaintRate(30);
-    visualiser.setBufferSize(256);
+    visualiser.setBufferSize(448);
+
+    outputVisualiser.setRepaintRate(30);
+    outputVisualiser.setBufferSize(448);
 
     cutoffFrequencyParameter =
         parameters.getRawParameterValue("cutoff_frequency");
@@ -175,13 +178,15 @@ void MainAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     // This is here to avoid people getting screaming feedback
     // when they first compile a plugin, but obviously you don't need to keep
     // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear(i, 0, buffer.getNumSamples());
+    // for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+    //     buffer.clear(i, 0, buffer.getNumSamples());
 
     // filter.processBlock(buffer, midiMessages);
     visualiser.pushBuffer(buffer);
 
     connectDAWs.processBlock(buffer);
+
+    outputVisualiser.pushBuffer(buffer);
 }
 
 //==============================================================================

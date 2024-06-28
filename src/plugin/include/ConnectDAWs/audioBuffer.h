@@ -14,6 +14,7 @@ public:
     // Function to read data from the buffer
     void readFromInternalBufferTo(juce::AudioBuffer<float> &destination);
 
+    //TODO: rename to getNumReadyToRead
     int getNumReady() const
     {
         return fifo.getNumReady();
