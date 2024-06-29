@@ -115,8 +115,9 @@ void MainAudioProcessorEditor::buttonClicked(juce::Button *button)
 
 void MainAudioProcessorEditor::sendMessageToCMT(juce::Message *message)
 {
-    juce::MessageManager::callAsync(
-        [this, message]() { m_cmtMessenger->postMessage(message); });
+    // juce::MessageManager::callAsync(
+    //     [this, message]() { m_cmtMessenger->postMessage(message); });
+    m_cmtMessenger->postMessage(message);
 }
 
 void MainAudioProcessorEditor::handleMessage(const juce::Message &message)

@@ -80,8 +80,6 @@ void ConnectDAWs::prepareToPlay(double sampleRate,
                                 int numInputChannels,
                                 int numOutputChannels)
 {
-
-
     initFIFOBuffers(numInputChannels, numOutputChannels, samplesPerBlock);
 
     setLocalConfigurationData(sampleRate,
@@ -97,7 +95,7 @@ void ConnectDAWs::prepareToPlay(double sampleRate,
                                                   *m_outputBufferFIFO,
                                                   m_startConnection,
                                                   m_stopConnection);
-    m_connectionManagerThread->startThread();
+    m_connectionManagerThread->startThread(juce::Thread::Priority::high);
 }
 
 

@@ -128,6 +128,8 @@ void MainAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
                               samplesPerBlock,
                               numInputChannels,
                               numOutputChannels);
+
+    std::cout << "Sample Rate: " << sampleRate << std::endl;
 }
 
 void MainAudioProcessor::releaseResources()

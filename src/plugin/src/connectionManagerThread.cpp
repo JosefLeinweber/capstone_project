@@ -15,6 +15,7 @@ ConnectionManagerThread::ConnectionManagerThread(
       m_inputRingBuffer(inputRingBuffer), m_outputRingBuffer(outputRingBuffer),
       m_startConnection(startConnection), m_stopConnection(stopConnection)
 {
+    std::cout << "ConnectionManagerThread | constructor" << std::endl;
 }
 
 ConnectionManagerThread::~ConnectionManagerThread()
@@ -60,7 +61,7 @@ void ConnectionManagerThread::run()
         {
             return;
         }
-        wait(100);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     if (m_startConnection)
@@ -235,9 +236,6 @@ void ConnectionManagerThread::startIOContextInDifferentThread()
             << "ConnectionManagerThread::startIOContextInDifferentThread | "
                "Failed to start ioContext in different thread"
             << std::endl;
-        throw std::runtime_error(
-            "Failed to start ioContext in different thread! With error: " +
-            std::string(e.what()));
     }
 }
 
@@ -269,9 +267,6 @@ void ConnectionManagerThread::initializeConnection(
             "Failed to connect to remote: " + remoteConfigurationData.ip() +
                 ":" + std::to_string(remoteConfigurationData.host_port()));
         sendMessageToGUI(message);
-        throw std::runtime_error(
-            "Failed to initialize connection! With error: " +
-            std::string(e.what()));
     }
 }
 
@@ -353,8 +348,9 @@ ConfigurationData ConnectionManagerThread::getRemoteConfigurationData() const
 
 void ConnectionManagerThread::sendMessageToGUI(juce::Message *message)
 {
-    juce::MessageManager::callAsync(
-        [this, message]() { m_guiMessenger->postMessage(message); });
+    // juce::MessageManager::callAsync(
+    //     [this, message]() { m_guiMessenger->postMessage(message); });
+    m_guiMessenger->postMessage(message);
 }
 
 void ConnectionManagerThread::handleMessage(const juce::Message &message)
@@ -383,4 +379,11 @@ void ConnectionManagerThread::initCMTMessenger()
         std::bind(&ConnectionManagerThread::handleMessage,
                   this,
                   std::placeholders::_1));
+    while (!m_guiMessenger)
+    {
+        std::cout << "ConnectionManagerThread::initCMTMessenger | Waiting for "
+                     "GUI Messenger to be created"
+                  << std::endl;
+        wait(100);
+    }
 }
