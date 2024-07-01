@@ -55,18 +55,11 @@ bool ProviderThread::readFromFIFOBuffer(std::chrono::milliseconds timeout)
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         if (threadShouldExit())
         {
-            std::cout << "ProviderThread | readFromFIFOBuffer | "
-                         "threadShouldExit"
-                      << std::endl;
             return false;
         }
         if (std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::high_resolution_clock::now() - start) > timeout)
         {
-            std::cout << "ProviderThread | readFromFIFOBuffer | "
-                         "timeout, only "
-                      << m_outputRingBuffer.getNumReady()
-                      << " samples ready to be read" << std::endl;
             return false;
         }
     }
@@ -88,9 +81,6 @@ bool ProviderThread::sendAudioToRemoteConsumer()
     }
     catch (const std::exception &e)
     {
-        std::cout << "ProviderThread | sendAudioToRemoteConsumer | "
-                     "Failed to send data: "
-                  << e.what() << std::endl;
         return false;
     }
 };
@@ -105,9 +95,7 @@ void ProviderThread::setupHost()
     }
     catch (const std::exception &e)
     {
-        std::cout << "ProviderThread | setupHost | "
-                     "Failed to setup host: "
-                  << e.what() << std::endl;
         signalThreadShouldExit();
+        throw e;
     }
 }

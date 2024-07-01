@@ -63,11 +63,9 @@ void UdpHost::sendAudioBuffer(juce::AudioBuffer<float> buffer,
         {
             throw std::runtime_error("Failed to send all data");
         }
-        std::cout << "Sent " << len << " bytes" << std::endl;
     }
     catch (const std::exception &e)
     {
-        std::cout << "Failed to send data: " << e.what() << std::endl;
         throw e;
     }
 };
@@ -88,15 +86,10 @@ bool UdpHost::receiveAudioBuffer(juce::AudioBuffer<float> &buffer)
 
     if (!m_ignoredError && len > 0)
     {
-        std::cout << "Received " << len << " bytes" << std::endl;
-
         return true;
     }
     else
     {
-        std::cout << "Failed to receive data from remote" << std::endl;
-        std::cout << "Error: " << m_ignoredError.message() << std::endl;
-        std::cout << "Length: " << len << std::endl;
         return false;
     }
 };
