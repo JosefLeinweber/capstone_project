@@ -39,6 +39,6 @@ void FileLogger::logMessage(const juce::String &message)
     }
     else
     {
-        std::cout << "FileLogger | Logger not initialized!"
+        std::cout << "FileLogger | Logger not initialized!" << std::endl;
     }
 }

@@ -57,7 +57,7 @@ public:
 
     bool incomingConnection() const;
 
-    void sendMessageToGUI(juce::Message *message);
+    void sendMessageToGUI(std::string type, std::string message);
 
     void handleMessage(const juce::Message &message);
 

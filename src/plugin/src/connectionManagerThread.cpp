@@ -15,6 +15,7 @@ ConnectionManagerThread::ConnectionManagerThread(
       m_inputRingBuffer(inputRingBuffer), m_outputRingBuffer(outputRingBuffer),
       m_startConnection(startConnection), m_stopConnection(stopConnection)
 {
+    m_fileLogger = std::make_unique<FileLogger>("ConnectDAWs");
 }
 
 ConnectionManagerThread::~ConnectionManagerThread()
@@ -47,54 +48,53 @@ ConnectionManagerThread::~ConnectionManagerThread()
 
 void ConnectionManagerThread::run()
 {
-    setup();
-
-    asyncWaitForConnection(std::chrono::milliseconds(2000000));
-
-    while (!m_incomingConnection && !m_startConnection)
+    while (!threadShouldExit())
     {
-        if (threadShouldExit())
+        setup();
+
+        asyncWaitForConnection(std::chrono::milliseconds(2000000));
+
+        while (!m_incomingConnection && !m_startConnection)
         {
-            return;
-        }
-        wait(100);
-    }
-
-    if (m_startConnection)
-    {
-        initializeConnection(m_remoteConfigurationData);
-    }
-
-    if (exchangeConfigurationDataWithRemote(m_localConfigurationData) &&
-        startUpProviderAndConsumerThreads(m_localConfigurationData,
-                                          m_remoteConfigurationData,
-                                          std::chrono::milliseconds(20000)))
-    {
-        MessageToGUI *start_message =
-            new MessageToGUI("status", "Start streaming...");
-        sendMessageToGUI(start_message);
-        while (m_providerThread->isThreadRunning() &&
-               m_consumerThread->isThreadRunning() && !m_stopConnection &&
-               !threadShouldExit())
-
-        {
+            if (threadShouldExit())
+            {
+                return;
+            }
             wait(100);
         }
-        stopProviderAndConsumerThreads(std::chrono::seconds(5));
-        MessageToGUI *stop_message =
-            new MessageToGUI("status", "Stoped streaming!");
-        sendMessageToGUI(stop_message);
-        resetToStartState();
-        if (threadShouldExit())
+
+        if (m_startConnection)
         {
-            waitForThreadToExit(1000);
+            initializeConnection(m_remoteConfigurationData);
         }
+
+        if (exchangeConfigurationDataWithRemote(m_localConfigurationData) &&
+            startUpProviderAndConsumerThreads(m_localConfigurationData,
+                                              m_remoteConfigurationData,
+                                              std::chrono::milliseconds(20000)))
+        {
+            sendMessageToGUI("status", "Start streaming...");
+            while (m_providerThread->isThreadRunning() &&
+                   m_consumerThread->isThreadRunning() && !m_stopConnection &&
+                   !threadShouldExit())
+
+            {
+                wait(100);
+            }
+            stopProviderAndConsumerThreads(std::chrono::seconds(5));
+            sendMessageToGUI("status", "Stoped streaming!");
+        }
+        else
+        {
+            sendMessageToGUI("status",
+                             "Failed to start streaming, please try again...");
+        }
+        resetToStartState();
     }
 }
 
 void ConnectionManagerThread::setup()
 {
-    m_fileLogger = std::make_unique<FileLogger>("ConnectDAWs");
     initCMTMessenger();
     setupHost();
     m_fileLogger->logMessage("ConnectionManagerThread | setup finished!");
@@ -150,10 +150,9 @@ void ConnectionManagerThread::setupHost()
     m_host = std::make_unique<TcpHost>(m_ioContext,
                                        m_localConfigurationData.host_port());
     m_host->setupSocket();
-    MessageToGUI *message = new MessageToGUI(
-        "localIpAndPort",
-        ":" + std::to_string(m_localConfigurationData.host_port()));
-    sendMessageToGUI(message);
+    sendMessageToGUI("localIpAndPort",
+                     ":" +
+                         std::to_string(m_localConfigurationData.host_port()));
 }
 
 
@@ -175,9 +174,7 @@ void ConnectionManagerThread::asyncWaitForConnection(
 {
     m_fileLogger->logMessage(
         "ConnectionManagerThread | asyncWaitForConnection");
-    MessageToGUI *message =
-        new MessageToGUI("status", "Waiting for connection...");
-    sendMessageToGUI(message);
+    sendMessageToGUI("status", "Waiting for connection...");
     m_host->asyncWaitForConnection(
         std::bind(&ConnectionManagerThread::callbackFunction,
                   this,
@@ -214,18 +211,16 @@ void ConnectionManagerThread::initializeConnection(
             "connect to remote: " +
             remoteConfigurationData.ip() + ":" +
             std::to_string(remoteConfigurationData.host_port()));
-        MessageToGUI *message1 = new MessageToGUI(
+        sendMessageToGUI(
             "status",
             "Trying to connected to remote: " + remoteConfigurationData.ip() +
                 ":" + std::to_string(remoteConfigurationData.host_port()));
-        sendMessageToGUI(message1);
         m_host->initializeConnection(remoteConfigurationData.ip(),
                                      remoteConfigurationData.host_port());
-        MessageToGUI *message = new MessageToGUI(
+        sendMessageToGUI(
             "status",
             "Connected to remote: " + remoteConfigurationData.ip() + ":" +
                 std::to_string(remoteConfigurationData.host_port()));
-        sendMessageToGUI(message);
     }
     catch (std::exception &e)
     {
@@ -236,11 +231,10 @@ void ConnectionManagerThread::initializeConnection(
             std::to_string(remoteConfigurationData.host_port()) +
             " with error: ");
         m_fileLogger->logMessage(e.what());
-        MessageToGUI *message = new MessageToGUI(
+        sendMessageToGUI(
             "status",
             "Failed to connect to remote: " + remoteConfigurationData.ip() +
                 ":" + std::to_string(remoteConfigurationData.host_port()));
-        sendMessageToGUI(message);
     }
 }
 
@@ -384,9 +378,10 @@ bool ConnectionManagerThread::incomingConnection() const
     return m_incomingConnection;
 }
 
-void ConnectionManagerThread::sendMessageToGUI(juce::Message *message)
+void ConnectionManagerThread::sendMessageToGUI(std::string type,
+                                               std::string message)
 {
-    // juce::MessageManager::callAsync(
-    //     [this, message]() { m_guiMessenger->postMessage(message); });
-    m_guiMessenger->postMessage(message);
+    m_fileLogger->logMessage("ConnectionManagerThread | sendMessageToGUI | "
+                             "Sending message to GUI");
+    m_guiMessenger->postMessage(new MessageToGUI(type, message));
 }
