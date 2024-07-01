@@ -11,7 +11,6 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
 {
     std::atomic<bool> remoteStartConnection = false;
     std::atomic<bool> remoteStopConnection = false;
-
     juce::AudioBuffer<float> audioBuffer(2, 256);
     audioBuffer.clear();
     fillBuffer(audioBuffer, 1.0f);
