@@ -4,9 +4,9 @@
 ProviderThread::ProviderThread(ConfigurationData remoteConfigurationData,
                                ConfigurationData localConfigurationData,
                                AudioBufferFIFO &outputRingBuffer,
-
+                               std::chrono::milliseconds timeout,
                                const std::string threadName)
-    : juce::Thread(threadName),
+    : juce::Thread(threadName), m_timeout(timeout),
       m_remoteConfigurationData(remoteConfigurationData),
       m_localConfigurationData(localConfigurationData),
       m_outputRingBuffer(outputRingBuffer)
@@ -33,7 +33,7 @@ void ProviderThread::run()
     setupHost();
     while (!threadShouldExit())
     {
-        if (readFromFIFOBuffer(std::chrono::milliseconds(5000)))
+        if (readFromFIFOBuffer(m_timeout))
         {
             sendAudioToRemoteConsumer();
         }

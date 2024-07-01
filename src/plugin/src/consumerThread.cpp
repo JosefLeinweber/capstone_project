@@ -4,9 +4,10 @@
 ConsumerThread::ConsumerThread(ConfigurationData remoteConfigurationData,
                                ConfigurationData localConfigurationData,
                                AudioBufferFIFO &inputRingBuffer,
+                               std::chrono::milliseconds timeout,
                                const std::string threadName)
 
-    : juce::Thread(threadName),
+    : juce::Thread(threadName), m_timeout(timeout),
       m_remoteConfigurationData(remoteConfigurationData),
       m_localConfigurationData(localConfigurationData),
       m_inputRingBuffer(inputRingBuffer)
@@ -28,7 +29,7 @@ ConsumerThread::~ConsumerThread()
 
 void ConsumerThread::run()
 {
-    setupHost(std::chrono::milliseconds(5000));
+    setupHost(m_timeout);
     while (!threadShouldExit())
     {
         if (receiveAudioFromRemoteProvider())

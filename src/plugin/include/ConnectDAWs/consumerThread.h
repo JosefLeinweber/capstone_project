@@ -8,10 +8,12 @@
 class ConsumerThread : public juce::Thread
 {
 public:
-    ConsumerThread(ConfigurationData remoteConfigurationData,
-                   ConfigurationData localConfigurationData,
-                   AudioBufferFIFO &inputRingBuffer,
-                   const std::string threadName = "ConsumerThread");
+    ConsumerThread(
+        ConfigurationData remoteConfigurationData,
+        ConfigurationData localConfigurationData,
+        AudioBufferFIFO &inputRingBuffer,
+        std::chrono::milliseconds timeout = std::chrono::milliseconds(2000),
+        const std::string threadName = "ConsumerThread");
 
     ~ConsumerThread() override;
 
@@ -30,7 +32,7 @@ public:
 private:
     boost::asio::io_context m_ioContext;
     std::unique_ptr<UdpHost> m_udpHost;
-
+    std::chrono::milliseconds m_timeout;
     ConfigurationData m_remoteConfigurationData;
     ConfigurationData m_localConfigurationData;
 };

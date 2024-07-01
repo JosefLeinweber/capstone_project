@@ -8,11 +8,12 @@
 class ProviderThread : public juce::Thread
 {
 public:
-    ProviderThread(ConfigurationData remoteConfigurationData,
-                   ConfigurationData localConfigurationData,
-                   AudioBufferFIFO &outputRingBuffer,
-
-                   const std::string threadName = "ProviderThread");
+    ProviderThread(
+        ConfigurationData remoteConfigurationData,
+        ConfigurationData localConfigurationData,
+        AudioBufferFIFO &outputRingBuffer,
+        std::chrono::milliseconds timeout = std::chrono::milliseconds(2000),
+        const std::string threadName = "ProviderThread");
 
 
     ~ProviderThread() override;
@@ -32,7 +33,7 @@ public:
 private:
     boost::asio::io_context m_ioContext;
     std::unique_ptr<UdpHost> m_udpHost;
-
+    std::chrono::milliseconds m_timeout;
     ConfigurationData m_remoteConfigurationData;
     ConfigurationData m_localConfigurationData;
 };

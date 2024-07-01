@@ -316,16 +316,22 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
 {
     m_fileLogger->logMessage(
         "ConnectionManagerThread | startUpProviderAndConsumerThreads");
-    m_providerThread = std::make_unique<ProviderThread>(remoteConfigurationData,
-                                                        localConfigurationData,
-                                                        m_outputRingBuffer);
-    m_consumerThread = std::make_unique<ConsumerThread>(remoteConfigurationData,
-                                                        localConfigurationData,
-                                                        m_inputRingBuffer);
+    std::chrono::milliseconds timeoutForProviderAndConsumerThreads =
+        std::chrono::milliseconds(5000);
+    m_providerThread =
+        std::make_unique<ProviderThread>(remoteConfigurationData,
+                                         localConfigurationData,
+                                         m_outputRingBuffer,
+                                         timeoutForProviderAndConsumerThreads);
+    m_consumerThread =
+        std::make_unique<ConsumerThread>(remoteConfigurationData,
+                                         localConfigurationData,
+                                         m_inputRingBuffer,
+                                         timeoutForProviderAndConsumerThreads);
 
     //TODO: change to realtime threads
-    m_providerThread->startThread(juce::Thread::Priority::highest);
-    m_consumerThread->startThread(juce::Thread::Priority::highest);
+    m_providerThread->startRealtimeThread(juce::Thread::RealtimeOptions());
+    m_consumerThread->startRealtimeThread(juce::Thread::RealtimeOptions());
 
 
     auto startTime = std::chrono::high_resolution_clock::now();
