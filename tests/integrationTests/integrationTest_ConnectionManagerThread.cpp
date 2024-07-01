@@ -10,12 +10,10 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
           "send data between two threads")
 {
     auto remoteThread = std::thread([&]() {
-        AudioBufferFIFO inputRingBuffer(2, 80);
-        AudioBufferFIFO outputRingBuffer(2, 80);
-        std::atomic<bool> startConnection = false;
-        std::atomic<bool> stopConnection = false;
+        std::atomic<bool> remoteStartConnection = false;
+        std::atomic<bool> remoteStopConnection = false;
 
-        juce::AudioBuffer<float> audioBuffer(2, 20);
+        juce::AudioBuffer<float> audioBuffer(2, 256);
         audioBuffer.clear();
         fillBuffer(audioBuffer, 1.0f);
         outputRingBuffer.writeToInternalBufferFrom(audioBuffer);
@@ -24,10 +22,10 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
         ConnectionManagerThread remoteThread(guiMessenger1,
                                              cmtMessenger1,
                                              remoteConfigurationData,
-                                             inputRingBuffer,
-                                             outputRingBuffer,
-                                             startConnection,
-                                             stopConnection);
+                                             remoteInputRingBuffer,
+                                             remoteOutputRingBuffer,
+                                             remoteStartConnection,
+                                             remoteStopConnection);
         remoteThread.startThread();
         std::cout << "started remoteThread" << std::endl;
         std::this_thread::sleep_for(std::chrono::milliseconds(5000));
@@ -39,14 +37,10 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
         printBuffer(inputRingBuffer.buffer);
         std::cout << "RemoteThread | outputRingBuffer" << std::endl;
         printBuffer(outputRingBuffer.buffer);
+        DBG("RemoteThread | EXIT");
     });
 
-
-    AudioBufferFIFO inputRingBuffer(2, 80);
-    AudioBufferFIFO outputRingBuffer(2, 80);
-    std::atomic<bool> startConnection = false;
-    std::atomic<bool> stopConnection = false;
-    juce::AudioBuffer<float> audioBuffer(2, 20);
+    juce::AudioBuffer<float> audioBuffer(2, 256);
     audioBuffer.clear();
     fillBuffer(audioBuffer, 2.0f);
     outputRingBuffer.writeToInternalBufferFrom(audioBuffer);

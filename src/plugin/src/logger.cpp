@@ -38,8 +38,3 @@ void FileLogger::logMessage(const juce::String &message)
         m_fileLogger->logMessage(message);
     }
 }
-
-std::unique_ptr<FileLogger> getFileLogger()
-{
-    return std::make_unique<FileLogger>("ConnectDAWs");
-}

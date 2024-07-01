@@ -41,7 +41,7 @@ ConnectionManagerThread::~ConnectionManagerThread()
         m_ioContextThread.join();
     }
 
-    m_fileLogger->logMessage("ConnectionManagerThread | closing...");
+    //m_fileLogger->logMessage("ConnectionManagerThread | closing...");
     waitForThreadToExit(1000);
 }
 
@@ -98,7 +98,7 @@ void ConnectionManagerThread::run()
 
 void ConnectionManagerThread::setup()
 {
-    m_fileLogger = getFileLogger();
+    m_fileLogger = std::make_unique<FileLogger>("ConnectDAWs");
     initCMTMessenger();
     setupHost();
     m_fileLogger->logMessage("ConnectionManagerThread | setup finished!");
