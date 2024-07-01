@@ -103,7 +103,6 @@ void MainAudioProcessorEditor::resized()
 
 void MainAudioProcessorEditor::buttonClicked(juce::Button *button)
 {
-
     if (button == &sendButton)
     {
         std::string ip = ipEditor.getText().toStdString();

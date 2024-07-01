@@ -48,10 +48,7 @@ bool ProviderThread::readFromFIFOBuffer(std::chrono::milliseconds timeout)
 {
     auto start = std::chrono::high_resolution_clock::now();
     //TODO: change 0 to not be hardcoded
-    std::cout << "m_outputBzffer.getNumSamples(): "
-              << m_outputBuffer.getNumSamples() << std::endl;
-    std::cout << "m_outputRingBuffer.getNumReady(): "
-              << m_outputRingBuffer.getNumReady() << std::endl;
+    // Only read from
     while (m_outputRingBuffer.getNumReady() < m_outputBuffer.getNumSamples())
 
     {
@@ -67,26 +64,20 @@ bool ProviderThread::readFromFIFOBuffer(std::chrono::milliseconds timeout)
                 std::chrono::high_resolution_clock::now() - start) > timeout)
         {
             std::cout << "ProviderThread | readFromFIFOBuffer | "
-                         "timeout, not enough ready samples in buffer"
-                      << std::endl;
+                         "timeout, only "
+                      << m_outputRingBuffer.getNumReady()
+                      << " samples ready to be read" << std::endl;
             return false;
         }
     }
-    std::cout << "ProviderThread | readFromFIFOBuffer | numReady: "
-              << m_outputRingBuffer.getNumReady() << std::endl;
     m_outputRingBuffer.readFromInternalBufferTo(m_outputBuffer);
     return true;
 }
 
 bool ProviderThread::sendAudioToRemoteConsumer()
 {
-    std::cout << "ProviderThread | sendAudioToRemoteConsumer" << std::endl;
-
     try
     {
-        std::cout << "ProviderThread | sendAudioToRemoteConsumer | "
-                     "send the following buffer: "
-                  << std::endl;
         m_udpHost->sendAudioBuffer(
             m_outputBuffer,
             boost::asio::ip::udp::endpoint(

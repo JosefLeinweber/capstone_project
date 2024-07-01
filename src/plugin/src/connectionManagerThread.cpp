@@ -15,7 +15,6 @@ ConnectionManagerThread::ConnectionManagerThread(
       m_inputRingBuffer(inputRingBuffer), m_outputRingBuffer(outputRingBuffer),
       m_startConnection(startConnection), m_stopConnection(stopConnection)
 {
-    std::cout << "ConnectionManagerThread | constructor" << std::endl;
 }
 
 ConnectionManagerThread::~ConnectionManagerThread()
@@ -42,16 +41,13 @@ ConnectionManagerThread::~ConnectionManagerThread()
         m_ioContextThread.join();
     }
 
-
+    m_fileLogger->logMessage("ConnectionManagerThread | closing...");
     waitForThreadToExit(1000);
 }
 
 void ConnectionManagerThread::run()
 {
-    std::cout << "ConnectionManagerThread | run" << std::endl;
-    initCMTMessenger();
-
-    setupHost();
+    setup();
 
     asyncWaitForConnection(std::chrono::milliseconds(2000000));
 
@@ -99,6 +95,88 @@ void ConnectionManagerThread::run()
         }
     }
 }
+
+void ConnectionManagerThread::setup()
+{
+    m_fileLogger = getFileLogger();
+    initCMTMessenger();
+    setupHost();
+    m_fileLogger->logMessage("ConnectionManagerThread | setup finished!");
+}
+
+void ConnectionManagerThread::initCMTMessenger()
+{
+    m_cmtMessenger = std::make_shared<Messenger>(
+        std::bind(&ConnectionManagerThread::handleMessage,
+                  this,
+                  std::placeholders::_1));
+    while (!m_guiMessenger)
+    {
+        m_fileLogger->logMessage("ConnectionManagerThread | waiting for GUI "
+                                 "messenger to be initialized...");
+        wait(100);
+    }
+}
+
+void ConnectionManagerThread::setupHost()
+{
+    m_host = std::make_unique<TcpHost>(m_ioContext,
+                                       m_localConfigurationData.host_port());
+    m_host->setupSocket();
+    MessageToGUI *message = new MessageToGUI(
+        "localIpAndPort",
+        ":" + std::to_string(m_localConfigurationData.host_port()));
+    sendMessageToGUI(message);
+}
+
+
+void ConnectionManagerThread::callbackFunction(
+    const boost::system::error_code &error)
+{
+    if (!error)
+    {
+        m_incomingConnection = true;
+    }
+    else
+    {
+        m_incomingConnection = false;
+    }
+}
+
+void ConnectionManagerThread::asyncWaitForConnection(
+    std::chrono::milliseconds timeout)
+{
+    m_fileLogger->logMessage(
+        "ConnectionManagerThread | asyncWaitForConnection");
+    MessageToGUI *message =
+        new MessageToGUI("status", "Waiting for connection...");
+    sendMessageToGUI(message);
+    m_host->asyncWaitForConnection(
+        std::bind(&ConnectionManagerThread::callbackFunction,
+                  this,
+                  std::placeholders::_1),
+        timeout);
+    startIOContextInDifferentThread();
+}
+
+void ConnectionManagerThread::startIOContextInDifferentThread()
+{
+    try
+    {
+        m_ioContextThread = std::jthread([this]() { m_ioContext.run(); });
+        m_fileLogger->logMessage(
+            "ConnectionManagerThread | startIOContextInDifferentThread | "
+            "Started io context thread");
+    }
+    catch (std::exception &e)
+    {
+        m_fileLogger->logMessage(
+            "ConnectionManagerThread | startIOContextInDifferentThread | "
+            "Failed to start io context thread\n");
+        m_fileLogger->logMessage(e.what());
+    }
+}
+
 
 bool ConnectionManagerThread::exchangeConfigurationDataWithRemote(
     ConfigurationData configurationData)
@@ -165,17 +243,6 @@ ConfigurationData ConnectionManagerThread::remoteConfigurationDataFromGUI()
 }
 
 
-void ConnectionManagerThread::setupHost()
-{
-    m_host = std::make_unique<TcpHost>(m_ioContext,
-                                       m_localConfigurationData.host_port());
-    m_host->setupSocket();
-    MessageToGUI *message = new MessageToGUI(
-        "localIpAndPort",
-        ":" + std::to_string(m_localConfigurationData.host_port()));
-    sendMessageToGUI(message);
-}
-
 void ConnectionManagerThread::resetToStartState()
 {
     std::cout << "ConnectionManagerThread | resetToStartState" << std::endl;
@@ -192,52 +259,6 @@ void ConnectionManagerThread::resetToStartState()
     }
 }
 
-void ConnectionManagerThread::callbackFunction(
-    const boost::system::error_code &error)
-{
-    if (!error)
-    {
-        m_incomingConnection = true;
-        std::cout << "callback > received data" << std::endl;
-    }
-    else
-    {
-        m_incomingConnection = false;
-        std::cout << "callback > no data received" << std::endl;
-        // throw std::runtime_error("Failed to receive data! With error: " +
-        //                          error.message());
-    }
-}
-
-void ConnectionManagerThread::asyncWaitForConnection(
-    std::chrono::milliseconds timeout)
-{
-    MessageToGUI *message =
-        new MessageToGUI("status", "Waiting for connection...");
-    sendMessageToGUI(message);
-    std::cout << "ConncectionManager::asyncWaitForConnection" << std::endl;
-    m_host->asyncWaitForConnection(
-        std::bind(&ConnectionManagerThread::callbackFunction,
-                  this,
-                  std::placeholders::_1),
-        timeout);
-    startIOContextInDifferentThread();
-}
-
-void ConnectionManagerThread::startIOContextInDifferentThread()
-{
-    try
-    {
-        m_ioContextThread = std::jthread([this]() { m_ioContext.run(); });
-    }
-    catch (std::exception &e)
-    {
-        std::cout
-            << "ConnectionManagerThread::startIOContextInDifferentThread | "
-               "Failed to start ioContext in different thread"
-            << std::endl;
-    }
-}
 
 void ConnectionManagerThread::initializeConnection(
     ConfigurationData remoteConfigurationData)
@@ -370,20 +391,5 @@ void ConnectionManagerThread::handleMessage(const juce::Message &message)
         std::cout << "ConnectionManagerThread::handleMessage | "
                      "Received unknown message from GUI"
                   << std::endl;
-    }
-}
-
-void ConnectionManagerThread::initCMTMessenger()
-{
-    m_cmtMessenger = std::make_shared<Messenger>(
-        std::bind(&ConnectionManagerThread::handleMessage,
-                  this,
-                  std::placeholders::_1));
-    while (!m_guiMessenger)
-    {
-        std::cout << "ConnectionManagerThread::initCMTMessenger | Waiting for "
-                     "GUI Messenger to be created"
-                  << std::endl;
-        wait(100);
     }
 }

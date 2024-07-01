@@ -61,21 +61,19 @@ void ConsumerThread::setupHost(std::chrono::milliseconds timeout)
 
 bool ConsumerThread::receiveAudioFromRemoteProvider()
 {
-    std::cout << "ConsumerThread | receiveAudioFromRemoteProvider" << std::endl;
     try
     {
-        bool success = m_udpHost->receiveAudioBuffer(m_inputBuffer);
-        if (!success)
+        if (m_udpHost->receiveAudioBuffer(m_inputBuffer))
+        {
+            return true;
+        }
+        else
         {
             std::cout << "ConsumerThread | receiveAudioFromRemoteProvider | "
                          "Failed to receive audio buffer"
                       << std::endl;
             return false;
         }
-        std::cout << "ConsumerThread | receiveAudioFromRemoteProvider | "
-                     "Received audio buffer"
-                  << std::endl;
-        return success;
     }
     catch (std::exception &e)
     {
@@ -88,14 +86,5 @@ bool ConsumerThread::receiveAudioFromRemoteProvider()
 
 void ConsumerThread::writeToFIFOBuffer()
 {
-    std::cout << "ConsumerThread | writeToFIFOBuffer | m_inputBuffer: ";
-    for (int channel = 0; channel < m_inputBuffer.getNumChannels(); ++channel)
-    {
-        for (int sample = 0; sample < m_inputBuffer.getNumSamples(); ++sample)
-        {
-            std::cout << m_inputBuffer.getSample(channel, sample) << " ";
-        }
-        std::cout << std::endl;
-    }
     return m_inputRingBuffer.writeToInternalBufferFrom(m_inputBuffer);
 };

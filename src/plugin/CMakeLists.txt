@@ -21,6 +21,7 @@ set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}")
 
 target_sources(${PROJECT_NAME}
     PRIVATE
+        src/logger.cpp
         src/audioBuffer.cpp
         src/connectionManagerThread.cpp
         src/consumerThread.cpp
@@ -33,6 +34,7 @@ target_sources(${PROJECT_NAME}
         src/udpHost.cpp
 
 
+        ${INCLUDE_DIR}/logger.h
         ${INCLUDE_DIR}/audioBuffer.h
         ${INCLUDE_DIR}/connectionManagerThread.h
         ${INCLUDE_DIR}/consumerThread.h
@@ -43,6 +45,7 @@ target_sources(${PROJECT_NAME}
         ${INCLUDE_DIR}/providerThread.h
         ${INCLUDE_DIR}/tcpHost.h
         ${INCLUDE_DIR}/udpHost.h
+
 )
 
 # Sets the include directories of the plugin project.

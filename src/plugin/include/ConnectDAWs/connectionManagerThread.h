@@ -2,6 +2,7 @@
 #include "audioBuffer.h"
 #include "consumerThread.h"
 #include "datagram.pb.h"
+#include "logger.h"
 #include "messenger.h"
 #include "providerThread.h"
 #include "tcpHost.h"
@@ -65,6 +66,7 @@ public:
     void handleMessage(const juce::Message &message);
 
     void initCMTMessenger();
+    void setup();
 
     boost::asio::io_context m_ioContext;
     std::jthread m_ioContextThread;
@@ -74,6 +76,7 @@ public:
 private:
     std::atomic<bool> m_incomingConnection = false;
 
+    std::unique_ptr<FileLogger> m_fileLogger;
     std::unique_ptr<ProviderThread> m_providerThread;
     std::unique_ptr<ConsumerThread> m_consumerThread;
     std::unique_ptr<TcpHost> m_host;

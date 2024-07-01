@@ -128,8 +128,6 @@ void MainAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
                               samplesPerBlock,
                               numInputChannels,
                               numOutputChannels);
-
-    std::cout << "Sample Rate: " << sampleRate << std::endl;
 }
 
 void MainAudioProcessor::releaseResources()
@@ -229,26 +227,3 @@ juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter()
 {
     return new MainAudioProcessor();
 }
-
-
-// void MainAudioProcessor::sendToConnectionManagerThread(const std::string &ip,
-//                                                        int port)
-// {
-//     std::cout << "Current Thread ID 1: " << std::this_thread::get_id()
-//               << std::endl;
-//     juce::MessageManager::callAsync([this, ip, port]() {
-//         std::cout << "Current Thread ID 2: " << std::this_thread::get_id()
-//                   << std::endl;
-//         MyCustomMessage *message = new MyCustomMessage(ip, port);
-//         connectionManagerThread->postMessage(message);
-//     });
-// }
-
-// void MainAudioProcessor::sendToPluginEditor(const std::string &ip, int port)
-// {
-//     juce::MessageManager::callAsync([this, ip, port]() {
-//         MyCustomMessage *message = new MyCustomMessage(ip, port);
-//         dynamic_cast<MainAudioProcessorEditor *>(getActiveEditor())
-//             ->postMessage(message);
-//     });
-// }

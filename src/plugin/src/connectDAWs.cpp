@@ -68,7 +68,6 @@ void ConnectDAWs::initFIFOBuffers(int numInputChannels,
 {
     //TODO: remove magic number (10) determin what the best value is and set a constant
     int bufferSize = samplesPerBlock * 10;
-
     m_inputBufferFIFO =
         std::make_shared<AudioBufferFIFO>(numInputChannels, bufferSize);
     m_outputBufferFIFO =
