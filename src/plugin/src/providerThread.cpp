@@ -33,7 +33,7 @@ void ProviderThread::run()
     setupHost();
     while (!threadShouldExit())
     {
-        if (readFromFIFOBuffer(std::chrono::milliseconds(2000)))
+        if (readFromFIFOBuffer(std::chrono::milliseconds(5000)))
         {
             sendAudioToRemoteConsumer();
         }

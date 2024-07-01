@@ -9,11 +9,14 @@
 TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
           "send data between two threads")
 {
+    // 1. Setting up the remote connection buffer
     std::atomic<bool> remoteStartConnection = false;
     std::atomic<bool> remoteStopConnection = false;
     juce::AudioBuffer<float> audioBuffer(2, 256);
     audioBuffer.clear();
     fillBuffer(audioBuffer, 1.0f);
+    remoteOutputRingBuffer.writeToInternalBufferFrom(audioBuffer);
+    remoteOutputRingBuffer.writeToInternalBufferFrom(audioBuffer);
     remoteOutputRingBuffer.writeToInternalBufferFrom(audioBuffer);
     remoteOutputRingBuffer.writeToInternalBufferFrom(audioBuffer);
     auto myLambda = [](const juce::Message &message) {
@@ -27,16 +30,20 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
                                          remoteOutputRingBuffer,
                                          remoteStartConnection,
                                          remoteStopConnection);
+
+    // 2. Starting the remote thread -> remote thread now waits for incomming connection
     remoteThread.startThread();
     std::cout << "started remoteThread" << std::endl;
     std::cout << "RemoteThread | inputRingBuffer" << std::endl;
     printBuffer(remoteInputRingBuffer.buffer);
     std::cout << "RemoteThread | outputRingBuffer" << std::endl;
     printBuffer(remoteOutputRingBuffer.buffer);
-    std::cout << "RemoteThread | EXIT" << std::endl;
 
+    // 3. Setting up the local thread
     audioBuffer.clear();
     fillBuffer(audioBuffer, 2.0f);
+    outputRingBuffer.writeToInternalBufferFrom(audioBuffer);
+    outputRingBuffer.writeToInternalBufferFrom(audioBuffer);
     outputRingBuffer.writeToInternalBufferFrom(audioBuffer);
     outputRingBuffer.writeToInternalBufferFrom(audioBuffer);
     guiMessenger2 = std::make_shared<Messenger>(myLambda);
@@ -48,22 +55,21 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
                                         startConnection,
                                         stopConnection);
 
-
+    // 4. Starting the local thread -> local thread now also waits for incomming connection
     localThread.startThread();
-    while (!cmtMessenger2)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     std::cout << "started localThread" << std::endl;
-    localThread.handleMessage(
-        MessageToCMT(remoteConfigurationData.ip(),
-                     remoteConfigurationData.host_port()));
 
+    // 5. Mock an incoming message on the local thread to make it connect to the remote thread
+    localThread.handleMessage(MessageToCMT("127.0.0.1", 6000));
+
+    // 6. while the connection is not established, wait
     while (startConnection)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    // remoteThread.join();
+
+    // 7. shutdown both threads
     localThread.signalThreadShouldExit();
     remoteThread.signalThreadShouldExit();
     localThread.waitForThreadToExit(1000);
@@ -72,6 +78,8 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
     printBuffer(inputRingBuffer.buffer);
     std::cout << "LocalThread | outputRingBuffer" << std::endl;
     printBuffer(outputRingBuffer.buffer);
+
+    // 8. Check if the data was successfully sent from the local to the remote thread
     bool areSendAndReceivedBuffersEqual = false;
     for (int channel = 0; channel < 2; channel++)
     {

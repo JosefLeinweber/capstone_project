@@ -95,6 +95,8 @@ bool UdpHost::receiveAudioBuffer(juce::AudioBuffer<float> &buffer)
     else
     {
         std::cout << "Failed to receive data from remote" << std::endl;
+        std::cout << "Error: " << m_ignoredError.message() << std::endl;
+        std::cout << "Length: " << len << std::endl;
         return false;
     }
 };

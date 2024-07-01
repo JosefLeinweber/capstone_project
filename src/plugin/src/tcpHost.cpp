@@ -42,15 +42,19 @@ void TcpHost::asyncWaitForConnection(
             timer->cancel();
             m_incomingConnection = true;
         });
-    timer->async_wait([this, timer](const boost::system::error_code &error) {
-        if (!error)
-        {
-            std::cout
-                << "TcpHost | asyncWaitForConnection timeout, timer expiered"
-                << std::endl;
-            m_acceptor.cancel();
-        }
-    });
+    if (timeout.count() > 0)
+    {
+        timer->async_wait(
+            [this, timer](const boost::system::error_code &error) {
+                if (!error)
+                {
+                    std::cout << "TcpHost | asyncWaitForConnection timeout, "
+                                 "timer expiered"
+                              << std::endl;
+                    m_acceptor.cancel();
+                }
+            });
+    }
 }
 
 void TcpHost::startAccept()
@@ -60,8 +64,7 @@ void TcpHost::startAccept()
     {
         std::cout << "Failed to accept connection" << std::endl;
         m_socket->close();
-        std::throw_with_nested(
-            std::runtime_error("Failed to accept connection"));
+        throw std::runtime_error("Failed to accept connection");
     }
     else
     {
@@ -84,8 +87,7 @@ void TcpHost::initializeConnection(std::string ip, unsigned short port)
         {
             std::cout << "!!!Failed to connect to remote host" << std::endl;
             m_socket->close();
-            std::throw_with_nested(
-                std::runtime_error("Failed to connect to remote host"));
+            throw std::runtime_error("Failed to connect to remote host");
         }
 
         m_incomingConnection = false;

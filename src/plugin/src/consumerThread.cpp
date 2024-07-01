@@ -28,7 +28,7 @@ ConsumerThread::~ConsumerThread()
 
 void ConsumerThread::run()
 {
-    setupHost(std::chrono::milliseconds(2000));
+    setupHost(std::chrono::milliseconds(5000));
     while (!threadShouldExit())
     {
         if (receiveAudioFromRemoteProvider())
@@ -86,5 +86,6 @@ bool ConsumerThread::receiveAudioFromRemoteProvider()
 
 void ConsumerThread::writeToFIFOBuffer()
 {
+    std::cout << "Received data on consumer " << std::endl;
     return m_inputRingBuffer.writeToInternalBufferFrom(m_inputBuffer);
 };

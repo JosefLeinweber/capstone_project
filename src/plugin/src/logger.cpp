@@ -21,13 +21,13 @@ std::unique_ptr<juce::FileLogger> FileLogger::createLogger(
     const juce::String &logName)
 {
     std::unique_ptr<juce::FileLogger> fileLogger(
-        juce::FileLogger::createDateStampedLogger(
+        juce::FileLogger::createDefaultAppLogger(
             generateLogFileDirectory(),
             logName,
-            ".log",
             "ConnectDAWs File Logger | only the ConnectionManagerThread will "
             "write to this file to avoid blocking calls inside the audio "
-            "thread."));
+            "thread.",
+            128 * 1024));
     return fileLogger;
 }
 

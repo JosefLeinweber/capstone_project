@@ -52,7 +52,7 @@ void ConnectionManagerThread::run()
     {
         setup();
 
-        asyncWaitForConnection(std::chrono::milliseconds(2000000));
+        asyncWaitForConnection(std::chrono::milliseconds(0));
 
         while (!m_incomingConnection && !m_startConnection)
         {
@@ -81,6 +81,16 @@ void ConnectionManagerThread::run()
             {
                 wait(100);
             }
+            m_fileLogger->logMessage("ConnectionManagerThread | "
+                                     "run | Stopped streaming...");
+            m_fileLogger->logMessage(
+                "providerThread is running: " +
+                std::to_string(m_providerThread->isThreadRunning()));
+            m_fileLogger->logMessage(
+                "consumerThread is running: " +
+                std::to_string(m_consumerThread->isThreadRunning()));
+            m_fileLogger->logMessage("m_stopConnection: " +
+                                     std::to_string(m_stopConnection));
             stopProviderAndConsumerThreads(std::chrono::seconds(5));
             sendMessageToGUI("status", "Stoped streaming!");
         }
@@ -217,10 +227,8 @@ void ConnectionManagerThread::initializeConnection(
                 ":" + std::to_string(remoteConfigurationData.host_port()));
         m_host->initializeConnection(remoteConfigurationData.ip(),
                                      remoteConfigurationData.host_port());
-        sendMessageToGUI(
-            "status",
-            "Connected to remote: " + remoteConfigurationData.ip() + ":" +
-                std::to_string(remoteConfigurationData.host_port()));
+        m_fileLogger->logMessage("ConnectionManagerThread | "
+                                 "initializeConnection | Connected to remote!");
     }
     catch (std::exception &e)
     {
