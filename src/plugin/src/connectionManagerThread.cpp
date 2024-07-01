@@ -172,7 +172,7 @@ void ConnectionManagerThread::startIOContextInDifferentThread()
     {
         m_fileLogger->logMessage(
             "ConnectionManagerThread | startIOContextInDifferentThread | "
-            "Failed to start io context thread\n");
+            "Failed to start io context thread with error: ");
         m_fileLogger->logMessage(e.what());
     }
 }
@@ -181,6 +181,8 @@ void ConnectionManagerThread::startIOContextInDifferentThread()
 bool ConnectionManagerThread::exchangeConfigurationDataWithRemote(
     ConfigurationData configurationData)
 {
+    m_fileLogger->logMessage(
+        "ConnectionManagerThread | exchangeConfigurationDataWithRemote");
     if (m_host->incomingConnection())
     {
         return receiveConfigurationData() &&
@@ -201,13 +203,17 @@ bool ConnectionManagerThread::sendConfigurationData(
     try
     {
         m_host->send(serializedData);
+        m_fileLogger->logMessage(
+            "ConnectionManagerThread | sendConfigurationData | Sent "
+            "configuration data");
         return true;
     }
     catch (std::exception &e)
     {
-        std::cout << "ConnectionManagerThread::sendConfigurationData | "
-                     "Failed to send configuration data"
-                  << std::endl;
+        m_fileLogger->logMessage(
+            "ConnectionManagerThread | sendConfigurationData | Failed to send "
+            "configuration data with error: ");
+        m_fileLogger->logMessage(e.what());
         return false;
     }
 }
@@ -219,33 +225,38 @@ bool ConnectionManagerThread::receiveConfigurationData()
         std::string serializedData = m_host->receiveConfiguration();
         m_remoteConfigurationData =
             m_host->deserializeConfigurationData(serializedData);
+        m_fileLogger->logMessage("ConnectionManagerThread | "
+                                 "receiveConfigurationData | Received "
+                                 "configuration data");
         return true;
     }
     catch (std::exception &e)
     {
-        std::cout << "ConnectionManagerThread::receiveConfigurationData | "
-                     "Failed to receive configuration data"
-                  << std::endl;
+        m_fileLogger->logMessage("ConnectionManagerThread | "
+                                 "receiveConfigurationData | Failed to receive "
+                                 "configuration data with error: ");
+        m_fileLogger->logMessage(e.what());
         return false;
     }
 }
 
-ConfigurationData ConnectionManagerThread::remoteConfigurationDataFromGUI()
-{
-    //TODO: implement this function
-    //! only placeholder
-    ConfigurationData remoteConfigurationData;
 
-    remoteConfigurationData.set_consumer_port(7001);
-    remoteConfigurationData.set_provider_port(7002);
+// ConfigurationData ConnectionManagerThread::remoteConfigurationDataFromGUI()
+// {
+//     //TODO: implement this function
+//     //! only placeholder
+//     ConfigurationData remoteConfigurationData;
 
-    return remoteConfigurationData;
-}
+//     remoteConfigurationData.set_consumer_port(7001);
+//     remoteConfigurationData.set_provider_port(7002);
+
+//     return remoteConfigurationData;
+// }
 
 
 void ConnectionManagerThread::resetToStartState()
 {
-    std::cout << "ConnectionManagerThread | resetToStartState" << std::endl;
+    m_fileLogger->logMessage("ConnectionManagerThread | resetToStartState");
     m_startConnection = false;
     m_stopConnection = false;
     m_incomingConnection = false;
@@ -257,6 +268,8 @@ void ConnectionManagerThread::resetToStartState()
         m_ioContext.stop();
         m_ioContextThread.join();
     }
+    m_fileLogger->logMessage("ConnectionManagerThread | ready for new "
+                             "connection...");
 }
 
 
@@ -265,6 +278,11 @@ void ConnectionManagerThread::initializeConnection(
 {
     try
     {
+        m_fileLogger->logMessage(
+            "ConnectionManagerThread | initializeConnection | Trying to "
+            "connect to remote: " +
+            remoteConfigurationData.ip() + ":" +
+            std::to_string(remoteConfigurationData.host_port()));
         MessageToGUI *message1 = new MessageToGUI(
             "status",
             "Trying to connected to remote: " + remoteConfigurationData.ip() +
@@ -280,9 +298,13 @@ void ConnectionManagerThread::initializeConnection(
     }
     catch (std::exception &e)
     {
-        std::cout << "ConnectionManagerThread::initializeConnection | "
-                     "Failed to initialize connection"
-                  << std::endl;
+        m_fileLogger->logMessage(
+            "ConnectionManagerThread | initializeConnection | Failed to "
+            "connect to remote: " +
+            remoteConfigurationData.ip() + ":" +
+            std::to_string(remoteConfigurationData.host_port()) +
+            " with error: ");
+        m_fileLogger->logMessage(e.what());
         MessageToGUI *message = new MessageToGUI(
             "status",
             "Failed to connect to remote: " + remoteConfigurationData.ip() +
@@ -297,9 +319,8 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
     ConfigurationData remoteConfigurationData,
     std::chrono::milliseconds timeout)
 {
-    //TODO: implement a way to get the provider and consumer address from the handshake
-
-
+    m_fileLogger->logMessage(
+        "ConnectionManagerThread | startUpProviderAndConsumerThreads");
     m_providerThread = std::make_unique<ProviderThread>(remoteConfigurationData,
                                                         localConfigurationData,
                                                         m_outputRingBuffer);
@@ -307,15 +328,12 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
                                                         localConfigurationData,
                                                         m_inputRingBuffer);
 
+    //TODO: change to realtime threads
     m_providerThread->startThread(juce::Thread::Priority::highest);
     m_consumerThread->startThread(juce::Thread::Priority::highest);
 
-    std::cout << "are threads running : " << m_providerThread->isThreadRunning()
-              << " " << m_consumerThread->isThreadRunning() << std::endl;
 
-    //time now
     auto startTime = std::chrono::high_resolution_clock::now();
-
     while (!m_providerThread->isThreadRunning() ||
            !m_consumerThread->isThreadRunning())
     {
@@ -323,10 +341,16 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
                 std::chrono::high_resolution_clock::now() - startTime)
                 .count() > timeout.count())
         {
+            m_fileLogger->logMessage(
+                "ConnectionManagerThread | startUpProviderAndConsumerThreads | "
+                "Timeout");
             return false;
         }
         wait(100);
     }
+    m_fileLogger->logMessage(
+        "ConnectionManagerThread | startUpProviderAndConsumerThreads | "
+        "Provider and Consumer threads started");
     return true;
 }
 
@@ -378,18 +402,29 @@ void ConnectionManagerThread::handleMessage(const juce::Message &message)
 {
     if (auto *customMessage = dynamic_cast<const MessageToCMT *>(&message))
     {
-        std::cout << "ConnectionManagerThread::handleMessage | "
-                     "Received message from GUI: "
-                  << customMessage->ip << " " << customMessage->port
-                  << std::endl;
+        // if (customMessage->type == "stop")
+        // {
+        //     m_stopConnection = true;
+        // }
+        // else
+        // {
+        //     std::cout << "ConnectionManagerThread::handleMessage | "
+        //                  "Received unknown message from GUI"
+        //               << std::endl;
+        // }
+        m_fileLogger->logMessage("ConnectionManagerThread | handleMessage | "
+                                 "Received message from GUI");
+        m_fileLogger->logMessage(customMessage->ip + " | " +
+                                 std::to_string(customMessage->port));
+        m_fileLogger->logMessage("ConnectionManagerThread | handleMessage | "
+                                 "setting m_startConnection to true...");
         m_remoteConfigurationData.set_ip(customMessage->ip);
         m_remoteConfigurationData.set_host_port(customMessage->port);
         m_startConnection = true;
     }
     else
     {
-        std::cout << "ConnectionManagerThread::handleMessage | "
-                     "Received unknown message from GUI"
-                  << std::endl;
+        m_fileLogger->logMessage("ConnectionManagerThread | handleMessage | "
+                                 "Received unknown message from GUI");
     }
 }
