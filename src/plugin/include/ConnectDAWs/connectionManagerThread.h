@@ -53,11 +53,7 @@ public:
 
     void resetToStartState();
 
-    void asyncWaitForClosingRequest();
-
     void stopProviderAndConsumerThreads(std::chrono::seconds timeout);
-
-    ConfigurationData getRemoteConfigurationData() const;
 
     bool incomingConnection() const;
 

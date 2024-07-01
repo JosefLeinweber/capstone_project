@@ -241,19 +241,6 @@ bool ConnectionManagerThread::receiveConfigurationData()
 }
 
 
-// ConfigurationData ConnectionManagerThread::remoteConfigurationDataFromGUI()
-// {
-//     //TODO: implement this function
-//     //! only placeholder
-//     ConfigurationData remoteConfigurationData;
-
-//     remoteConfigurationData.set_consumer_port(7001);
-//     remoteConfigurationData.set_provider_port(7002);
-
-//     return remoteConfigurationData;
-// }
-
-
 void ConnectionManagerThread::resetToStartState()
 {
     m_fileLogger->logMessage("ConnectionManagerThread | resetToStartState");
@@ -368,27 +355,9 @@ void ConnectionManagerThread::stopProviderAndConsumerThreads(
     m_consumerThread->waitForThreadToExit(timeout.count());
 }
 
-void ConnectionManagerThread::asyncWaitForClosingRequest()
-{
-    while (!threadShouldExit())
-    {
-        // 6. wait for a closing request from the gui or the connected virtual studio
-        wait(100);
-    }
-
-    m_providerThread->stopThread(1000);
-    m_consumerThread->stopThread(1000);
-}
-
-
 bool ConnectionManagerThread::incomingConnection() const
 {
     return m_incomingConnection;
-}
-
-ConfigurationData ConnectionManagerThread::getRemoteConfigurationData() const
-{
-    return m_remoteConfigurationData;
 }
 
 void ConnectionManagerThread::sendMessageToGUI(juce::Message *message)
