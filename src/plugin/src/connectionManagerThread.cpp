@@ -102,7 +102,13 @@ void ConnectionManagerThread::run()
             std::to_string(m_consumerThread->isThreadRunning()));
         m_fileLogger->logMessage("m_stopConnection: " +
                                  std::to_string(m_stopConnection));
-        stopProviderAndConsumerThreads(std::chrono::seconds(500));
+        stopProviderAndConsumerThreads(std::chrono::seconds(5));
+        m_fileLogger->logMessage(
+            "providerThread is running: " +
+            std::to_string(m_providerThread->isThreadRunning()));
+        m_fileLogger->logMessage(
+            "consumerThread is running: " +
+            std::to_string(m_consumerThread->isThreadRunning()));
         sendMessageToGUI("status", "Stoped streaming!");
     }
     else
@@ -110,7 +116,7 @@ void ConnectionManagerThread::run()
         sendMessageToGUI("status",
                          "Failed to start streaming, please try again...");
     }
-    resetToStartState();
+    // resetToStartState();
 }
 
 void ConnectionManagerThread::setup()
@@ -244,7 +250,6 @@ void ConnectionManagerThread::stopAsyncWaitForConnection()
             "ConnectionManagerThread | stopAsyncWaitForConnection | Failed to "
             "stop io context thread with error: ");
         m_fileLogger->logMessage(e.what());
-        throw std::runtime_error("Failed to stop io context thread");
     }
 }
 
@@ -413,6 +418,9 @@ void ConnectionManagerThread::stopProviderAndConsumerThreads(
 
     m_providerThread->waitForThreadToExit(timeout.count());
     m_consumerThread->waitForThreadToExit(timeout.count());
+    m_fileLogger->logMessage(
+        "ConnectionManagerThread | stopProviderAndConsumerThreads | "
+        "Provider and Consumer threads stopped");
 }
 
 void ConnectionManagerThread::resetToStartState()

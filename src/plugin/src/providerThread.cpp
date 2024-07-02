@@ -44,7 +44,6 @@ void ProviderThread::run()
         {
             std::cout << "ProviderThread | run | Error reading from FIFO buffer"
                       << std::endl;
-            signalThreadShouldExit();
         }
     }
 };
@@ -65,6 +64,7 @@ bool ProviderThread::readFromFIFOBuffer(std::chrono::milliseconds timeout)
         if (std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::high_resolution_clock::now() - start) > timeout)
         {
+            signalThreadShouldExit();
             return false;
         }
     }
@@ -101,6 +101,5 @@ void ProviderThread::setupHost()
     catch (const std::exception &e)
     {
         signalThreadShouldExit();
-        throw e;
     }
 }

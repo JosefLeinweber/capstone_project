@@ -19,10 +19,9 @@ public:
 
     void run() override;
 
-    void setupHost(
-        std::chrono::milliseconds timeout = std::chrono::milliseconds(500));
+    void setupHost();
 
-    bool receiveAudioFromRemoteProvider();
+    bool receiveAudioFromRemoteProvider(std::chrono::milliseconds timeout);
 
     void writeToFIFOBuffer();
 
@@ -30,6 +29,9 @@ public:
     AudioBufferFIFO &m_inputRingBuffer;
 
 private:
+    void receiveHandler(const boost::system::error_code &error,
+                        std::size_t bytes_transferred);
+    bool m_receivedData = false;
     boost::asio::io_context m_ioContext;
     std::unique_ptr<UdpHost> m_udpHost;
     std::chrono::milliseconds m_timeout;

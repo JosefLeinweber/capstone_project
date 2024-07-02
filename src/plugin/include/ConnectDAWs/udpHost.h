@@ -15,14 +15,15 @@ public:
 
     ~UdpHost();
 
-    void setupSocket(boost::asio::io_context &ioContext,
-                     unsigned short port,
-                     unsigned short rec_timeout = 1000);
+    void setupSocket(boost::asio::io_context &ioContext, unsigned short port);
 
     void sendAudioBuffer(juce::AudioBuffer<float> buffer,
                          boost::asio::ip::udp::endpoint remoteEndpoint);
 
-    bool receiveAudioBuffer(juce::AudioBuffer<float> &buffer);
+    void receiveAudioBuffer(
+        juce::AudioBuffer<float> &buffer,
+        std::function<void(const boost::system::error_code &, std::size_t)>
+            handler);
 
 private:
     ConfigurationData m_configurationData;
@@ -33,6 +34,5 @@ private:
 
     std::unique_ptr<boost::asio::ip::udp::socket> m_socket;
     std::unique_ptr<boost::asio::steady_timer> m_timer;
-
     juce::AudioBuffer<float> m_tempBuffer;
 };

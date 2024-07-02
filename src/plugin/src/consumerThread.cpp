@@ -29,10 +29,10 @@ ConsumerThread::~ConsumerThread()
 
 void ConsumerThread::run()
 {
-    setupHost(m_timeout);
+    setupHost();
     while (!threadShouldExit())
     {
-        if (receiveAudioFromRemoteProvider())
+        if (receiveAudioFromRemoteProvider(m_timeout))
         {
             std::cout << "ConsumerThread | run | Writing audio to FIFO buffer"
                       << std::endl;
@@ -43,19 +43,17 @@ void ConsumerThread::run()
             std::cout << "ConsumerThread | run | Error receiving audio from "
                          "remote provider"
                       << std::endl;
-            signalThreadShouldExit();
         }
     }
 };
 
-void ConsumerThread::setupHost(std::chrono::milliseconds timeout)
+void ConsumerThread::setupHost()
 {
     try
     {
         m_udpHost = std::make_unique<UdpHost>();
         m_udpHost->setupSocket(m_ioContext,
-                               m_localConfigurationData.consumer_port(),
-                               timeout.count());
+                               m_localConfigurationData.consumer_port());
     }
     catch (std::exception &e)
     {
@@ -64,25 +62,42 @@ void ConsumerThread::setupHost(std::chrono::milliseconds timeout)
     }
 };
 
-bool ConsumerThread::receiveAudioFromRemoteProvider()
+bool ConsumerThread::receiveAudioFromRemoteProvider(
+    std::chrono::milliseconds timeout)
 {
-    try
+    m_udpHost->receiveAudioBuffer(m_inputBuffer,
+                                  std::bind(&ConsumerThread::receiveHandler,
+                                            this,
+                                            std::placeholders::_1,
+                                            std::placeholders::_2));
+    auto start = std::chrono::high_resolution_clock::now();
+    while (!m_receivedData)
     {
-        if (m_udpHost->receiveAudioBuffer(m_inputBuffer))
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        if (threadShouldExit() ||
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::high_resolution_clock::now() - start) > timeout)
         {
-            return true;
-        }
-        else
-        {
-
             return false;
         }
     }
-    catch (std::exception &e)
-    {
-        return false;
-    }
+
+    m_receivedData = false;
+    return true;
 };
+
+void ConsumerThread::receiveHandler(const boost::system::error_code &error,
+                                    std::size_t bytes_transferred)
+{
+    if (!error && bytes_transferred > 0)
+    {
+        m_receivedData = true;
+    }
+    else
+    {
+        m_receivedData = false;
+    }
+}
 
 void ConsumerThread::writeToFIFOBuffer()
 {

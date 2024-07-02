@@ -18,8 +18,7 @@ UdpHost::~UdpHost()
 };
 
 void UdpHost::setupSocket(boost::asio::io_context &ioContext,
-                          unsigned short port,
-                          unsigned short rec_timeout)
+                          unsigned short port)
 {
     try
     {
@@ -30,7 +29,6 @@ void UdpHost::setupSocket(boost::asio::io_context &ioContext,
         m_socket = std::make_unique<boost::asio::ip::udp::socket>(
             ioContext,
             boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port));
-        m_socket->set_option(receive_timeout_option{rec_timeout});
     }
     catch (const std::exception &e)
     {
@@ -70,26 +68,17 @@ void UdpHost::sendAudioBuffer(juce::AudioBuffer<float> buffer,
     }
 };
 
-bool UdpHost::receiveAudioBuffer(juce::AudioBuffer<float> &buffer)
+void UdpHost::receiveAudioBuffer(
+    juce::AudioBuffer<float> &buffer,
+    std::function<void(const boost::system::error_code &error,
+                       std::size_t bytes_transferred)> handler)
 {
 
     float *data = buffer.getWritePointer(0);
-    // float* data2 = tempBuffer.getReadPointer(1);
     std::size_t length =
         buffer.getNumSamples() * sizeof(float) * buffer.getNumChannels();
-
-
-    std::size_t len = m_socket->receive_from(boost::asio::buffer(data, length),
-                                             m_remoteEndpoint,
-                                             0,
-                                             m_ignoredError);
-
-    if (!m_ignoredError && len > 0)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    m_socket->async_receive_from(
+        boost::asio::buffer(data, length),
+        m_remoteEndpoint,
+        std::bind(handler, std::placeholders::_1, std::placeholders::_2));
 };

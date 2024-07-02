@@ -140,7 +140,10 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
     localThread.handleMessage(MessageToCMT("127.0.0.1", 6000));
 
     // 6. while the connection is not established, wait
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    while (startConnection)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
 
     // 7. shutdown both threads
     localThread.signalThreadShouldExit();
