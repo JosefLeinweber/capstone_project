@@ -34,10 +34,15 @@ void ConsumerThread::run()
     {
         if (receiveAudioFromRemoteProvider())
         {
+            std::cout << "ConsumerThread | run | Writing audio to FIFO buffer"
+                      << std::endl;
             writeToFIFOBuffer();
         }
         else
         {
+            std::cout << "ConsumerThread | run | Error receiving audio from "
+                         "remote provider"
+                      << std::endl;
             signalThreadShouldExit();
         }
     }

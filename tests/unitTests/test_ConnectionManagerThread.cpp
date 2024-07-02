@@ -58,6 +58,14 @@ TEST_CASE("ConnectionManagerThread | asyncWaitForConnection unsuccessfull")
     REQUIRE_FALSE(connectionEstablished);
 }
 
+TEST_CASE("ConnectionManagerThread | stopAsyncWaitForConnection")
+{
+    connectionManagerThread.setupHost();
+    connectionManagerThread.asyncWaitForConnection(
+        std::chrono::milliseconds(5000));
+    REQUIRE_NOTHROW(connectionManagerThread.stopAsyncWaitForConnection());
+}
+
 TEST_CASE("ConnectionManagerThread | initializeConnection successfull")
 {
     //GIVEN: a remote host waits for a connection

@@ -7,6 +7,8 @@ TcpHost::TcpHost(boost::asio::io_context &ioContext, unsigned short port)
           boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port))
 {
     std::cout << "TcpHost created" << std::endl;
+    m_timer =
+        std::make_shared<boost::asio::steady_timer>(m_acceptor.get_executor());
 }
 
 TcpHost::~TcpHost()
@@ -32,28 +34,25 @@ void TcpHost::asyncWaitForConnection(
     std::function<void(const boost::system::error_code &error)> callback,
     std::chrono::milliseconds timeout)
 {
-    auto timer =
-        std::make_shared<boost::asio::steady_timer>(m_acceptor.get_executor(),
-                                                    timeout);
+    m_timer->expires_after(timeout);
     m_acceptor.async_accept(
         *m_socket,
-        [this, callback, timer](const boost::system::error_code &error) {
+        [this, callback](const boost::system::error_code &error) {
             callback(error);
-            timer->cancel();
+            m_timer->cancel();
             m_incomingConnection = true;
         });
     if (timeout.count() > 0)
     {
-        timer->async_wait(
-            [this, timer](const boost::system::error_code &error) {
-                if (!error)
-                {
-                    std::cout << "TcpHost | asyncWaitForConnection timeout, "
-                                 "timer expiered"
-                              << std::endl;
-                    m_acceptor.cancel();
-                }
-            });
+        m_timer->async_wait([this](const boost::system::error_code &error) {
+            if (!error)
+            {
+                std::cout << "TcpHost | asyncWaitForConnection timeout, "
+                             "timer expiered"
+                          << std::endl;
+                m_acceptor.cancel();
+            }
+        });
     }
 }
 
@@ -102,6 +101,12 @@ void TcpHost::handleConnectTimeout(const boost::system::error_code &error)
     }
 }
 
+void TcpHost::stopAsyncOperations()
+{
+    m_acceptor.cancel();
+    m_timer->cancel();
+}
+
 void TcpHost::initializeConnection(std::string ip,
                                    unsigned short port,
                                    std::chrono::milliseconds timeout)
@@ -111,19 +116,16 @@ void TcpHost::initializeConnection(std::string ip,
 
     if (m_socket)
     {
-        auto timer = std::make_shared<boost::asio::steady_timer>(
-            m_acceptor.get_executor(),
-            timeout);
+        m_timer->expires_after(timeout);
         std::cout << "Connecting to remote host" << std::endl;
-        m_socket->async_connect(
-            boost::asio::ip::tcp::endpoint(
-                boost::asio::ip::address::from_string(ip),
-                port),
-            [this, timer](const boost::system::error_code &error) {
-                handleConnect(error);
-                timer->cancel();
-            });
-        timer->async_wait([this](const boost::system::error_code &error) {
+        m_socket->async_connect(boost::asio::ip::tcp::endpoint(
+                                    boost::asio::ip::address::from_string(ip),
+                                    port),
+                                [this](const boost::system::error_code &error) {
+                                    handleConnect(error);
+                                    m_timer->cancel();
+                                });
+        m_timer->async_wait([this](const boost::system::error_code &error) {
             handleConnectTimeout(error);
         });
     }

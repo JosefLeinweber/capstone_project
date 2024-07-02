@@ -63,6 +63,10 @@ void ConnectionManagerThread::run()
             wait(100);
         }
 
+        m_fileLogger->logMessage("ConnectionManagerThread | run | Incoming "
+                                 "connection: " +
+                                 std::to_string(m_incomingConnection));
+
         if (m_startConnection)
         {
             initializeConnection(m_remoteConfigurationData);
@@ -91,7 +95,7 @@ void ConnectionManagerThread::run()
                 std::to_string(m_consumerThread->isThreadRunning()));
             m_fileLogger->logMessage("m_stopConnection: " +
                                      std::to_string(m_stopConnection));
-            stopProviderAndConsumerThreads(std::chrono::seconds(5));
+            stopProviderAndConsumerThreads(std::chrono::seconds(500));
             sendMessageToGUI("status", "Stoped streaming!");
         }
         else
@@ -171,10 +175,17 @@ void ConnectionManagerThread::callbackFunction(
 {
     if (!error)
     {
+        m_fileLogger->logMessage(
+            "ConnectionManagerThread | callbackFunction | Incoming connection "
+            "accepted");
         m_incomingConnection = true;
     }
     else
     {
+        m_fileLogger->logMessage(
+            "ConnectionManagerThread | callbackFunction | Failed to accept "
+            "incoming connection with error: ");
+        m_fileLogger->logMessage(error.message());
         m_incomingConnection = false;
     }
 }
@@ -213,13 +224,19 @@ void ConnectionManagerThread::startIOContextInDifferentThread()
 
 void ConnectionManagerThread::stopAsyncWaitForConnection()
 {
-    if (!m_ioContext.stopped())
+    try
     {
-        m_ioContext.stop();
+        m_host->stopAsyncOperations();
+        m_fileLogger->logMessage(
+            "ConnectionManagerThread | stopAsyncWaitForConnection");
     }
-    if (m_ioContextThread.joinable())
+    catch (std::exception &e)
     {
-        m_ioContextThread.join();
+        m_fileLogger->logMessage(
+            "ConnectionManagerThread | stopAsyncWaitForConnection | Failed to "
+            "stop io context thread with error: ");
+        m_fileLogger->logMessage(e.what());
+        throw std::runtime_error("Failed to stop io context thread");
     }
 }
 
@@ -240,12 +257,8 @@ void ConnectionManagerThread::initializeConnection(
                 ":" + std::to_string(remoteConfigurationData.host_port()));
         m_host->initializeConnection(remoteConfigurationData.ip(),
                                      remoteConfigurationData.host_port());
-        if (m_ioContextThread.joinable())
-        {
-            m_ioContextThread.join();
-        }
         // blocking call to wait for either connection or timeout
-        m_ioContext.run();
+        m_ioContext.run_one_for(std::chrono::milliseconds(5000));
         m_fileLogger->logMessage("ConnectionManagerThread | "
                                  "initializeConnection | Connected to remote!");
     }
@@ -406,6 +419,7 @@ void ConnectionManagerThread::resetToStartState()
     {
         m_ioContext.stop();
         m_ioContextThread.join();
+        m_ioContext.restart();
     }
     m_fileLogger->logMessage("ConnectionManagerThread | ready for new "
                              "connection...");
@@ -420,6 +434,7 @@ void ConnectionManagerThread::sendMessageToGUI(std::string type,
                                                std::string message)
 {
     m_fileLogger->logMessage("ConnectionManagerThread | sendMessageToGUI | "
-                             "Sending message to GUI");
+                             "Sending message to GUI | " +
+                             message);
     m_guiMessenger->postMessage(new MessageToGUI(type, message));
 }
