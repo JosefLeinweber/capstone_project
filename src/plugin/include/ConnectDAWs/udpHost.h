@@ -5,7 +5,8 @@
 #include <juce_audio_basics/juce_audio_basics.h>
 
 typedef boost::asio::detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>
-    rcv_timeout_option;
+    receive_timeout_option;
+
 
 class UdpHost
 {

@@ -68,6 +68,7 @@ public:
     std::jthread m_ioContextThread;
     std::atomic<bool> &m_startConnection;
     std::atomic<bool> &m_stopConnection;
+    ConfigurationData m_remoteConfigurationData;
 
 private:
     std::atomic<bool> m_incomingConnection = false;
@@ -83,5 +84,4 @@ private:
     AudioBufferFIFO &m_inputRingBuffer;
     AudioBufferFIFO &m_outputRingBuffer;
     ConfigurationData m_localConfigurationData;
-    ConfigurationData m_remoteConfigurationData;
 };

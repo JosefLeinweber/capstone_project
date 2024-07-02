@@ -60,10 +60,16 @@ AudioBufferFIFO remoteOutputRingBuffer(2, 1024);
 std::atomic<bool> startConnection = false;
 std::atomic<bool> stopConnection = false;
 
-std::shared_ptr<Messenger> guiMessenger1;
+auto placeHolderHandler = [](const juce::Message &message) {
+    juce::ignoreUnused(message);
+};
+
+std::shared_ptr<Messenger> guiMessenger1 =
+    std::make_shared<Messenger>(placeHolderHandler);
 std::shared_ptr<Messenger> cmtMessenger1;
 
-std::shared_ptr<Messenger> guiMessenger2;
+std::shared_ptr<Messenger> guiMessenger2 =
+    std::make_shared<Messenger>(placeHolderHandler);
 std::shared_ptr<Messenger> cmtMessenger2;
 
 

@@ -72,17 +72,36 @@ void TcpHost::startAccept()
     }
 }
 
-void TcpHost::initializeConnection(std::string ip, unsigned short port)
+void TcpHost::initializeConnection(std::string ip,
+                                   unsigned short port,
+                                   std::chrono::milliseconds timeout)
 {
     std::cout << "tcpHost initConnection  | Connecting to remote host"
               << std::endl;
     if (m_socket)
     {
         std::cout << "Connecting to remote host" << std::endl;
+        // auto timer = std::make_shared<boost::asio::steady_timer>(
+        //     m_acceptor.get_executor(),
+        //     timeout);
+        // if (timeout.count() > 0)
+        // {
+        //     timer->async_wait([this,
+        //                        timer](const boost::system::error_code &error) {
+        //         if (!error)
+        //         {
+        //             std::cout << "TcpHost | asyncWaitForConnection timeout, "
+        //                          "timer expiered"
+        //                       << std::endl;
+        //             m_socket.cancel();
+        //         }
+        //     });
+        // }
         m_socket->connect(boost::asio::ip::tcp::endpoint(
                               boost::asio::ip::address::from_string(ip),
                               port),
                           m_error);
+
         if (m_error)
         {
             std::cout << "!!!Failed to connect to remote host" << std::endl;

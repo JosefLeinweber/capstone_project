@@ -71,7 +71,7 @@ void ConnectionManagerThread::run()
         if (exchangeConfigurationDataWithRemote(m_localConfigurationData) &&
             startUpProviderAndConsumerThreads(m_localConfigurationData,
                                               m_remoteConfigurationData,
-                                              std::chrono::milliseconds(20000)))
+                                              std::chrono::milliseconds(2000)))
         {
             sendMessageToGUI("status", "Start streaming...");
             while (m_providerThread->isThreadRunning() &&
@@ -227,6 +227,11 @@ void ConnectionManagerThread::initializeConnection(
                 ":" + std::to_string(remoteConfigurationData.host_port()));
         m_host->initializeConnection(remoteConfigurationData.ip(),
                                      remoteConfigurationData.host_port());
+        if (m_ioContextThread.joinable())
+        {
+            m_ioContextThread.join();
+        }
+        startIOContextInDifferentThread();
         m_fileLogger->logMessage("ConnectionManagerThread | "
                                  "initializeConnection | Connected to remote!");
     }
@@ -249,15 +254,20 @@ void ConnectionManagerThread::initializeConnection(
 bool ConnectionManagerThread::exchangeConfigurationDataWithRemote(
     ConfigurationData configurationData)
 {
-    m_fileLogger->logMessage(
-        "ConnectionManagerThread | exchangeConfigurationDataWithRemote");
+
     if (m_host->incomingConnection())
     {
+        m_fileLogger->logMessage(
+            "ConnectionManagerThread | exchangeConfigurationDataWithRemote | "
+            "incoming connection...");
         return receiveConfigurationData() &&
                sendConfigurationData(configurationData);
     }
     else
     {
+        m_fileLogger->logMessage(
+            "ConnectionManagerThread | exchangeConfigurationDataWithRemote | "
+            "outgoing connection...");
         return sendConfigurationData(configurationData) &&
                receiveConfigurationData();
     }

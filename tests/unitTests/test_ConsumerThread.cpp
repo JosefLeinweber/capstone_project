@@ -7,7 +7,6 @@
 
 TEST_CASE("ConsumerThread | Constructor", "[ConsumerThread]")
 {
-    AudioBufferFIFO inputRingBuffer(2, 1024);
 
     try
     {
@@ -24,7 +23,6 @@ TEST_CASE("ConsumerThread | Constructor", "[ConsumerThread]")
 TEST_CASE("ConsumerThread | setupHost")
 {
 
-    AudioBufferFIFO inputRingBuffer(2, 1024);
 
     ConsumerThread consumerThread(remoteConfigurationData,
                                   localConfigurationData,
@@ -48,7 +46,6 @@ TEST_CASE("ConsumerThread | writeToFIFOBuffer")
 TEST_CASE("ConsumerThread | receiveAudioFromRemoteProvider")
 {
 
-    AudioBufferFIFO inputRingBuffer(2, 20);
 
     ConsumerThread consumerThread(remoteConfigurationData,
                                   localConfigurationData,

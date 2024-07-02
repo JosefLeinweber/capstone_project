@@ -30,7 +30,7 @@ void UdpHost::setupSocket(boost::asio::io_context &ioContext,
         m_socket = std::make_unique<boost::asio::ip::udp::socket>(
             ioContext,
             boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port));
-        m_socket->set_option(rcv_timeout_option{rec_timeout});
+        m_socket->set_option(receive_timeout_option{rec_timeout});
     }
     catch (const std::exception &e)
     {

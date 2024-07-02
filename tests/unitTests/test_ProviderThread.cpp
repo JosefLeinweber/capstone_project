@@ -11,7 +11,6 @@
 TEST_CASE("ProviderThread | Constructor")
 {
 
-    AudioBufferFIFO outputRingBuffer(2, 1024);
 
     try
     {
@@ -28,7 +27,6 @@ TEST_CASE("ProviderThread | Constructor")
 TEST_CASE("ProviderThread | setupHost")
 {
 
-    AudioBufferFIFO outputRingBuffer(2, 1024);
 
     ProviderThread providerThread(remoteConfigurationData,
                                   localConfigurationData,
@@ -39,9 +37,8 @@ TEST_CASE("ProviderThread | setupHost")
 TEST_CASE("ProviderThread | readFromFIFOBuffer")
 {
 
-    AudioBufferFIFO outputRingBuffer(2, 20);
 
-    auto fillThread = std::jthread([&outputRingBuffer]() {
+    auto fillThread = std::jthread([&]() {
         juce::AudioBuffer<float> tempBuffer(2, 10);
         fillBuffer(tempBuffer, 0.5);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -60,7 +57,6 @@ TEST_CASE("ProviderThread | readFromFIFOBuffer")
 TEST_CASE("ProviderThread | readFromFIFOBuffer timeout")
 {
 
-    AudioBufferFIFO outputRingBuffer(2, 20);
 
     ProviderThread providerThread(remoteConfigurationData,
                                   localConfigurationData,
@@ -71,7 +67,6 @@ TEST_CASE("ProviderThread | readFromFIFOBuffer timeout")
 
 TEST_CASE("ProviderThread | sendAudioToRemoteConsumer")
 {
-    AudioBufferFIFO outputRingBuffer(2, 20);
 
 
     ProviderThread providerThread(remoteConfigurationData,

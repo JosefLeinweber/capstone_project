@@ -18,7 +18,10 @@ public:
 
     void startAccept();
 
-    void initializeConnection(std::string ip, unsigned short port);
+    void initializeConnection(
+        std::string ip,
+        unsigned short port,
+        std::chrono::milliseconds timeout = std::chrono::milliseconds(1000));
 
     void send(std::string &message);
 
