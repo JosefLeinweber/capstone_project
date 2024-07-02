@@ -8,14 +8,15 @@ ConnectionManagerThread::ConnectionManagerThread(
     AudioBufferFIFO &inputRingBuffer,
     AudioBufferFIFO &outputRingBuffer,
     std::atomic<bool> &startConnection,
-    std::atomic<bool> &stopConnection)
-    : juce::Thread("ConnectionManagerThread"), m_guiMessenger(guiMessenger),
+    std::atomic<bool> &stopConnection,
+    const std::string threadName)
+    : juce::Thread(threadName), m_guiMessenger(guiMessenger),
       m_cmtMessenger(cmtMessenger),
       m_localConfigurationData(localConfigurationData),
       m_inputRingBuffer(inputRingBuffer), m_outputRingBuffer(outputRingBuffer),
       m_startConnection(startConnection), m_stopConnection(stopConnection)
 {
-    m_fileLogger = std::make_unique<FileLogger>("ConnectDAWs");
+    m_fileLogger = std::make_unique<FileLogger>("ConnectDAWs", threadName);
 }
 
 ConnectionManagerThread::~ConnectionManagerThread()
@@ -48,70 +49,68 @@ ConnectionManagerThread::~ConnectionManagerThread()
 
 void ConnectionManagerThread::run()
 {
-    while (!threadShouldExit())
-    {
-        setup();
 
-        asyncWaitForConnection(std::chrono::milliseconds(0));
-        // m_fileLogger->logMessage("ConnectionManagerThread | run | Waiting for "
-        //                          "connection...");
-        // m_fileLogger->logMessage("ConnectionManagerThread | run | Incoming "
-        //                          "connection: " +
-        //                          std::to_string(m_incomingConnection));
-        // m_fileLogger->logMessage("ConnectionManagerThread | run | Start "
-        //                          "connection: " +
-        //                          std::to_string(m_startConnection));
-        while (!m_incomingConnection && !m_startConnection)
+    setup();
+
+    asyncWaitForConnection(std::chrono::milliseconds(0));
+    // m_fileLogger->logMessage("ConnectionManagerThread | run | Waiting for "
+    //                          "connection...");
+    // m_fileLogger->logMessage("ConnectionManagerThread | run | Incoming "
+    //                          "connection: " +
+    //                          std::to_string(m_incomingConnection));
+    // m_fileLogger->logMessage("ConnectionManagerThread | run | Start "
+    //                          "connection: " +
+    //                          std::to_string(m_startConnection));
+    while (!m_incomingConnection && !m_startConnection)
+    {
+        if (threadShouldExit())
         {
-            if (threadShouldExit())
-            {
-                return;
-            }
+            return;
+        }
+        wait(100);
+    }
+
+    m_fileLogger->logMessage("ConnectionManagerThread | run | Incoming "
+                             "connection: " +
+                             std::to_string(m_incomingConnection));
+
+    if (m_startConnection)
+    {
+        initializeConnection(m_remoteConfigurationData);
+    }
+
+    if (exchangeConfigurationDataWithRemote(m_localConfigurationData) &&
+        startUpProviderAndConsumerThreads(m_localConfigurationData,
+                                          m_remoteConfigurationData,
+                                          std::chrono::milliseconds(2000)))
+    {
+        sendMessageToGUI("status", "Start streaming...");
+        while (m_providerThread->isThreadRunning() &&
+               m_consumerThread->isThreadRunning() && !m_stopConnection &&
+               !threadShouldExit())
+
+        {
             wait(100);
         }
-
-        m_fileLogger->logMessage("ConnectionManagerThread | run | Incoming "
-                                 "connection: " +
-                                 std::to_string(m_incomingConnection));
-
-        if (m_startConnection)
-        {
-            initializeConnection(m_remoteConfigurationData);
-        }
-
-        if (exchangeConfigurationDataWithRemote(m_localConfigurationData) &&
-            startUpProviderAndConsumerThreads(m_localConfigurationData,
-                                              m_remoteConfigurationData,
-                                              std::chrono::milliseconds(2000)))
-        {
-            sendMessageToGUI("status", "Start streaming...");
-            while (m_providerThread->isThreadRunning() &&
-                   m_consumerThread->isThreadRunning() && !m_stopConnection &&
-                   !threadShouldExit())
-
-            {
-                wait(100);
-            }
-            m_fileLogger->logMessage("ConnectionManagerThread | "
-                                     "run | Stopped streaming...");
-            m_fileLogger->logMessage(
-                "providerThread is running: " +
-                std::to_string(m_providerThread->isThreadRunning()));
-            m_fileLogger->logMessage(
-                "consumerThread is running: " +
-                std::to_string(m_consumerThread->isThreadRunning()));
-            m_fileLogger->logMessage("m_stopConnection: " +
-                                     std::to_string(m_stopConnection));
-            stopProviderAndConsumerThreads(std::chrono::seconds(500));
-            sendMessageToGUI("status", "Stoped streaming!");
-        }
-        else
-        {
-            sendMessageToGUI("status",
-                             "Failed to start streaming, please try again...");
-        }
-        resetToStartState();
+        m_fileLogger->logMessage("ConnectionManagerThread | "
+                                 "run | Stopped streaming...");
+        m_fileLogger->logMessage(
+            "providerThread is running: " +
+            std::to_string(m_providerThread->isThreadRunning()));
+        m_fileLogger->logMessage(
+            "consumerThread is running: " +
+            std::to_string(m_consumerThread->isThreadRunning()));
+        m_fileLogger->logMessage("m_stopConnection: " +
+                                 std::to_string(m_stopConnection));
+        stopProviderAndConsumerThreads(std::chrono::seconds(500));
+        sendMessageToGUI("status", "Stoped streaming!");
     }
+    else
+    {
+        sendMessageToGUI("status",
+                         "Failed to start streaming, please try again...");
+    }
+    resetToStartState();
 }
 
 void ConnectionManagerThread::setup()

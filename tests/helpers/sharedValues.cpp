@@ -79,7 +79,8 @@ ConnectionManagerThread remoteConnectionManagerThread(guiMessenger1,
                                                       remoteInputRingBuffer,
                                                       remoteOutputRingBuffer,
                                                       startConnection,
-                                                      stopConnection);
+                                                      stopConnection,
+                                                      "RemoteCMT");
 
 ConnectionManagerThread connectionManagerThread(guiMessenger2,
                                                 cmtMessenger2,
@@ -87,4 +88,5 @@ ConnectionManagerThread connectionManagerThread(guiMessenger2,
                                                 inputRingBuffer,
                                                 outputRingBuffer,
                                                 startConnection,
-                                                stopConnection);
+                                                stopConnection,
+                                                "LocalCMT");

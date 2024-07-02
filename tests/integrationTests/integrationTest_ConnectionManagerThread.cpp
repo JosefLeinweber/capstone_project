@@ -15,7 +15,9 @@ TEST_CASE(
     auto sendingThread = std::jthread([]() {
         remoteConnectionManagerThread.setup();
         remoteConnectionManagerThread.asyncWaitForConnection(
-            std::chrono::milliseconds(0));
+            std::chrono::milliseconds(5000));
+        // need to wait because asyncWaitForConnection is non-blocking
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         remoteConnectionManagerThread.sendConfigurationData(
             remoteConfigurationData);
     });
@@ -51,21 +53,18 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | "
     //GIVEN: a ConnectionManagerThread which is connected to a remote host
     auto remoteThread = std::jthread([]() {
         remoteConnectionManagerThread.setupHost();
-        try
-        {
-            remoteConnectionManagerThread.asyncWaitForConnection(
-                std::chrono::milliseconds(5000));
-            remoteConnectionManagerThread.exchangeConfigurationDataWithRemote(
-                remoteConfigurationData);
-        }
-        catch (std::exception &e)
-        {
-            std::cout << e.what() << std::endl;
-        }
+        remoteConnectionManagerThread.asyncWaitForConnection(
+            std::chrono::milliseconds(5000));
+        // need to wait because asyncWaitForConnection is non-blocking
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        remoteConnectionManagerThread.exchangeConfigurationDataWithRemote(
+            remoteConfigurationData);
     });
 
 
     connectionManagerThread.setupHost();
+    connectionManagerThread.asyncWaitForConnection(
+        std::chrono::milliseconds(5000));
     connectionManagerThread.initializeConnection(remoteConfigurationData);
 
     //WHEN: the ConnectionManagerThread tries to receive configuration data
@@ -107,7 +106,8 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
                                          remoteInputRingBuffer,
                                          remoteOutputRingBuffer,
                                          remoteStartConnection,
-                                         remoteStopConnection);
+                                         remoteStopConnection,
+                                         "RemoteCMT");
 
     std::cout << "RemoteThread | inputRingBuffer" << std::endl;
     printBuffer(remoteInputRingBuffer.buffer);
@@ -127,7 +127,8 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
                                         inputRingBuffer,
                                         outputRingBuffer,
                                         startConnection,
-                                        stopConnection);
+                                        stopConnection,
+                                        "LocalCMT");
 
     // 4. Start both threads -> both are waiting for a connection
     remoteThread.startThread();
@@ -139,10 +140,7 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
     localThread.handleMessage(MessageToCMT("127.0.0.1", 6000));
 
     // 6. while the connection is not established, wait
-    while (startConnection)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
     // 7. shutdown both threads
     localThread.signalThreadShouldExit();

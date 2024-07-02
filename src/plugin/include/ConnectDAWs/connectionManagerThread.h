@@ -12,13 +12,15 @@
 class ConnectionManagerThread : public juce::Thread
 {
 public:
-    ConnectionManagerThread(std::shared_ptr<Messenger> &guiMessenger,
-                            std::shared_ptr<Messenger> &cmtMessenger,
-                            ConfigurationData localConfigurationData,
-                            AudioBufferFIFO &inputRingBuffer,
-                            AudioBufferFIFO &outputRingBuffer,
-                            std::atomic<bool> &startConnection,
-                            std::atomic<bool> &stopConnection);
+    ConnectionManagerThread(
+        std::shared_ptr<Messenger> &guiMessenger,
+        std::shared_ptr<Messenger> &cmtMessenger,
+        ConfigurationData localConfigurationData,
+        AudioBufferFIFO &inputRingBuffer,
+        AudioBufferFIFO &outputRingBuffer,
+        std::atomic<bool> &startConnection,
+        std::atomic<bool> &stopConnection,
+        const std::string threadName = "ConnectionManagerThread");
 
     ~ConnectionManagerThread() override;
 

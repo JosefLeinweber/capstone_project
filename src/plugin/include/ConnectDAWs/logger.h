@@ -4,7 +4,7 @@
 class FileLogger
 {
 public:
-    FileLogger(const juce::String &logName);
+    FileLogger(const juce::String &logName, std::string threadName);
     ~FileLogger();
 
     void logMessage(const juce::String &message);
@@ -15,6 +15,7 @@ private:
 
     std::unique_ptr<juce::FileLogger> m_fileLogger;
     juce::String m_logName;
+    std::string m_threadName;
 };
 
 std::unique_ptr<FileLogger> getFileLogger();

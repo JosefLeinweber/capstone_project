@@ -33,16 +33,9 @@ void TcpHost::asyncWaitForConnection(
     std::function<void(const boost::system::error_code &error)> callback,
     std::chrono::milliseconds timeout)
 {
-    m_timer->expires_after(timeout);
-    m_acceptor.async_accept(
-        *m_socket,
-        [this, callback](const boost::system::error_code &error) {
-            callback(error);
-            m_timer->cancel();
-            m_incomingConnection = true;
-        });
     if (timeout.count() > 0)
     {
+        m_timer->expires_after(timeout);
         m_timer->async_wait([this](const boost::system::error_code &error) {
             if (!error)
             {
@@ -53,6 +46,14 @@ void TcpHost::asyncWaitForConnection(
             }
         });
     }
+
+    m_acceptor.async_accept(
+        *m_socket,
+        [this, callback](const boost::system::error_code &error) {
+            callback(error);
+            m_timer->cancel();
+            m_incomingConnection = true;
+        });
 }
 
 void TcpHost::startAccept()
@@ -104,7 +105,6 @@ void TcpHost::stopAsyncOperations()
 {
     try
     {
-        m_acceptor.cancel();
         m_timer->cancel();
     }
     catch (const std::exception &e)

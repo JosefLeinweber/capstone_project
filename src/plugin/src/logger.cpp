@@ -1,6 +1,7 @@
 #include "ConnectDAWs/logger.h"
 
-FileLogger::FileLogger(const juce::String &logName) : m_logName(logName)
+FileLogger::FileLogger(const juce::String &logName, std::string threadName)
+    : m_logName(logName), m_threadName(threadName)
 {
     m_fileLogger = createLogger(logName);
 }
@@ -33,9 +34,14 @@ std::unique_ptr<juce::FileLogger> FileLogger::createLogger(
 
 void FileLogger::logMessage(const juce::String &message)
 {
+
+
     if (m_fileLogger)
     {
-        m_fileLogger->logMessage(message);
+
+        juce::String logMessage =
+            juce::String(m_threadName) + juce::String(" | ") + message;
+        m_fileLogger->logMessage(logMessage);
     }
     else
     {
