@@ -53,7 +53,14 @@ void ConnectionManagerThread::run()
         setup();
 
         asyncWaitForConnection(std::chrono::milliseconds(0));
-
+        // m_fileLogger->logMessage("ConnectionManagerThread | run | Waiting for "
+        //                          "connection...");
+        // m_fileLogger->logMessage("ConnectionManagerThread | run | Incoming "
+        //                          "connection: " +
+        //                          std::to_string(m_incomingConnection));
+        // m_fileLogger->logMessage("ConnectionManagerThread | run | Start "
+        //                          "connection: " +
+        //                          std::to_string(m_startConnection));
         while (!m_incomingConnection && !m_startConnection)
         {
             if (threadShouldExit())
@@ -116,6 +123,7 @@ void ConnectionManagerThread::setup()
 
 void ConnectionManagerThread::initCMTMessenger()
 {
+
     m_cmtMessenger = std::make_shared<Messenger>(
         std::bind(&ConnectionManagerThread::handleMessage,
                   this,
@@ -161,6 +169,7 @@ void ConnectionManagerThread::handleMessage(const juce::Message &message)
 
 void ConnectionManagerThread::setupHost()
 {
+
     m_host = std::make_unique<TcpHost>(m_ioContext,
                                        m_localConfigurationData.host_port());
     m_host->setupSocket();
@@ -259,6 +268,7 @@ void ConnectionManagerThread::initializeConnection(
                                      remoteConfigurationData.host_port());
         // blocking call to wait for either connection or timeout
         m_ioContext.run_one_for(std::chrono::milliseconds(5000));
+
         m_fileLogger->logMessage("ConnectionManagerThread | "
                                  "initializeConnection | Connected to remote!");
     }
@@ -282,7 +292,7 @@ bool ConnectionManagerThread::exchangeConfigurationDataWithRemote(
     ConfigurationData configurationData)
 {
 
-    if (m_host->incomingConnection())
+    if (m_incomingConnection)
     {
         m_fileLogger->logMessage(
             "ConnectionManagerThread | exchangeConfigurationDataWithRemote | "
@@ -412,15 +422,14 @@ void ConnectionManagerThread::resetToStartState()
     m_startConnection = false;
     m_stopConnection = false;
     m_incomingConnection = false;
-
     m_remoteConfigurationData = ConfigurationData();
 
     if (m_ioContextThread.joinable())
     {
-        m_ioContext.stop();
         m_ioContextThread.join();
-        m_ioContext.restart();
     }
+    m_ioContext.stop();
+    m_ioContext.restart();
     m_fileLogger->logMessage("ConnectionManagerThread | ready for new "
                              "connection...");
 }

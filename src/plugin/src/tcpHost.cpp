@@ -25,7 +25,6 @@ TcpHost::~TcpHost()
 
 void TcpHost::setupSocket()
 {
-
     m_socket = std::make_unique<boost::asio::ip::tcp::socket>(
         m_acceptor.get_executor());
 }
@@ -103,8 +102,16 @@ void TcpHost::handleConnectTimeout(const boost::system::error_code &error)
 
 void TcpHost::stopAsyncOperations()
 {
-    m_acceptor.cancel();
-    m_timer->cancel();
+    try
+    {
+        m_acceptor.cancel();
+        m_timer->cancel();
+    }
+    catch (const std::exception &e)
+    {
+        std::cout << "TcpHost | stopAsyncOperations | " << e.what()
+                  << std::endl;
+    }
 }
 
 void TcpHost::initializeConnection(std::string ip,

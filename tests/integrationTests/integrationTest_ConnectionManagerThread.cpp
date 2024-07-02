@@ -15,7 +15,7 @@ TEST_CASE(
     auto sendingThread = std::jthread([]() {
         remoteConnectionManagerThread.setup();
         remoteConnectionManagerThread.asyncWaitForConnection(
-            std::chrono::milliseconds(5000));
+            std::chrono::milliseconds(0));
         remoteConnectionManagerThread.sendConfigurationData(
             remoteConfigurationData);
     });
