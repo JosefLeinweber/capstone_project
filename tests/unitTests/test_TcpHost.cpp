@@ -86,8 +86,18 @@ SCENARIO("TcpHost | initializeConnection with unreachable remote host")
         {
             THEN("The function fails because the remote host is not reachable")
             {
-                REQUIRE_THROWS(tcpHost.initializeConnection("127.0.0.1", 8002),
-                               "Failed to connect to remote host");
+                try
+                {
+                    tcpHost.initializeConnection("127.0.0.1",
+                                                 8002,
+                                                 std::chrono::milliseconds(1));
+                    ioContext.run();
+                    FAIL("No exception thrown");
+                }
+                catch (...)
+                {
+                    REQUIRE(true);
+                }
             }
         }
     }
@@ -118,9 +128,21 @@ SCENARIO("TcpHost | initializeConnection with reachable remote host")
         {
             THEN("The function connects to the remote host without error")
             {
-                REQUIRE_NOTHROW(
-                    tcpHost.initializeConnection(remoteAddress.ip(),
-                                                 remoteAddress.port()));
+                try
+                {
+                    tcpHost.initializeConnection(
+                        remoteAddress.ip(),
+                        remoteAddress.port(),
+                        std::chrono::milliseconds(1000));
+                    ioContext.run();
+                    REQUIRE(true);
+                }
+                catch (std::exception &e)
+                {
+                    std::cout << "something went wrong:" << std::endl;
+                    std::cout << e.what() << std::endl;
+                    FAIL(e.what());
+                }
             }
         }
         remoteThread.join();

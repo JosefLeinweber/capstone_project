@@ -62,7 +62,10 @@ public:
     void handleMessage(const juce::Message &message);
 
     void initCMTMessenger();
+
     void setup();
+
+    void stopAsyncWaitForConnection();
 
     boost::asio::io_context m_ioContext;
     std::jthread m_ioContextThread;

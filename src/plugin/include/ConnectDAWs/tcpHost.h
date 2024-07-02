@@ -39,6 +39,9 @@ public:
     };
 
 private:
+    void handleConnect(const boost::system::error_code &error);
+    void handleConnectTimeout(const boost::system::error_code &error);
+
     boost::asio::ip::tcp::acceptor m_acceptor;
     boost::system::error_code m_error;
     std::unique_ptr<boost::asio::ip::tcp::socket> m_socket;

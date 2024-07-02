@@ -71,6 +71,36 @@ void TcpHost::startAccept()
         std::cout << "New connection established!" << std::endl;
     }
 }
+void TcpHost::handleConnect(const boost::system::error_code &error)
+{
+    if (!error)
+    {
+        std::cout << "TcpHost | Connection established" << std::endl;
+        m_incomingConnection = false;
+    }
+    else
+    {
+        std::cout << "Failed to connect to remote host" << std::endl;
+        m_socket->close();
+        throw std::runtime_error(error.message());
+    }
+}
+
+void TcpHost::handleConnectTimeout(const boost::system::error_code &error)
+{
+    if (!error)
+    {
+        std::cout << "TcpHost | asyncWaitForConnection timeout, timer expiered"
+                  << std::endl;
+        m_socket->cancel();
+        throw std::runtime_error("Connection timeout");
+    }
+    else
+    {
+        m_socket->cancel();
+        //TODO: handle error
+    }
+}
 
 void TcpHost::initializeConnection(std::string ip,
                                    unsigned short port,
@@ -78,38 +108,24 @@ void TcpHost::initializeConnection(std::string ip,
 {
     std::cout << "tcpHost initConnection  | Connecting to remote host"
               << std::endl;
+
     if (m_socket)
     {
+        auto timer = std::make_shared<boost::asio::steady_timer>(
+            m_acceptor.get_executor(),
+            timeout);
         std::cout << "Connecting to remote host" << std::endl;
-        // auto timer = std::make_shared<boost::asio::steady_timer>(
-        //     m_acceptor.get_executor(),
-        //     timeout);
-        // if (timeout.count() > 0)
-        // {
-        //     timer->async_wait([this,
-        //                        timer](const boost::system::error_code &error) {
-        //         if (!error)
-        //         {
-        //             std::cout << "TcpHost | asyncWaitForConnection timeout, "
-        //                          "timer expiered"
-        //                       << std::endl;
-        //             m_socket.cancel();
-        //         }
-        //     });
-        // }
-        m_socket->connect(boost::asio::ip::tcp::endpoint(
-                              boost::asio::ip::address::from_string(ip),
-                              port),
-                          m_error);
-
-        if (m_error)
-        {
-            std::cout << "!!!Failed to connect to remote host" << std::endl;
-            m_socket->close();
-            throw std::runtime_error("Failed to connect to remote host");
-        }
-
-        m_incomingConnection = false;
+        m_socket->async_connect(
+            boost::asio::ip::tcp::endpoint(
+                boost::asio::ip::address::from_string(ip),
+                port),
+            [this, timer](const boost::system::error_code &error) {
+                handleConnect(error);
+                timer->cancel();
+            });
+        timer->async_wait([this](const boost::system::error_code &error) {
+            handleConnectTimeout(error);
+        });
     }
     else
     {

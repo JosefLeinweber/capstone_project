@@ -211,11 +211,24 @@ void ConnectionManagerThread::startIOContextInDifferentThread()
     }
 }
 
+void ConnectionManagerThread::stopAsyncWaitForConnection()
+{
+    if (!m_ioContext.stopped())
+    {
+        m_ioContext.stop();
+    }
+    if (m_ioContextThread.joinable())
+    {
+        m_ioContextThread.join();
+    }
+}
+
 void ConnectionManagerThread::initializeConnection(
     ConfigurationData remoteConfigurationData)
 {
     try
     {
+        stopAsyncWaitForConnection();
         m_fileLogger->logMessage(
             "ConnectionManagerThread | initializeConnection | Trying to "
             "connect to remote: " +
@@ -231,7 +244,8 @@ void ConnectionManagerThread::initializeConnection(
         {
             m_ioContextThread.join();
         }
-        startIOContextInDifferentThread();
+        // blocking call to wait for either connection or timeout
+        m_ioContext.run();
         m_fileLogger->logMessage("ConnectionManagerThread | "
                                  "initializeConnection | Connected to remote!");
     }
