@@ -24,6 +24,14 @@ ConsumerThread::~ConsumerThread()
         signalThreadShouldExit();
         waitForThreadToExit(1000);
     }
+    if (m_ioContextThread.joinable())
+    {
+        m_ioContextThread.join();
+    }
+    if (!m_ioContext.stopped())
+    {
+        m_ioContext.stop();
+    }
     std::cout << "ConsumerThread | Destructor" << std::endl;
 }
 
@@ -62,6 +70,11 @@ void ConsumerThread::setupHost()
     }
 };
 
+void ConsumerThread::startIOContextInDifferentThread()
+{
+    m_ioContextThread = std::jthread([&]() { m_ioContext.run_one(); });
+};
+
 bool ConsumerThread::receiveAudioFromRemoteProvider(
     std::chrono::milliseconds timeout)
 {
@@ -70,14 +83,21 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
                                             this,
                                             std::placeholders::_1,
                                             std::placeholders::_2));
+    startIOContextInDifferentThread();
     auto start = std::chrono::high_resolution_clock::now();
     while (!m_receivedData)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        if (threadShouldExit() ||
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::high_resolution_clock::now() - start) > timeout)
+        if (threadShouldExit())
         {
+            m_udpHost->cancelReceive();
+            return false;
+        }
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::high_resolution_clock::now() - start)
+                .count() > timeout.count())
+        {
+            m_udpHost->cancelReceive();
             return false;
         }
     }

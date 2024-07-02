@@ -25,6 +25,8 @@ public:
         std::function<void(const boost::system::error_code &, std::size_t)>
             handler);
 
+    void cancelReceive();
+
 private:
     ConfigurationData m_configurationData;
 

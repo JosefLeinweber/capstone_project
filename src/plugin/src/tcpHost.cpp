@@ -52,7 +52,7 @@ void TcpHost::asyncWaitForConnection(
         [this, callback](const boost::system::error_code &error) {
             callback(error);
             m_timer->cancel();
-            m_incomingConnection = true;
+            m_isConnected = true;
         });
 }
 
@@ -75,7 +75,7 @@ void TcpHost::handleConnect(const boost::system::error_code &error)
     if (!error)
     {
         std::cout << "TcpHost | Connection established" << std::endl;
-        m_incomingConnection = false;
+        m_isConnected = true;
     }
     else
     {
@@ -242,4 +242,9 @@ ConfigurationData TcpHost::deserializeConfigurationData(
         throw std::runtime_error("Failed to deserialize configuration data");
     }
     return configurationData;
+}
+
+bool TcpHost::isConnected()
+{
+    return m_isConnected;
 }

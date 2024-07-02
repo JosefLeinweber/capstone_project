@@ -14,8 +14,9 @@ TEST_CASE("ConsumerThread | Constructor", "[ConsumerThread]")
                                       localConfigurationData,
                                       inputRingBuffer);
     }
-    catch (...)
+    catch (std::exception &e)
     {
+        std::cout << e.what() << std::endl;
         FAIL("No error should be thrown");
     }
 }
@@ -51,5 +52,6 @@ TEST_CASE("ConsumerThread | receiveAudioFromRemoteProvider")
                                   localConfigurationData,
                                   inputRingBuffer);
     consumerThread.setupHost();
-    REQUIRE_FALSE(consumerThread.receiveAudioFromRemoteProvider());
+    REQUIRE_FALSE(consumerThread.receiveAudioFromRemoteProvider(
+        std::chrono::milliseconds(10)));
 }

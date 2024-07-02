@@ -54,7 +54,24 @@ TEST_CASE("UdpHost | sendAudioBuffer and receive")
     boost::asio::io_context ioContext;
     UdpHost udpHost;
     udpHost.setupSocket(ioContext, 8002);
-    REQUIRE(udpHost.receiveAudioBuffer(buffer));
+    bool success = false;
+    auto receiveCallback = [&success](const boost::system::error_code &error,
+                                      std::size_t bytes_transferred) {
+        if (error)
+        {
+            success = false;
+        }
+        else
+        {
+            success = true;
+        }
+    };
+
+    udpHost.receiveAudioBuffer(buffer,
+                               std::bind(receiveCallback,
+                                         std::placeholders::_1,
+                                         std::placeholders::_2));
+    REQUIRE(success);
     REQUIRE(buffer.getSample(0, 0) == 0.5);
     remoteThread.join();
 }
@@ -76,7 +93,38 @@ TEST_CASE("UdpHost | recieveAudioBuffer timeout")
 {
     boost::asio::io_context ioContext;
     UdpHost udpHost;
-    udpHost.setupSocket(ioContext, 8001, 50);
+    udpHost.setupSocket(ioContext, 8001);
     juce::AudioBuffer<float> buffer(2, 10);
-    REQUIRE_FALSE(udpHost.receiveAudioBuffer(buffer));
+    bool success = true;
+    auto receiveCallback = [&success](const boost::system::error_code &error,
+                                      std::size_t bytes_transferred) {
+        if (error)
+        {
+            FAIL("Error receiving data");
+        }
+        else
+        {
+            FAIL("Data received");
+        }
+    };
+
+    udpHost.receiveAudioBuffer(buffer,
+                               [](const boost::system::error_code &error,
+                                  std::size_t bytes_transferred) {
+                                   if (error)
+                                   {
+                                       std::cout << "erro" << std::endl;
+                                       FAIL("Error receiving data");
+                                   }
+                                   else
+                                   {
+                                       std::cout << "data" << std::endl;
+                                       FAIL("Data received");
+                                   }
+                               });
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    // udpHost.cancelReceive();
+    std::cout << "end" << std::endl;
+    FAIL("Timeout");
 }

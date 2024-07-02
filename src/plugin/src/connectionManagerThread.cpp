@@ -72,14 +72,15 @@ void ConnectionManagerThread::run()
 
     m_fileLogger->logMessage("ConnectionManagerThread | run | Incoming "
                              "connection: " +
-                             std::to_string(m_incomingConnection));
+                             std::to_string(isConnected()));
 
     if (m_startConnection)
     {
         initializeConnection(m_remoteConfigurationData);
     }
 
-    if (exchangeConfigurationDataWithRemote(m_localConfigurationData) &&
+    if (isConnected() &&
+        exchangeConfigurationDataWithRemote(m_localConfigurationData) &&
         startUpProviderAndConsumerThreads(m_localConfigurationData,
                                           m_remoteConfigurationData,
                                           std::chrono::milliseconds(2000)))
@@ -116,6 +117,7 @@ void ConnectionManagerThread::run()
         sendMessageToGUI("status",
                          "Failed to start streaming, please try again...");
     }
+    m_startConnection = false;
     // resetToStartState();
 }
 
@@ -253,7 +255,7 @@ void ConnectionManagerThread::stopAsyncWaitForConnection()
     }
 }
 
-void ConnectionManagerThread::initializeConnection(
+bool ConnectionManagerThread::initializeConnection(
     ConfigurationData remoteConfigurationData)
 {
     try
@@ -272,9 +274,11 @@ void ConnectionManagerThread::initializeConnection(
                                      remoteConfigurationData.host_port());
         // blocking call to wait for either connection or timeout
         m_ioContext.run_one_for(std::chrono::milliseconds(5000));
-
-        m_fileLogger->logMessage("ConnectionManagerThread | "
-                                 "initializeConnection | Connected to remote!");
+        m_fileLogger->logMessage(
+            "ConnectionManagerThread | "
+            "initializeConnection | Connected to remote? " +
+            isConnected());
+        return isConnected();
     }
     catch (std::exception &e)
     {
@@ -289,7 +293,13 @@ void ConnectionManagerThread::initializeConnection(
             "status",
             "Failed to connect to remote: " + remoteConfigurationData.ip() +
                 ":" + std::to_string(remoteConfigurationData.host_port()));
+        return false;
     }
+}
+
+bool ConnectionManagerThread::isConnected()
+{
+    return m_host->isConnected();
 }
 
 bool ConnectionManagerThread::exchangeConfigurationDataWithRemote(
@@ -439,11 +449,6 @@ void ConnectionManagerThread::resetToStartState()
     m_ioContext.restart();
     m_fileLogger->logMessage("ConnectionManagerThread | ready for new "
                              "connection...");
-}
-
-bool ConnectionManagerThread::incomingConnection() const
-{
-    return m_incomingConnection;
 }
 
 void ConnectionManagerThread::sendMessageToGUI(std::string type,

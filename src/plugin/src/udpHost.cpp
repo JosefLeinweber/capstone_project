@@ -68,6 +68,8 @@ void UdpHost::sendAudioBuffer(juce::AudioBuffer<float> buffer,
     }
 };
 
+
+//TODO: change name to asyncReceiveAudioBuffer
 void UdpHost::receiveAudioBuffer(
     juce::AudioBuffer<float> &buffer,
     std::function<void(const boost::system::error_code &error,
@@ -81,4 +83,9 @@ void UdpHost::receiveAudioBuffer(
         boost::asio::buffer(data, length),
         m_remoteEndpoint,
         std::bind(handler, std::placeholders::_1, std::placeholders::_2));
+};
+
+void UdpHost::cancelReceive()
+{
+    m_socket->cancel();
 };

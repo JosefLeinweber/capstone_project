@@ -24,7 +24,7 @@ TEST_CASE("ConnectionManagerThread | asyncWaitForConnection successfull")
         connectionManagerThread.setupHost();
         connectionManagerThread.asyncWaitForConnection();
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        connectionEstablished = connectionManagerThread.incomingConnection();
+        connectionEstablished = connectionManagerThread.isConnected();
         std::cout << "waitingThread finishes" << std::endl;
     });
     //WHEN: a remote host tries to connect
@@ -51,7 +51,7 @@ TEST_CASE("ConnectionManagerThread | asyncWaitForConnection unsuccessfull")
         connectionManagerThread.asyncWaitForConnection(
             std::chrono::milliseconds(5));
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        connectionEstablished = connectionManagerThread.incomingConnection();
+        connectionEstablished = connectionManagerThread.isConnected();
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     waitingThread.join();

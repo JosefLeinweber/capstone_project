@@ -25,6 +25,8 @@ public:
 
     void writeToFIFOBuffer();
 
+    void startIOContextInDifferentThread();
+
     juce::AudioBuffer<float> m_inputBuffer;
     AudioBufferFIFO &m_inputRingBuffer;
 
@@ -32,6 +34,7 @@ private:
     void receiveHandler(const boost::system::error_code &error,
                         std::size_t bytes_transferred);
     bool m_receivedData = false;
+    std::jthread m_ioContextThread;
     boost::asio::io_context m_ioContext;
     std::unique_ptr<UdpHost> m_udpHost;
     std::chrono::milliseconds m_timeout;

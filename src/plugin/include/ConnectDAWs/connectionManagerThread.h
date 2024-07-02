@@ -35,7 +35,7 @@ public:
 
     void startIOContextInDifferentThread();
 
-    void initializeConnection(ConfigurationData remoteConfigurationData);
+    bool initializeConnection(ConfigurationData remoteConfigurationData);
 
     bool sendConfigurationData(ConfigurationData localConfigurationData);
 
@@ -57,7 +57,7 @@ public:
 
     void stopProviderAndConsumerThreads(std::chrono::seconds timeout);
 
-    bool incomingConnection() const;
+    bool isConnected();
 
     void sendMessageToGUI(std::string type, std::string message);
 
