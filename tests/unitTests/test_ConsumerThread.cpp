@@ -55,3 +55,19 @@ TEST_CASE("ConsumerThread | receiveAudioFromRemoteProvider")
     REQUIRE_FALSE(consumerThread.receiveAudioFromRemoteProvider(
         std::chrono::milliseconds(10)));
 }
+
+TEST_CASE("ConsumerThread | timeOut")
+{
+
+    ConsumerThread consumerThread(remoteConfigurationData,
+                                  localConfigurationData,
+                                  inputRingBuffer);
+    auto start = std::chrono::high_resolution_clock::now();
+
+    //WHEN: timeOut is called with a timeout of 10ms THEN: it should return false as the time has not passed
+    REQUIRE_FALSE(consumerThread.timeOut(std::chrono::milliseconds(10), start));
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    //WHEN: timeOut is called with a timeout of 0ms after waiting for 10ms from start THEN: it should return true as the time has passed
+    REQUIRE(consumerThread.timeOut(std::chrono::milliseconds(0), start));
+}
