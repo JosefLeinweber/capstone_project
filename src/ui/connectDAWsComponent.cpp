@@ -1,7 +1,8 @@
-#include "ConnectDAWsComponents/mainComponent.h"
+#include "ConnectDAWsComponents/connectDAWsComponent.h"
 
-MainComponent::MainComponent(std::shared_ptr<Messenger> &guiMessenger,
-                             std::shared_ptr<Messenger> &cmtMessenger)
+ConnectDAWsComponent::ConnectDAWsComponent(
+    std::shared_ptr<Messenger> &guiMessenger,
+    std::shared_ptr<Messenger> &cmtMessenger)
     : m_guiMessenger(guiMessenger), m_cmtMessenger(cmtMessenger)
 {
     // In your constructor, you should add any child components, and
@@ -47,13 +48,13 @@ MainComponent::MainComponent(std::shared_ptr<Messenger> &guiMessenger,
     setSize(WIDTH, HEIGHT);
 }
 
-MainComponent::~MainComponent()
+ConnectDAWsComponent::~ConnectDAWsComponent()
 {
     sendButton.removeListener(this);
     stopButton.removeListener(this);
 }
 
-void MainComponent::paint(juce::Graphics &g)
+void ConnectDAWsComponent::paint(juce::Graphics &g)
 {
     g.fillAll(
         getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
@@ -62,7 +63,7 @@ void MainComponent::paint(juce::Graphics &g)
     g.setFont(15.0f);
 }
 
-void MainComponent::resized()
+void ConnectDAWsComponent::resized()
 {
     // This method is where you should set the bounds of any child
     // components that your component contains..
@@ -81,7 +82,7 @@ void MainComponent::resized()
     stopButton.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
 }
 
-void MainComponent::buttonClicked(juce::Button *button)
+void ConnectDAWsComponent::buttonClicked(juce::Button *button)
 {
     if (button == &sendButton)
     {
@@ -97,7 +98,7 @@ void MainComponent::buttonClicked(juce::Button *button)
     }
 }
 
-void MainComponent::handleMessage(const juce::Message &message)
+void ConnectDAWsComponent::handleMessage(const juce::Message &message)
 {
     if (auto *m = dynamic_cast<const MessageToGUI *>(&message))
     {
@@ -112,21 +113,23 @@ void MainComponent::handleMessage(const juce::Message &message)
         }
         else
         {
-            std::cout << "MainComponent::handleMessage | Received "
+            std::cout << "ConnectDAWsComponent::handleMessage | Received "
                          "unknown message type from CMT"
                       << std::endl;
         }
     }
     else
     {
-        std::cout << "MainComponent::handleMessage | Received "
+        std::cout << "ConnectDAWsComponent::handleMessage | Received "
                      "unknown message from CMT"
                   << std::endl;
     }
 }
 
-void MainComponent::initGUIMessenger()
+void ConnectDAWsComponent::initGUIMessenger()
 {
     m_guiMessenger = std::make_shared<Messenger>(
-        std::bind(&MainComponent::handleMessage, this, std::placeholders::_1));
+        std::bind(&ConnectDAWsComponent::handleMessage,
+                  this,
+                  std::placeholders::_1));
 }

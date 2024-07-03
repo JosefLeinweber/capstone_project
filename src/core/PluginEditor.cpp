@@ -17,12 +17,12 @@ MainAudioProcessorEditor::MainAudioProcessorEditor(
     std::shared_ptr<Messenger> &guiMessenger,
     std::shared_ptr<Messenger> &cmtMessenger)
     : AudioProcessorEditor(&p), audioProcessor(p),
-      m_mainComponent(guiMessenger, cmtMessenger)
+      m_connectDAWsComponent(guiMessenger, cmtMessenger)
 {
     constexpr auto HEIGHT = 500;
     constexpr auto WIDTH = 500;
 
-    addAndMakeVisible(m_mainComponent);
+    addAndMakeVisible(m_connectDAWsComponent);
 
     addAndMakeVisible(audioProcessor.visualiser);
     audioProcessor.visualiser.setColours(
@@ -58,7 +58,7 @@ void MainAudioProcessorEditor::resized()
     // subcomponents in your editor..
     auto area = getLocalBounds();
     auto textFieldHeight = 30;
-    m_mainComponent.setBounds(area.removeFromTop(150).reduced(0, 5));
+    m_connectDAWsComponent.setBounds(area.removeFromTop(150).reduced(0, 5));
     audioProcessor.visualiser.setBounds(area.removeFromTop(150).reduced(0, 5));
     audioProcessor.outputVisualiser.setBounds(
         area.removeFromTop(150).reduced(0, 5));

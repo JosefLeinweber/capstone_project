@@ -12,7 +12,7 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 
 #include "ConnectDAWs/connectDAWS.h"
-#include "ConnectDAWsComponents/mainComponent.h"
+#include "ConnectDAWsComponents/connectDAWsComponent.h"
 #include "PluginProcessor.h"
 
 //==============================================================================
@@ -35,7 +35,7 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     MainAudioProcessor &audioProcessor;
-    MainComponent m_mainComponent;
+    ConnectDAWsComponent m_connectDAWsComponent;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainAudioProcessorEditor)
 };

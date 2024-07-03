@@ -4,12 +4,13 @@
 
 #include "ConnectDAWs/messenger.h"
 
-class MainComponent : public juce::Component, public juce::Button::Listener
+class ConnectDAWsComponent : public juce::Component,
+                             public juce::Button::Listener
 {
 public:
-    MainComponent(std::shared_ptr<Messenger> &guiMessenger,
-                  std::shared_ptr<Messenger> &cmtMessenger);
-    ~MainComponent();
+    ConnectDAWsComponent(std::shared_ptr<Messenger> &guiMessenger,
+                         std::shared_ptr<Messenger> &cmtMessenger);
+    ~ConnectDAWsComponent();
 
     void paint(juce::Graphics &) override;
     void resized() override;
@@ -31,5 +32,5 @@ private:
     juce::Label statusLabel{"Status", "Status:"};
     juce::Label localIpAndPortLabel{"Local", "Local IP and Port:"};
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ConnectDAWsComponent)
 };
