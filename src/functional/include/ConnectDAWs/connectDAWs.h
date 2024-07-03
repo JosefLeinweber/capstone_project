@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/asio.hpp>
 #include <juce_audio_basics/juce_audio_basics.h>
 
 #include "audioBuffer.h"
@@ -23,6 +24,8 @@ public:
                        int numOutputChannels);
     void releaseResources();
     void processBlock(juce::AudioBuffer<float> &);
+    // TODO: is this the best place to get the ip???
+    std::string getIp();
 
     //==============================================================================
 
@@ -30,8 +33,6 @@ public:
     std::shared_ptr<Messenger> m_cmtMessenger;
 
 private:
-    // TODO: is this the best place to get the ip???
-    std::string getIp();
     void initFIFOBuffers(int numInputChannels,
                          int numOutputChannels,
                          int samplesPerBlock);

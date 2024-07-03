@@ -9,6 +9,7 @@ set(TESTS_SOURCES
     test_ConsumerThread.cpp
     test_ConnectionManagerThread.cpp
     test_TcpHost.cpp
+    test_ConnectDAWs.cpp
 )
 
 add_executable(${TEST_NAME} ${TESTS_SOURCES})

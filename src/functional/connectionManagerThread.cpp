@@ -180,9 +180,7 @@ void ConnectionManagerThread::setupHost()
     m_host = std::make_unique<TcpHost>(m_ioContext,
                                        m_localConfigurationData.host_port());
     m_host->setupSocket();
-    sendMessageToGUI("localIpAndPort",
-                     ":" +
-                         std::to_string(m_localConfigurationData.host_port()));
+    sendMessageToGUI("ip", "   ");
 }
 
 

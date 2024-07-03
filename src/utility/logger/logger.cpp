@@ -1,4 +1,4 @@
-#include "ConnectDAWs/logger.h"
+#include "logger.h"
 
 FileLogger::FileLogger(const juce::String &logName, std::string threadName)
     : m_logName(logName), m_threadName(threadName)

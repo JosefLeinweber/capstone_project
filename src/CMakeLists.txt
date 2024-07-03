@@ -32,7 +32,6 @@ target_sources(${PROJECT_NAME}
         functional/connectDAWs.cpp
         functional/connectionManagerThread.cpp
         functional/consumerThread.cpp
-        functional/logger.cpp
         functional/messenger.cpp
         functional/providerThread.cpp
         functional/tcpHost.cpp
@@ -42,7 +41,6 @@ target_sources(${PROJECT_NAME}
         ${INCLUDE_DIR}/connectDAWs.h
         ${INCLUDE_DIR}/connectionManagerThread.h
         ${INCLUDE_DIR}/consumerThread.h
-        ${INCLUDE_DIR}/logger.h
         ${INCLUDE_DIR}/messenger.h
         ${INCLUDE_DIR}/providerThread.h
         ${INCLUDE_DIR}/tcpHost.h
@@ -55,6 +53,9 @@ target_sources(${PROJECT_NAME}
         ${UI_INCLUDE_DIR}/connectDAWsComponent.h
         ${UI_INCLUDE_DIR}/startConnectionComponent.h
         ${UI_INCLUDE_DIR}/inConnectionComponent.h
+
+        utility/logger/logger.cpp
+        utility/logger/logger.h
 )
 
 # Sets the include directories of the plugin project.
@@ -62,6 +63,7 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/functional/include
     ${CMAKE_CURRENT_SOURCE_DIR}/ui/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/utility/logger
 )
 
 

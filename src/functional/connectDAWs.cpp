@@ -11,33 +11,35 @@ ConnectDAWs::~ConnectDAWs()
 
 std::string ConnectDAWs::getIp()
 {
-    //TODO: implement this function to get the public ip address?
+    //TODO: is this save?
     try
     {
-        // Step 1: Create a context and resolver
-        boost::asio::io_context io_context;
-        boost::asio::ip::tcp::resolver resolver(io_context);
+        // std::string public_ip;
+        // using namespace boost::asio::ip;
+        // boost::asio::io_context ioContext;
+        // boost::asio::streambuf request_buffer;
 
-        // Step 2: Get the hostname of the current machine
-        std::string hostname = boost::asio::ip::host_name();
+        // // Send the request
+        // boost::asio::ip::tcp::resolver resolver(ioContext);
+        // boost::asio::ip::tcp::resolver::query query("api.ipify.org", "http");
+        // boost::asio::ip::tcp::socket socket(ioContext);
 
-        // Step 3: Resolve the hostname to get a list of endpoints
-        boost::asio::ip::tcp::resolver::results_type endpoints =
-            resolver.resolve(hostname, "");
+        // boost::asio::ip::tcp::resolver::iterator endpoint_iterator =
+        //     resolver.resolve(query);
+        // boost::asio::connect(socket, endpoint_iterator);
 
-        for (const auto &endpoint : endpoints)
-        {
-            // Step 4: Filter out loopback addresses and IPv6 addresses
-            auto address = endpoint.endpoint().address();
-            if (address.is_loopback() || address.is_v6())
-            {
-                continue;
-            }
-            // Return the first non-loopback IPv4 address
-            return address.to_string();
-        }
-        return std::string();
-        // If no non-loopback IPv4 addresses are found, return an empty string
+        // // Receive the response
+        // boost::asio::streambuf response_buffer;
+        // boost::asio::read_until(socket, response_buffer, "\r\n\r\n");
+
+        // // Extract the IP address from the response (assuming it's the entire body)
+        // std::istream response_stream(&response_buffer);
+        // std::getline(response_stream, public_ip);
+
+        // // Close the socket
+        // socket.close();
+        // return public_ip;
+        return "will be implemented in the future"
     }
     catch (std::exception &e)
     {
