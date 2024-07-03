@@ -43,6 +43,7 @@ private:
     std::shared_ptr<Messenger> &m_guiMessenger;
     std::shared_ptr<Messenger> &m_cmtMessenger;
 
+    juce::TextButton stopButton{"Stop"};
     juce::TextEditor ipEditor;
     juce::TextEditor portEditor;
     juce::TextButton sendButton{"Send IP and Port"};
