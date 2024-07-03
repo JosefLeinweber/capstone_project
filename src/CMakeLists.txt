@@ -18,6 +18,7 @@ juce_add_plugin(${PROJECT_NAME}
 )
 
 set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/functional/include/${PROJECT_NAME}")
+set(UI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ui/include/${PROJECT_NAME}Components")
 
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -46,12 +47,17 @@ target_sources(${PROJECT_NAME}
         ${INCLUDE_DIR}/providerThread.h
         ${INCLUDE_DIR}/tcpHost.h
         ${INCLUDE_DIR}/udpHost.h
+
+        ui/mainComponent.cpp
+
+        ${UI_INCLUDE_DIR}/mainComponent.h
 )
 
 # Sets the include directories of the plugin project.
 target_include_directories(${PROJECT_NAME}
     PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/functional/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/ui/include
 )
 
 
