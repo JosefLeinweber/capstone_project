@@ -17,7 +17,10 @@ MainAudioProcessorEditor::MainAudioProcessorEditor(
     std::shared_ptr<Messenger> &guiMessenger,
     std::shared_ptr<Messenger> &cmtMessenger)
     : AudioProcessorEditor(&p), audioProcessor(p),
-      m_connectDAWsComponent(guiMessenger, cmtMessenger)
+      m_connectDAWsComponent(
+          guiMessenger,
+          cmtMessenger,
+          std::bind(&MainAudioProcessorEditor::resized, this))
 {
     constexpr auto HEIGHT = 500;
     constexpr auto WIDTH = 500;
@@ -33,6 +36,19 @@ MainAudioProcessorEditor::MainAudioProcessorEditor(
     audioProcessor.outputVisualiser.setColours(
         juce::Colours::black,
         juce::Colours::whitesmoke.withAlpha(0.5f));
+
+    addAndMakeVisible(m_outputVisualiserLabel);
+    m_outputVisualiserLabel.setText("Outgoing Audio",
+                                    juce::dontSendNotification);
+    m_outputVisualiserLabel.setColour(juce::Label::textColourId,
+                                      juce::Colours::white);
+
+    addAndMakeVisible(m_inputVisualiserLabel);
+    m_inputVisualiserLabel.setText("Incoming Audio",
+                                   juce::dontSendNotification);
+    m_inputVisualiserLabel.setColour(juce::Label::textColourId,
+                                     juce::Colours::white);
+
 
     setSize(WIDTH, HEIGHT);
 }
@@ -59,7 +75,25 @@ void MainAudioProcessorEditor::resized()
     auto area = getLocalBounds();
     auto textFieldHeight = 30;
     m_connectDAWsComponent.setBounds(area.removeFromTop(150).reduced(0, 5));
+    m_outputVisualiserLabel.setBounds(
+        area.removeFromTop(textFieldHeight).reduced(0, 5));
     audioProcessor.visualiser.setBounds(area.removeFromTop(150).reduced(0, 5));
+    m_inputVisualiserLabel.setBounds(
+        area.removeFromTop(textFieldHeight).reduced(0, 5));
     audioProcessor.outputVisualiser.setBounds(
         area.removeFromTop(150).reduced(0, 5));
+    if (m_connectDAWsComponent.m_isConnected)
+    {
+        audioProcessor.visualiser.setVisible(true);
+        audioProcessor.outputVisualiser.setVisible(true);
+        m_outputVisualiserLabel.setVisible(true);
+        m_inputVisualiserLabel.setVisible(true);
+    }
+    else
+    {
+        audioProcessor.visualiser.setVisible(false);
+        audioProcessor.outputVisualiser.setVisible(false);
+        m_outputVisualiserLabel.setVisible(false);
+        m_inputVisualiserLabel.setVisible(false);
+    }
 }

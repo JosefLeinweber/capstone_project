@@ -34,6 +34,9 @@ public:
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
+    juce::Label m_outputVisualiserLabel{"Output Visualiser",
+                                        "Output Visualiser"};
+    juce::Label m_inputVisualiserLabel{"Input Visualiser", "Input Visualiser"};
     MainAudioProcessor &audioProcessor;
     ConnectDAWsComponent m_connectDAWsComponent;
 

@@ -49,8 +49,12 @@ target_sources(${PROJECT_NAME}
         ${INCLUDE_DIR}/udpHost.h
 
         ui/connectDAWsComponent.cpp
+        ui/startConnectionComponent.cpp
+        ui/inConnectionComponent.cpp
 
         ${UI_INCLUDE_DIR}/connectDAWsComponent.h
+        ${UI_INCLUDE_DIR}/startConnectionComponent.h
+        ${UI_INCLUDE_DIR}/inConnectionComponent.h
 )
 
 # Sets the include directories of the plugin project.

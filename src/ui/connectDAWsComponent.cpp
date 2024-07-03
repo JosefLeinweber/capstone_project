@@ -2,8 +2,10 @@
 
 ConnectDAWsComponent::ConnectDAWsComponent(
     std::shared_ptr<Messenger> &guiMessenger,
-    std::shared_ptr<Messenger> &cmtMessenger)
-    : m_guiMessenger(guiMessenger), m_cmtMessenger(cmtMessenger)
+    std::shared_ptr<Messenger> &cmtMessenger,
+    std::function<void()> forceResizeCallback)
+    : m_guiMessenger(guiMessenger), m_cmtMessenger(cmtMessenger),
+      m_forceResizeCallback(forceResizeCallback)
 {
     // In your constructor, you should add any child components, and
     // initialise any special settings that your component needs.
@@ -26,10 +28,6 @@ ConnectDAWsComponent::ConnectDAWsComponent(
     portEditor.setTextToShowWhenEmpty("Enter Port", juce::Colours::grey);
     addAndMakeVisible(portEditor);
 
-    // Set up Submit button
-    sendButton.setButtonText("Connect");
-    sendButton.addListener(this);
-    addAndMakeVisible(sendButton);
 
     statusLabel.setText("Status: Loading...", juce::dontSendNotification);
     addAndMakeVisible(statusLabel);
@@ -37,10 +35,10 @@ ConnectDAWsComponent::ConnectDAWsComponent(
     localIpAndPortLabel.setText("Local IP and Port: Loading...",
                                 juce::dontSendNotification);
     addAndMakeVisible(localIpAndPortLabel);
-    addAndMakeVisible(stopButton);
-    stopButton.addListener(this);
-    stopButton.setButtonText("Stop Connection");
 
+    addAndMakeVisible(m_startConnectionComponent);
+    addAndMakeVisible(m_inConnectionComponent);
+    m_inConnectionComponent.setVisible(false);
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -50,8 +48,6 @@ ConnectDAWsComponent::ConnectDAWsComponent(
 
 ConnectDAWsComponent::~ConnectDAWsComponent()
 {
-    sendButton.removeListener(this);
-    stopButton.removeListener(this);
 }
 
 void ConnectDAWsComponent::paint(juce::Graphics &g)
@@ -72,31 +68,33 @@ void ConnectDAWsComponent::resized()
     // as our own size.
     auto area = getLocalBounds();
     auto textFieldHeight = 30;
-
+    m_startConnectionComponent.setBounds(area);
+    m_inConnectionComponent.setBounds(area);
     ipEditor.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
     portEditor.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
-    sendButton.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
     statusLabel.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
     localIpAndPortLabel.setBounds(
         area.removeFromTop(textFieldHeight).reduced(0, 5));
-    stopButton.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
 }
 
-void ConnectDAWsComponent::buttonClicked(juce::Button *button)
+void ConnectDAWsComponent::buttonClickedCallback(juce::Button *button,
+                                                 bool success)
 {
-    if (button == &sendButton)
+    if (button->getButtonText() == "Connect" && success)
     {
-        std::string ip = ipEditor.getText().toStdString();
-        int port = portEditor.getText().getIntValue();
-        MessageToCMT *message = new MessageToCMT(ip, port);
-        m_cmtMessenger->postMessage(message);
+        m_isConnected = true;
+        m_startConnectionComponent.setVisible(false);
+        m_inConnectionComponent.setVisible(true);
     }
-    else if (button == &stopButton)
+    else if (button->getButtonText() == "Cancel" && success)
     {
-        MessageToCMT *message = new MessageToCMT("stop", 1000);
-        m_cmtMessenger->postMessage(message);
+        m_isConnected = false;
+        m_inConnectionComponent.setVisible(false);
+        m_startConnectionComponent.setVisible(true);
     }
+    m_forceResizeCallback();
 }
+
 
 void ConnectDAWsComponent::handleMessage(const juce::Message &message)
 {
