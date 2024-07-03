@@ -12,13 +12,13 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 
 #include "ConnectDAWs/connectDAWS.h"
+#include "ConnectDAWsComponents/mainComponent.h"
 #include "PluginProcessor.h"
 
 //==============================================================================
 /**
 */
-class MainAudioProcessorEditor : public juce::AudioProcessorEditor,
-                                 public juce::Button::Listener
+class MainAudioProcessorEditor : public juce::AudioProcessorEditor
 {
 public:
     MainAudioProcessorEditor(MainAudioProcessor &,
@@ -30,28 +30,12 @@ public:
     //==============================================================================
     void paint(juce::Graphics &) override;
     void resized() override;
-    void buttonClicked(juce::Button *button) override;
-    void handleMessage(const juce::Message &message);
-    void initGUIMessenger();
 
 private:
-    void sendMessageToCMT(juce::Message *message);
-
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     MainAudioProcessor &audioProcessor;
-    std::shared_ptr<Messenger> &m_guiMessenger;
-    std::shared_ptr<Messenger> &m_cmtMessenger;
-
-    juce::TextButton stopButton{"Stop"};
-    juce::TextEditor ipEditor;
-    juce::TextEditor portEditor;
-    juce::TextButton sendButton{"Send IP and Port"};
-    juce::Label ipLabel{"IP", "IP Address:"};
-    juce::Label portLabel{"Port", "Port:"};
-    juce::Label statusLabel{"Status", "Status:"};
-    juce::Label localIpAndPortLabel{"Local", "Local IP and Port:"};
-
+    MainComponent m_mainComponent;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainAudioProcessorEditor)
 };
