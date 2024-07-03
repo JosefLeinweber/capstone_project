@@ -13,7 +13,7 @@
 #include <juce_core/juce_core.h>
 #include <juce_events/juce_events.h>
 
-#include "connectDAWS.h"
+#include "ConnectDAWs/connectDAWS.h"
 
 //==============================================================================
 /**

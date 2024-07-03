@@ -6,8 +6,8 @@
   ==============================================================================
 */
 
-#include "ConnectDAWs/mainPluginEditor.h"
-#include "ConnectDAWs/mainPluginProcessor.h"
+#include "PluginEditor.h"
+#include "PluginProcessor.h"
 
 
 //==============================================================================
@@ -60,6 +60,10 @@ MainAudioProcessorEditor::MainAudioProcessorEditor(
         juce::Colours::black,
         juce::Colours::whitesmoke.withAlpha(0.5f));
 
+    addAndMakeVisible(stopButton);
+    stopButton.addListener(this);
+    stopButton.setButtonText("Stop Connection");
+
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -70,6 +74,7 @@ MainAudioProcessorEditor::MainAudioProcessorEditor(
 MainAudioProcessorEditor::~MainAudioProcessorEditor()
 {
     sendButton.removeListener(this);
+    stopButton.removeListener(this);
 }
 
 //==============================================================================
@@ -99,6 +104,7 @@ void MainAudioProcessorEditor::resized()
     audioProcessor.visualiser.setBounds(area.removeFromTop(150).reduced(0, 5));
     audioProcessor.outputVisualiser.setBounds(
         area.removeFromTop(150).reduced(0, 5));
+    stopButton.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
 }
 
 void MainAudioProcessorEditor::buttonClicked(juce::Button *button)
@@ -108,6 +114,11 @@ void MainAudioProcessorEditor::buttonClicked(juce::Button *button)
         std::string ip = ipEditor.getText().toStdString();
         int port = portEditor.getText().getIntValue();
         MessageToCMT *message = new MessageToCMT(ip, port);
+        sendMessageToCMT(message);
+    }
+    else if (button == &stopButton)
+    {
+        MessageToCMT *message = new MessageToCMT("stop", 1000);
         sendMessageToCMT(message);
     }
 }

@@ -35,15 +35,7 @@ void ProviderThread::run()
     {
         if (readFromFIFOBuffer(m_timeout))
         {
-            std::cout
-                << "ProviderThread | run | Sending audio to remote consumer"
-                << std::endl;
             sendAudioToRemoteConsumer();
-        }
-        else
-        {
-            std::cout << "ProviderThread | run | Error reading from FIFO buffer"
-                      << std::endl;
         }
     }
 };
