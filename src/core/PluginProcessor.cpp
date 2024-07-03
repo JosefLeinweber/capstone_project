@@ -6,8 +6,8 @@
   ==============================================================================
 */
 
-#include "ConnectDAWs/mainPluginProcessor.h"
-#include "ConnectDAWs/mainPluginEditor.h"
+#include "PluginProcessor.h"
+#include "PluginEditor.h"
 
 //==============================================================================
 MainAudioProcessor::MainAudioProcessor()
