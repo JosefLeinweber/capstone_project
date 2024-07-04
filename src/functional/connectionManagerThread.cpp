@@ -53,14 +53,8 @@ void ConnectionManagerThread::run()
     setup();
 
     asyncWaitForConnection(std::chrono::milliseconds(0));
-    // m_fileLogger->logMessage("ConnectionManagerThread | run | Waiting for "
-    //                          "connection...");
-    // m_fileLogger->logMessage("ConnectionManagerThread | run | Incoming "
-    //                          "connection: " +
-    //                          std::to_string(m_incomingConnection));
-    // m_fileLogger->logMessage("ConnectionManagerThread | run | Start "
-    //                          "connection: " +
-    //                          std::to_string(m_startConnection));
+
+    //TODO change m_startConnection to isConnected()??
     while (!m_incomingConnection && !m_startConnection)
     {
         if (threadShouldExit())
@@ -85,7 +79,7 @@ void ConnectionManagerThread::run()
                                           m_remoteConfigurationData,
                                           std::chrono::milliseconds(2000)))
     {
-        sendMessageToGUI("status", "Start streaming...");
+        sendMessageToGUI("status", "Streaming audio...");
         while (m_providerThread->isThreadRunning() &&
                m_consumerThread->isThreadRunning() && !m_stopConnection &&
                !threadShouldExit())
@@ -303,7 +297,7 @@ bool ConnectionManagerThread::isConnected()
 bool ConnectionManagerThread::exchangeConfigurationDataWithRemote(
     ConfigurationData configurationData)
 {
-
+    sendMessageToGUI("status", "Exchanging configuration data...");
     if (m_incomingConnection)
     {
         m_fileLogger->logMessage(
@@ -373,6 +367,7 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
     ConfigurationData remoteConfigurationData,
     std::chrono::milliseconds timeout)
 {
+    sendMessageToGUI("status", "Starting audio streams...");
     m_fileLogger->logMessage(
         "ConnectionManagerThread | startUpProviderAndConsumerThreads");
     std::chrono::milliseconds timeoutForProviderAndConsumerThreads =

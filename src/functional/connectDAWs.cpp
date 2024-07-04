@@ -39,7 +39,7 @@ std::string ConnectDAWs::getIp()
         // // Close the socket
         // socket.close();
         // return public_ip;
-        return "will be implemented in the future"
+        return "will be implemented in the future";
     }
     catch (std::exception &e)
     {

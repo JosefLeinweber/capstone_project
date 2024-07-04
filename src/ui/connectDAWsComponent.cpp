@@ -13,28 +13,10 @@ ConnectDAWsComponent::ConnectDAWsComponent(
     constexpr auto HEIGHT = 500;
     constexpr auto WIDTH = 500;
 
-    // Set up IP text editor
-    ipLabel.attachToComponent(&ipEditor, true);
-    ipEditor.setMultiLine(false);
-    ipEditor.setTextToShowWhenEmpty("Enter IP address", juce::Colours::grey);
-    addAndMakeVisible(ipEditor);
-
-    // Set up Port text editor
-    portLabel.attachToComponent(&portEditor, true);
-    portEditor.setMultiLine(false);
-    portEditor.setInputFilter(
-        new juce::TextEditor::LengthAndCharacterRestriction(5, "0123456789"),
-        true);
-    portEditor.setTextToShowWhenEmpty("Enter Port", juce::Colours::grey);
-    addAndMakeVisible(portEditor);
-
-
-    statusLabel.setText("Status: Loading...", juce::dontSendNotification);
-    addAndMakeVisible(statusLabel);
-
-    localIpAndPortLabel.setText("Local IP and Port: Loading...",
-                                juce::dontSendNotification);
-    addAndMakeVisible(localIpAndPortLabel);
+    addAndMakeVisible(m_statusLabel);
+    m_statusLabel.setText("Status: loading...", juce::dontSendNotification);
+    m_statusLabel.setColour(juce::TextEditor::textColourId,
+                            juce::Colours::white);
 
     addAndMakeVisible(m_startConnectionComponent);
     addAndMakeVisible(m_inConnectionComponent);
@@ -68,13 +50,9 @@ void ConnectDAWsComponent::resized()
     // as our own size.
     auto area = getLocalBounds();
     auto textFieldHeight = 30;
+    m_statusLabel.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
     m_startConnectionComponent.setBounds(area);
     m_inConnectionComponent.setBounds(area);
-    ipEditor.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
-    portEditor.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
-    statusLabel.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
-    localIpAndPortLabel.setBounds(
-        area.removeFromTop(textFieldHeight).reduced(0, 5));
 }
 
 void ConnectDAWsComponent::buttonClickedCallback(juce::Button *button,
@@ -102,12 +80,7 @@ void ConnectDAWsComponent::handleMessage(const juce::Message &message)
     {
         if (m->m_messageType == "status")
         {
-            statusLabel.setText(m->m_message, juce::dontSendNotification);
-        }
-        else if (m->m_messageType == "localIpAndPort")
-        {
-            localIpAndPortLabel.setText(m->m_message,
-                                        juce::dontSendNotification);
+            m_statusLabel.setText(m->m_message, juce::dontSendNotification);
         }
         else
         {

@@ -17,7 +17,6 @@ public:
     void buttonClicked(juce::Button *button) override;
 
 private:
-    juce::Label m_ipTextLabel{"IP", "IP Address:"};
     juce::TextEditor m_ipEditor;
     juce::TextButton m_button{"Connect"};
     std::function<void(juce::Button *, bool success)> m_buttonClickedCallback;

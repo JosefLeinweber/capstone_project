@@ -14,13 +14,6 @@ StartConnectionComponent::StartConnectionComponent(
     m_ipEditor.setInputFilter(
         new juce::TextEditor::LengthAndCharacterRestriction(15, "0123456789."),
         true);
-
-    addAndMakeVisible(m_ipTextLabel);
-
-    m_ipTextLabel.setText("Your IP Address: loading...",
-                          juce::dontSendNotification);
-    m_ipTextLabel.setColour(juce::TextEditor::textColourId,
-                            juce::Colours::white);
 }
 
 StartConnectionComponent::~StartConnectionComponent()
@@ -38,7 +31,6 @@ void StartConnectionComponent::resized()
 {
     auto textFieldHeight = 30;
     auto area = getLocalBounds();
-    m_ipTextLabel.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
     m_ipEditor.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
     m_button.setBounds(area.removeFromTop(textFieldHeight).reduced(0, 5));
 }

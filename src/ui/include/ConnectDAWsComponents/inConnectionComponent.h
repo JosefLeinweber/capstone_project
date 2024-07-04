@@ -16,10 +16,7 @@ public:
 
     void buttonClicked(juce::Button *button) override;
 
-    void setStatusLabel(const juce::String &status);
-
 private:
-    juce::Label m_statusLabel{"Status", "Status:"};
     juce::TextButton m_button{"Cancel"};
     std::function<void(juce::Button *, bool success)> m_buttonClickedCallback;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(InConnectionComponent)

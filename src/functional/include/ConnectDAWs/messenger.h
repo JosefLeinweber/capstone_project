@@ -15,10 +15,24 @@ public:
 class MessageToCMT : public juce::Message
 {
 public:
-    MessageToCMT(const std::string &ipAddress, int port);
+    MessageToCMT(const std::string &messageType,
+                 const std::string &ipAddress,
+                 int port);
 
-    std::string ip;
-    int port;
+    std::string m_messageType;
+    std::string m_ipAddress;
+    int m_port;
+};
+
+class MessageToCMT : public juce::Message
+{
+public:
+    MessageToCMT(const std::string &messageType,
+                 const std::string &ipAddress,
+                 int port);
+
+    std::string m_messageType;
+    std::string m_message
 };
 
 

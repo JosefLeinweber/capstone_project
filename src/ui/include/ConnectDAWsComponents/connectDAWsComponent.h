@@ -24,6 +24,8 @@ public:
     bool m_isConnected = false;
 
 private:
+    void sendMessageToCMT(std::string type, std::string message);
+
     std::shared_ptr<Messenger> &m_guiMessenger;
     std::shared_ptr<Messenger> &m_cmtMessenger;
     std::function<void()> m_forceResizeCallback;
@@ -36,12 +38,7 @@ private:
         [this](juce::Button *button, bool success) {
             buttonClickedCallback(button, success);
         }};
-    juce::TextEditor ipEditor;
-    juce::TextEditor portEditor;
-    juce::Label ipLabel{"IP", "IP Address:"};
-    juce::Label portLabel{"Port", "Port:"};
-    juce::Label statusLabel{"Status", "Status:"};
-    juce::Label localIpAndPortLabel{"Local", "Local IP and Port:"};
+    juce::Label m_statusLabel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ConnectDAWsComponent)
 };
