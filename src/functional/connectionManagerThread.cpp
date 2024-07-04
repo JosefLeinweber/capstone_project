@@ -54,7 +54,7 @@ void ConnectionManagerThread::run()
 
     asyncWaitForConnection(std::chrono::milliseconds(0));
 
-    //TODO change m_startConnection to isConnected()??
+    //TODO change m_incomingConnection to isConnected()??
     while (!m_incomingConnection && !m_startConnection)
     {
         if (threadShouldExit())
@@ -328,6 +328,7 @@ bool ConnectionManagerThread::sendConfigurationData(
         m_fileLogger->logMessage(
             "ConnectionManagerThread | sendConfigurationData | Sent "
             "configuration data");
+        m_fileLogger->logMessage(localConfigurationData.DebugString());
         return true;
     }
     catch (std::exception &e)
@@ -350,6 +351,7 @@ bool ConnectionManagerThread::receiveConfigurationData()
         m_fileLogger->logMessage("ConnectionManagerThread | "
                                  "receiveConfigurationData | Received "
                                  "configuration data");
+        m_fileLogger->logMessage(m_remoteConfigurationData.DebugString());
         return true;
     }
     catch (std::exception &e)

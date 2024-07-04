@@ -12,34 +12,45 @@ ConnectDAWs::~ConnectDAWs()
 std::string ConnectDAWs::getIp()
 {
     //TODO: is this save?
+    // the ip will be send to the remote without encription currently
     try
     {
-        // std::string public_ip;
-        // using namespace boost::asio::ip;
-        // boost::asio::io_context ioContext;
-        // boost::asio::streambuf request_buffer;
+        // Step 1: Create an io_context object
+        boost::asio::io_context io_context;
 
-        // // Send the request
-        // boost::asio::ip::tcp::resolver resolver(ioContext);
-        // boost::asio::ip::tcp::resolver::query query("api.ipify.org", "http");
-        // boost::asio::ip::tcp::socket socket(ioContext);
+        // Step 2: Resolve the server name
+        boost::asio::ip::tcp::resolver resolver(io_context);
+        boost::asio::ip::tcp::resolver::results_type endpoints =
+            resolver.resolve("api.ipify.org", "http");
 
-        // boost::asio::ip::tcp::resolver::iterator endpoint_iterator =
-        //     resolver.resolve(query);
-        // boost::asio::connect(socket, endpoint_iterator);
+        // Step 3: Create and connect the socket
+        boost::asio::ip::tcp::socket socket(io_context);
+        boost::asio::connect(socket, endpoints);
 
-        // // Receive the response
-        // boost::asio::streambuf response_buffer;
-        // boost::asio::read_until(socket, response_buffer, "\r\n\r\n");
+        // Step 4: Form the HTTP GET request
+        std::string request = "GET /?format=text HTTP/1.1\r\n";
+        request += "Host: api.ipify.org\r\n";
+        request += "Connection: close\r\n\r\n";
 
-        // // Extract the IP address from the response (assuming it's the entire body)
-        // std::istream response_stream(&response_buffer);
-        // std::getline(response_stream, public_ip);
+        // Step 5: Send the request
+        boost::asio::write(socket, boost::asio::buffer(request));
 
-        // // Close the socket
-        // socket.close();
-        // return public_ip;
-        return "will be implemented in the future";
+        // Step 6: Read the response
+        boost::asio::streambuf response;
+        boost::asio::read_until(socket, response, "\r\n\r\n");
+
+        // Step 7: Process the response
+        std::string header;
+        std::istream response_stream(&response);
+        while (std::getline(response_stream, header) && header != "\r")
+        {
+            // Discard header lines
+        }
+
+        // Read the remaining data which contains the IP address
+        std::string ip;
+        std::getline(response_stream, ip);
+        return ip;
     }
     catch (std::exception &e)
     {
