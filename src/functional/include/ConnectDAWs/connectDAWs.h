@@ -18,10 +18,10 @@ public:
     ~ConnectDAWs();
 
     //==============================================================================
-    void prepareToPlay(double sampleRate,
-                       int samplesPerBlock,
-                       int numInputChannels,
-                       int numOutputChannels);
+    void startUpConnectionManagerThread(double sampleRate,
+                                        int samplesPerBlock,
+                                        int numInputChannels,
+                                        int numOutputChannels);
     void releaseResources();
     void processBlock(juce::AudioBuffer<float> &);
     // TODO: is this the best place to get the ip???
@@ -31,6 +31,7 @@ public:
 
     std::shared_ptr<Messenger> m_guiMessenger;
     std::shared_ptr<Messenger> m_cmtMessenger;
+    std::unique_ptr<ConnectionManagerThread> m_connectionManagerThread;
 
 private:
     void initFIFOBuffers(int numInputChannels,
@@ -44,7 +45,6 @@ private:
     ConfigurationData m_localConfigurationData;
     std::atomic<bool> m_startConnection = false;
     std::atomic<bool> m_stopConnection = false;
-    std::unique_ptr<ConnectionManagerThread> m_connectionManagerThread;
     std::shared_ptr<AudioBufferFIFO> m_outputBufferFIFO;
     std::shared_ptr<AudioBufferFIFO> m_inputBufferFIFO;
 };

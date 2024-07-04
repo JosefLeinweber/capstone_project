@@ -87,10 +87,10 @@ void ConnectDAWs::initFIFOBuffers(int numInputChannels,
         std::make_shared<AudioBufferFIFO>(numOutputChannels, bufferSize);
 }
 
-void ConnectDAWs::prepareToPlay(double sampleRate,
-                                int samplesPerBlock,
-                                int numInputChannels,
-                                int numOutputChannels)
+void ConnectDAWs::startUpConnectionManagerThread(double sampleRate,
+                                                 int samplesPerBlock,
+                                                 int numInputChannels,
+                                                 int numOutputChannels)
 {
     initFIFOBuffers(numInputChannels, numOutputChannels, samplesPerBlock);
 
@@ -117,6 +117,7 @@ void ConnectDAWs::releaseResources()
     {
         m_connectionManagerThread->signalThreadShouldExit();
         m_connectionManagerThread->waitForThreadToExit(1000);
+        m_connectionManagerThread.reset();
     }
 }
 

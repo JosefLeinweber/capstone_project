@@ -447,6 +447,7 @@ void ConnectionManagerThread::stopProviderAndConsumerThreads(
     m_fileLogger->logMessage(
         "ConnectionManagerThread | stopProviderAndConsumerThreads | "
         "Provider and Consumer threads stopped");
+    m_readyForNextConnection = true;
 }
 
 void ConnectionManagerThread::resetToStartState()

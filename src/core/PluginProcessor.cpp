@@ -48,8 +48,7 @@ MainAudioProcessor::MainAudioProcessor()
 
 MainAudioProcessor::~MainAudioProcessor()
 {
-    // connectionManagerThread->signalThreadShouldExit();
-    // connectionManagerThread->waitForThreadToExit(1000);
+    connectDAWs.releaseResources();
 }
 
 //==============================================================================
@@ -124,17 +123,19 @@ void MainAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     int numInputChannels = getTotalNumInputChannels();
     int numOutputChannels = getTotalNumOutputChannels();
-    connectDAWs.prepareToPlay(sampleRate,
-                              samplesPerBlock,
-                              numInputChannels,
-                              numOutputChannels);
+    if (connectDAWs.m_connectionManagerThread == nullptr)
+    {
+        connectDAWs.startUpConnectionManagerThread(sampleRate,
+                                                   samplesPerBlock,
+                                                   numInputChannels,
+                                                   numOutputChannels);
+    }
 }
 
 void MainAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
-    connectDAWs.releaseResources();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations

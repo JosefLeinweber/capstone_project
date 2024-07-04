@@ -63,6 +63,8 @@ void ConnectDAWsComponent::buttonClickedCallback(juce::Button *button,
     if (button->getButtonText() == "Connect" && success)
     {
         //TODO: change port to be loaded from plugin config or something
+        // auto *message = new StatusMessage("start", "something");
+        // m_cmtMessenger->postMessage(message);
         sendAddressMessageToCMT(m_startConnectionComponent.getIP(), 7000);
         sendStatusMessageToCMT("start", "Try to connecto to remote...");
     }

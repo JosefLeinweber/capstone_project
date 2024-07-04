@@ -103,7 +103,6 @@ void TcpHost::handleConnectTimeout(const boost::system::error_code &error)
         std::cout << "TcpHost | asyncWaitForConnection timeout, timer expiered"
                   << std::endl;
         m_socket->cancel();
-        throw std::runtime_error("Connection timeout");
     }
     else
     {
