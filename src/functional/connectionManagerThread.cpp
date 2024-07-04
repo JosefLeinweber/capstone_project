@@ -113,7 +113,11 @@ void ConnectionManagerThread::run()
         {
             sendMessageToGUI("status", "Failed to connect");
         }
+        while (!m_readyForNextConnection && !threadShouldExit())
+        {
 
+            wait(100);
+        }
 
         // m_startConnection = false;
         resetToStartState();
@@ -170,6 +174,10 @@ void ConnectionManagerThread::handleMessage(const juce::Message &message)
         {
             m_startConnection = true;
         }
+        else if (statusMessage->m_messageType == "ready")
+        {
+            m_readyForNextConnection = true;
+        }
         else
         {
             m_fileLogger->logMessage(
@@ -213,7 +221,7 @@ void ConnectionManagerThread::asyncWaitForConnection(
 {
     m_fileLogger->logMessage(
         "ConnectionManagerThread | asyncWaitForConnection");
-    sendMessageToGUI("status", "Waiting for connection...");
+    sendMessageToGUI("status", "Ready to connect");
     m_host->asyncWaitForConnection(
         std::bind(&ConnectionManagerThread::callbackFunction,
                   this,
@@ -447,6 +455,7 @@ void ConnectionManagerThread::resetToStartState()
     m_startConnection = false;
     m_stopConnection = false;
     m_incomingConnection = false;
+    m_readyForNextConnection = false;
     m_remoteConfigurationData = ConfigurationData();
 
     m_host.reset();

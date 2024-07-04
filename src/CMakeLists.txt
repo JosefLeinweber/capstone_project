@@ -49,10 +49,12 @@ target_sources(${PROJECT_NAME}
         ui/connectDAWsComponent.cpp
         ui/startConnectionComponent.cpp
         ui/inConnectionComponent.cpp
+        ui/errorComponent.cpp
 
         ${UI_INCLUDE_DIR}/connectDAWsComponent.h
         ${UI_INCLUDE_DIR}/startConnectionComponent.h
         ${UI_INCLUDE_DIR}/inConnectionComponent.h
+        ${UI_INCLUDE_DIR}/errorComponent.h
 
         utility/logger/logger.cpp
         utility/logger/logger.h

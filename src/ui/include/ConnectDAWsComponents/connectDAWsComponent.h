@@ -4,6 +4,7 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #include "ConnectDAWs/messenger.h"
+#include "ConnectDAWsComponents/errorComponent.h"
 #include "ConnectDAWsComponents/inConnectionComponent.h"
 #include "ConnectDAWsComponents/startConnectionComponent.h"
 
@@ -22,6 +23,7 @@ public:
     void handleMessage(const juce::Message &message);
     void initGUIMessenger();
     bool m_isConnected = false;
+    bool m_error = false;
 
 private:
     void sendStatusMessageToCMT(std::string type, std::string message);
@@ -40,6 +42,10 @@ private:
         [this](juce::Button *button, bool success) {
             buttonClickedCallback(button, success);
         }};
+
+    ErrorComponent m_errorComponent{[this](juce::Button *button, bool success) {
+        buttonClickedCallback(button, success);
+    }};
     juce::Label m_statusLabel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ConnectDAWsComponent)

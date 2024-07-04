@@ -78,6 +78,7 @@ public:
 private:
     bool validateIpAddress(std::string ip);
     std::atomic<bool> m_incomingConnection = false;
+    std::atomic<bool> m_readyForNextConnection = false;
 
     std::unique_ptr<FileLogger> m_fileLogger;
     std::unique_ptr<ProviderThread> m_providerThread;
