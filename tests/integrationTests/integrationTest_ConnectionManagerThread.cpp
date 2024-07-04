@@ -95,10 +95,10 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
     juce::AudioBuffer<float> audioBuffer(2, 256);
     audioBuffer.clear();
     fillBuffer(audioBuffer, 1.0f);
-    remoteOutputRingBuffer.writeToInternalBufferFrom(audioBuffer);
-    remoteOutputRingBuffer.writeToInternalBufferFrom(audioBuffer);
-    remoteOutputRingBuffer.writeToInternalBufferFrom(audioBuffer);
-    remoteOutputRingBuffer.writeToInternalBufferFrom(audioBuffer);
+    remoteOutputRingBuffer.read(audioBuffer);
+    remoteOutputRingBuffer.read(audioBuffer);
+    remoteOutputRingBuffer.read(audioBuffer);
+    remoteOutputRingBuffer.read(audioBuffer);
 
     ConnectionManagerThread remoteThread(guiMessenger1,
                                          cmtMessenger1,
@@ -117,10 +117,10 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
     // 3. Setting up the local thread
     audioBuffer.clear();
     fillBuffer(audioBuffer, 2.0f);
-    outputRingBuffer.writeToInternalBufferFrom(audioBuffer);
-    outputRingBuffer.writeToInternalBufferFrom(audioBuffer);
-    outputRingBuffer.writeToInternalBufferFrom(audioBuffer);
-    outputRingBuffer.writeToInternalBufferFrom(audioBuffer);
+    outputRingBuffer.read(audioBuffer);
+    outputRingBuffer.read(audioBuffer);
+    outputRingBuffer.read(audioBuffer);
+    outputRingBuffer.read(audioBuffer);
     ConnectionManagerThread localThread(guiMessenger2,
                                         cmtMessenger2,
                                         localConfigurationData,

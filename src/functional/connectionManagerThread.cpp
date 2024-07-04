@@ -49,6 +49,7 @@ ConnectionManagerThread::~ConnectionManagerThread()
 
 void ConnectionManagerThread::run()
 {
+    //why is the setup inside the while loop?
 
     while (!threadShouldExit())
     {

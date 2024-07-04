@@ -60,7 +60,7 @@ bool ProviderThread::readFromFIFOBuffer(std::chrono::milliseconds timeout)
             return false;
         }
     }
-    m_outputRingBuffer.readFromInternalBufferTo(m_outputBuffer);
+    m_outputRingBuffer.write(m_outputBuffer);
     return true;
 }
 

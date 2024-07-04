@@ -12,8 +12,7 @@ AudioBufferFIFO::AudioBufferFIFO(int numChannels, int bufferSize)
 };
 
 // Function to write data to the buffer
-void AudioBufferFIFO::writeToInternalBufferFrom(
-    const juce::AudioBuffer<float> &source)
+void AudioBufferFIFO::read(const juce::AudioBuffer<float> &source)
 {
     auto writeHandle = fifo.write(source.getNumSamples());
 
@@ -41,8 +40,7 @@ void AudioBufferFIFO::writeToInternalBufferFrom(
 };
 
 // Function to read data from the buffer
-void AudioBufferFIFO::readFromInternalBufferTo(
-    juce::AudioBuffer<float> &destination)
+void AudioBufferFIFO::write(juce::AudioBuffer<float> &destination)
 {
 
     auto readHandle = fifo.read(destination.getNumSamples());

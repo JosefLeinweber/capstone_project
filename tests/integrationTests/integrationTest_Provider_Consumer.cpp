@@ -18,7 +18,7 @@ TEST_CASE(
     juce::AudioBuffer<float> tempBuffer(2, 512);
     fillBuffer(tempBuffer, 0.5);
 
-    outputRingBuffer.writeToInternalBufferFrom(tempBuffer);
+    outputRingBuffer.read(tempBuffer);
 
 
     ProviderThread providerThread(consumerConfigurationData,
@@ -68,7 +68,7 @@ TEST_CASE("Provider & Consumer | receiveAudioFromProvider")
     juce::AudioBuffer<float> tempBuffer(2, 512);
     fillBuffer(tempBuffer, 0.5);
 
-    outputRingBuffer.writeToInternalBufferFrom(tempBuffer);
+    outputRingBuffer.read(tempBuffer);
     ProviderThread providerThread(remoteConfigurationData,
                                   localConfigurationData,
                                   outputRingBuffer);

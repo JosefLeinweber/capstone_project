@@ -42,7 +42,7 @@ TEST_CASE("ProviderThread | readFromFIFOBuffer")
         juce::AudioBuffer<float> tempBuffer(2, 10);
         fillBuffer(tempBuffer, 0.5);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        outputRingBuffer.writeToInternalBufferFrom(tempBuffer);
+        outputRingBuffer.read(tempBuffer);
     });
 
     ProviderThread providerThread(remoteConfigurationData,

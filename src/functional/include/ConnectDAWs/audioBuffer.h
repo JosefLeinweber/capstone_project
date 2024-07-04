@@ -9,10 +9,11 @@ public:
     AudioBufferFIFO(int numChannels, int bufferSize);
 
     // Function to write data to the buffer
-    void writeToInternalBufferFrom(const juce::AudioBuffer<float> &source);
+    //TODO:
+    void read(const juce::AudioBuffer<float> &source);
 
     // Function to read data from the buffer
-    void readFromInternalBufferTo(juce::AudioBuffer<float> &destination);
+    void write(juce::AudioBuffer<float> &destination);
 
     //TODO: rename to getNumReadyToRead
     int getNumReady() const

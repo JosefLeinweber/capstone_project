@@ -36,7 +36,7 @@ TEST_CASE("AudioBufferFIFO | Write")
         fillBuffer(sourceBuffer, 1.0f);
 
         // Write data to the buffer
-        audioBufferFIFO.writeToInternalBufferFrom(sourceBuffer);
+        audioBufferFIFO.read(sourceBuffer);
 
         bool areBuffersEqual = true;
 
@@ -88,11 +88,11 @@ TEST_CASE("AudioBufferFIFO | Read")
         fillBuffer(sourceBuffer, 0.2f);
 
         // Fill the buffer
-        audioBufferFIFO.writeToInternalBufferFrom(sourceBuffer);
+        audioBufferFIFO.read(sourceBuffer);
 
 
         // Read data from the buffer
-        audioBufferFIFO.readFromInternalBufferTo(destinationBuffer);
+        audioBufferFIFO.write(destinationBuffer);
 
         bool areBuffersEqual = true;
 
@@ -139,8 +139,8 @@ TEST_CASE("AudioBuffer | continously read and write to buffer")
 
     for (int i = 0; i < 10; i++)
     {
-        audioBufferFIFO.writeToInternalBufferFrom(sourceBuffer);
-        audioBufferFIFO.readFromInternalBufferTo(destinationBuffer);
+        audioBufferFIFO.read(sourceBuffer);
+        audioBufferFIFO.write(destinationBuffer);
     }
 
     bool areBuffersEqual = true;
@@ -178,6 +178,6 @@ TEST_CASE("AudioBuffer | getNumReady test")
 
     REQUIRE(audioBufferFIFO.getNumReady() == 0);
 
-    audioBufferFIFO.writeToInternalBufferFrom(sourceBuffer);
+    audioBufferFIFO.read(sourceBuffer);
     REQUIRE(audioBufferFIFO.getNumReady() == bufferSize);
 }
