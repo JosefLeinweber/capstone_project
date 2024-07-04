@@ -10,7 +10,7 @@ TEST_CASE("Host & Host| back & forth")
 
     auto thread_1 = std::jthread([]() {
         std::cout << "Thread 1" << std::endl;
-        addressData hostAddress("127.0.0.1", 8001);
+        addressData hostAddress("::1", 8001);
         Host host(hostAddress);
         host.setupSocket();
         std::cout << "Thread 1 Host created" << std::endl;
@@ -35,11 +35,11 @@ TEST_CASE("Host & Host| back & forth")
 
     auto thread_2 = std::jthread([]() {
         std::cout << "Thread 2" << std::endl;
-        addressData hostAddress("127.0.0.1", 8010);
+        addressData hostAddress("::1", 8010);
         Host host(hostAddress);
         host.setupSocket();
         std::cout << "Thread 2 Sending connection request" << std::endl;
-        addressData remoteAddress("127.0.0.1", 8001);
+        addressData remoteAddress("::1", 8001);
         host.sendHandshake(remoteAddress);
         juce::AudioBuffer<float> recievedBuffer(2, 10);
         std::cout << "Thread 2 Waiting for buffer" << std::endl;
@@ -65,7 +65,7 @@ TEST_CASE("Host & AudioBuffer | back & forth with abstractFIFO write and read "
 
     auto thread_1 = std::jthread([]() {
         std::cout << "Thread 1" << std::endl;
-        addressData hostAddress("127.0.0.1", 8001);
+        addressData hostAddress("::1", 8001);
         Host host(hostAddress);
         host.setupSocket();
         AudioBufferFIFO audioBufferFifo(2, 20);
@@ -96,12 +96,12 @@ TEST_CASE("Host & AudioBuffer | back & forth with abstractFIFO write and read "
 
     auto thread_2 = std::jthread([]() {
         std::cout << "Thread 2" << std::endl;
-        addressData hostAddress("127.0.0.1", 8010);
+        addressData hostAddress("::1", 8010);
         Host host(hostAddress);
         host.setupSocket();
         AudioBufferFIFO audioBufferFifo2(2, 20);
         std::cout << "Thread 2 Sending connection request" << std::endl;
-        addressData remoteAddress("127.0.0.1", 8001);
+        addressData remoteAddress("::1", 8001);
         host.sendHandshake(remoteAddress);
         juce::AudioBuffer<float> recievedBuffer(2, 10);
         std::cout << "Thread 2 Waiting for buffer" << std::endl;

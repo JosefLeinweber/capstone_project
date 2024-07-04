@@ -88,7 +88,7 @@ SCENARIO("TcpHost | initializeConnection with unreachable remote host")
             {
                 try
                 {
-                    tcpHost.initializeConnection("127.0.0.1",
+                    tcpHost.initializeConnection("::1",
                                                  8002,
                                                  std::chrono::milliseconds(1));
                     ioContext.run();
@@ -109,7 +109,7 @@ SCENARIO("TcpHost | initializeConnection with reachable remote host")
           "on a different thread")
     {
         AddressData remoteAddress;
-        remoteAddress.set_ip("127.0.0.1");
+        remoteAddress.set_ip("::1");
         remoteAddress.set_port(8001);
 
         std::jthread remoteThread([&]() {
@@ -155,7 +155,7 @@ SCENARIO("TcpHost | sendConfiguration without receiving remote host")
           "on a different thread")
     {
         AddressData remoteAddress;
-        remoteAddress.set_ip("127.0.0.1");
+        remoteAddress.set_ip("::1");
         remoteAddress.set_port(8001);
 
         std::jthread remoteThread([&]() {
@@ -207,10 +207,10 @@ SCENARIO("TcpHost | sendConfiguration without receiving remote host")
 TEST_CASE("TcpHost | sendConfiguration with receiving remote host")
 {
     AddressData remoteAddress;
-    remoteAddress.set_ip("127.0.0.1");
+    remoteAddress.set_ip("::1");
     remoteAddress.set_port(8001);
     AddressData hostAddress;
-    hostAddress.set_ip("127.0.0.1");
+    hostAddress.set_ip("::1");
     hostAddress.set_port(8002);
 
     // GIVEN: A tcpHost connected to a remote tcpHost running
@@ -246,10 +246,10 @@ SCENARIO("TcpHost | sendConfiguration, receiveConfiguration, "
          "deseraializeConfiguration")
 {
     AddressData remoteAddress;
-    remoteAddress.set_ip("127.0.0.1");
+    remoteAddress.set_ip("::1");
     remoteAddress.set_port(8001);
     AddressData hostAddress;
-    hostAddress.set_ip("127.0.0.1");
+    hostAddress.set_ip("::1");
     hostAddress.set_port(8002);
 
     GIVEN("tcpHost connected to a remote tcpHost who "
@@ -308,10 +308,10 @@ SCENARIO("TcpHost | sendConfiguration, receiveConfiguration, "
 SCENARIO("TcpHost | serializer and deserializer")
 {
     AddressData remoteAddress;
-    remoteAddress.set_ip("127.0.0.1");
+    remoteAddress.set_ip("::1");
     remoteAddress.set_port(8001);
     AddressData hostAddress;
-    hostAddress.set_ip("127.0.0.1");
+    hostAddress.set_ip("::1");
     hostAddress.set_port(8002);
 
     GIVEN("Some data to serialize")

@@ -9,5 +9,5 @@ TEST_CASE("ConnectDAWs | getIp")
     std::string ip = connectDAWs.getIp();
     REQUIRE(ip != std::string());
     std::cout << ip << std::endl;
-    FAIL("Test not implemented");
+    REQUIRE(ip.length() == 39);
 }

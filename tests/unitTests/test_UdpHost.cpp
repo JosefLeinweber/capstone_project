@@ -45,7 +45,7 @@ TEST_CASE("UdpHost | sendAudioBuffer and receive")
         juce::AudioBuffer<float> buffer(2, 10);
         fillBuffer(buffer, 0.5);
         boost::asio::ip::udp::endpoint remoteEndpoint(
-            boost::asio::ip::address::from_string("127.0.0.1"),
+            boost::asio::ip::address::from_string("::1"),
             8002);
         udpHost.sendAudioBuffer(buffer, remoteEndpoint);
     });
@@ -88,7 +88,7 @@ TEST_CASE("UdpHost | sendAudioBuffer to invalid endpoint still successfull")
     juce::AudioBuffer<float> buffer(2, 10);
     fillBuffer(buffer, 0.5);
     boost::asio::ip::udp::endpoint remoteEndpoint(
-        boost::asio::ip::address::from_string("127.0.0.1"),
+        boost::asio::ip::address::from_string("::1"),
         8002);
     REQUIRE_NOTHROW(udpHost.sendAudioBuffer(buffer, remoteEndpoint));
 }

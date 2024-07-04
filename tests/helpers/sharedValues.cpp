@@ -46,10 +46,10 @@ void printBuffer(juce::AudioBuffer<float> &buffer)
 }
 
 ConfigurationData localConfigurationData =
-    setConfigurationData("127.0.0.1", 5000, 5001, 5002, 44100, 512, 2, 2);
+    setConfigurationData("::1", 5000, 5001, 5002, 44100, 512, 2, 2);
 
 ConfigurationData remoteConfigurationData =
-    setConfigurationData("127.0.0.1", 6000, 6001, 6002, 44100, 512, 2, 2);
+    setConfigurationData("::1", 6000, 6001, 6002, 44100, 512, 2, 2);
 
 AudioBufferFIFO inputRingBuffer(2, 1024);
 AudioBufferFIFO outputRingBuffer(2, 1024);
