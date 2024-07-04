@@ -20,8 +20,7 @@ ConnectDAWsComponent::ConnectDAWsComponent(
 
     addAndMakeVisible(m_startConnectionComponent);
     addAndMakeVisible(m_inConnectionComponent);
-    m_inConnectionComponent.setVisible(false);
-
+    updateComponentVisibility(m_isConnected);
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
 
@@ -60,20 +59,32 @@ void ConnectDAWsComponent::buttonClickedCallback(juce::Button *button,
 {
     if (button->getButtonText() == "Connect" && success)
     {
-        m_isConnected = true;
-        m_startConnectionComponent.setVisible(false);
-        m_inConnectionComponent.setVisible(true);
+        // m_startConnectionComponent.setVisible(false);
+        // m_inConnectionComponent.setVisible(true);
         //TODO: change port to be loaded from plugin config or something
         sendAddressMessageToCMT(m_startConnectionComponent.getIP(), 7000);
         sendStatusMessageToCMT("start", "Try to connecto to remote...");
     }
     else if (button->getButtonText() == "Cancel" && success)
     {
-        m_isConnected = false;
-        m_inConnectionComponent.setVisible(false);
-        m_startConnectionComponent.setVisible(true);
+        // m_inConnectionComponent.setVisible(false);
+        // m_startConnectionComponent.setVisible(true);
+        sendStatusMessageToCMT("stop", "Stop connection attempt");
     }
-    m_forceResizeCallback();
+}
+
+void ConnectDAWsComponent::updateComponentVisibility(bool isConnected)
+{
+    if (isConnected)
+    {
+        m_startConnectionComponent.setVisible(false);
+        m_inConnectionComponent.setVisible(true);
+    }
+    else
+    {
+        m_startConnectionComponent.setVisible(true);
+        m_inConnectionComponent.setVisible(false);
+    }
 }
 
 
@@ -85,6 +96,28 @@ void ConnectDAWsComponent::handleMessage(const juce::Message &message)
         {
             m_statusLabel.setText(statusMessage->m_message,
                                   juce::dontSendNotification);
+            if (statusMessage->m_message == "Started stream")
+            {
+                m_isConnected = true;
+            }
+            else if (statusMessage->m_message == "Stoped stream")
+            {
+                m_isConnected = false;
+            }
+            else if (statusMessage->m_message == "Failed to connect")
+            {
+                m_statusLabel.setText(
+                    "Could not connect to remote with that IP",
+                    juce::dontSendNotification);
+                m_isConnected = false;
+            }
+            else if (statusMessage->m_message == "Failed to start stream")
+            {
+                m_statusLabel.setText(
+                    "Could not start stream, check remote configuration",
+                    juce::dontSendNotification);
+                m_isConnected = false;
+            }
         }
         else
         {
@@ -99,6 +132,9 @@ void ConnectDAWsComponent::handleMessage(const juce::Message &message)
                      "unknown message from CMT"
                   << std::endl;
     }
+    updateComponentVisibility(m_isConnected);
+    repaint();
+    m_forceResizeCallback();
 }
 
 void ConnectDAWsComponent::initGUIMessenger()

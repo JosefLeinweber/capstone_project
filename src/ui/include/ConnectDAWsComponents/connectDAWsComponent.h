@@ -26,6 +26,7 @@ public:
 private:
     void sendStatusMessageToCMT(std::string type, std::string message);
     void sendAddressMessageToCMT(std::string ip, int port);
+    void updateComponentVisibility(bool isConnected);
 
     std::shared_ptr<Messenger> &m_guiMessenger;
     std::shared_ptr<Messenger> &m_cmtMessenger;

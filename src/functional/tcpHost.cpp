@@ -80,8 +80,9 @@ void TcpHost::handleConnect(const boost::system::error_code &error)
     else
     {
         std::cout << "Failed to connect to remote host" << std::endl;
+        std::cout << error.message() << std::endl;
         m_socket->close();
-        throw std::runtime_error(error.message());
+        m_isConnected = false;
     }
 }
 

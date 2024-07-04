@@ -73,44 +73,45 @@ void ConnectionManagerThread::run()
         initializeConnection(m_remoteConfigurationData);
     }
 
-    if (isConnected() &&
-        exchangeConfigurationDataWithRemote(m_localConfigurationData) &&
-        startUpProviderAndConsumerThreads(m_localConfigurationData,
-                                          m_remoteConfigurationData,
-                                          std::chrono::milliseconds(2000)))
+    if (isConnected())
     {
-        sendMessageToGUI("status", "Streaming audio...");
-        while (m_providerThread->isThreadRunning() &&
-               m_consumerThread->isThreadRunning() && !m_stopConnection &&
-               !threadShouldExit())
-
+        if (exchangeConfigurationDataWithRemote(m_localConfigurationData) &&
+            startUpProviderAndConsumerThreads(m_localConfigurationData,
+                                              m_remoteConfigurationData,
+                                              std::chrono::milliseconds(2000)))
         {
-            wait(100);
+            sendMessageToGUI("status", "Started stream");
+            while (m_providerThread->isThreadRunning() &&
+                   m_consumerThread->isThreadRunning() && !m_stopConnection &&
+                   !threadShouldExit())
+
+            {
+                wait(100);
+            }
+            m_fileLogger->logMessage("ConnectionManagerThread | "
+                                     "run | Stopped streaming...");
+            m_fileLogger->logMessage(
+                "providerThread is running: " +
+                std::to_string(m_providerThread->isThreadRunning()));
+            m_fileLogger->logMessage(
+                "consumerThread is running: " +
+                std::to_string(m_consumerThread->isThreadRunning()));
+            m_fileLogger->logMessage("m_stopConnection: " +
+                                     std::to_string(m_stopConnection));
+            stopProviderAndConsumerThreads(std::chrono::seconds(5));
+            sendMessageToGUI("status", "Stoped stream");
         }
-        m_fileLogger->logMessage("ConnectionManagerThread | "
-                                 "run | Stopped streaming...");
-        m_fileLogger->logMessage(
-            "providerThread is running: " +
-            std::to_string(m_providerThread->isThreadRunning()));
-        m_fileLogger->logMessage(
-            "consumerThread is running: " +
-            std::to_string(m_consumerThread->isThreadRunning()));
-        m_fileLogger->logMessage("m_stopConnection: " +
-                                 std::to_string(m_stopConnection));
-        stopProviderAndConsumerThreads(std::chrono::seconds(5));
-        m_fileLogger->logMessage(
-            "providerThread is running: " +
-            std::to_string(m_providerThread->isThreadRunning()));
-        m_fileLogger->logMessage(
-            "consumerThread is running: " +
-            std::to_string(m_consumerThread->isThreadRunning()));
-        sendMessageToGUI("status", "Stoped streaming!");
+        else
+        {
+            sendMessageToGUI("status", "Failed to start stream");
+        }
     }
     else
     {
-        sendMessageToGUI("status",
-                         "Failed to start streaming, please try again...");
+        sendMessageToGUI("status", "Failed to connect");
     }
+
+
     m_startConnection = false;
     // resetToStartState();
 }
