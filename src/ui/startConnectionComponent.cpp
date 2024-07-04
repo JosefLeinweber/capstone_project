@@ -50,3 +50,8 @@ void StartConnectionComponent::buttonClicked(juce::Button *button)
         repaint();
     }
 }
+
+std::string StartConnectionComponent::getIP()
+{
+    return m_ipEditor.getText().toStdString();
+}

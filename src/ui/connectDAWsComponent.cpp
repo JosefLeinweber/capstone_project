@@ -63,6 +63,8 @@ void ConnectDAWsComponent::buttonClickedCallback(juce::Button *button,
         m_isConnected = true;
         m_startConnectionComponent.setVisible(false);
         m_inConnectionComponent.setVisible(true);
+        sendAddressMessageToCMT(m_startConnectionComponent.getIP(), 0);
+        sendStatusMessageToCMT("start", "Try to connecto to remote...");
     }
     else if (button->getButtonText() == "Cancel" && success)
     {
@@ -76,11 +78,12 @@ void ConnectDAWsComponent::buttonClickedCallback(juce::Button *button,
 
 void ConnectDAWsComponent::handleMessage(const juce::Message &message)
 {
-    if (auto *m = dynamic_cast<const MessageToGUI *>(&message))
+    if (auto *statusMessage = dynamic_cast<const StatusMessage *>(&message))
     {
-        if (m->m_messageType == "status")
+        if (statusMessage->m_messageType == "status")
         {
-            m_statusLabel.setText(m->m_message, juce::dontSendNotification);
+            m_statusLabel.setText(statusMessage->m_message,
+                                  juce::dontSendNotification);
         }
         else
         {
@@ -103,4 +106,15 @@ void ConnectDAWsComponent::initGUIMessenger()
         std::bind(&ConnectDAWsComponent::handleMessage,
                   this,
                   std::placeholders::_1));
+}
+
+void ConnectDAWsComponent::sendStatusMessageToCMT(std::string type,
+                                                  std::string message)
+{
+    m_cmtMessenger->postMessage(new StatusMessage(type, message));
+}
+
+void ConnectDAWsComponent::sendAddressMessageToCMT(std::string ip, int port)
+{
+    m_cmtMessenger->postMessage(new AddressMessage(ip, port));
 }

@@ -137,7 +137,7 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
     std::cout << "started localThread" << std::endl;
 
     // 5. Mock an incoming message on the local thread to make it connect to the remote thread
-    localThread.handleMessage(MessageToCMT("127.0.0.1", 6000));
+    localThread.handleMessage(AddressMessage("127.0.0.1", 6000));
 
     // 6. while the connection is not established, wait
     while (startConnection)

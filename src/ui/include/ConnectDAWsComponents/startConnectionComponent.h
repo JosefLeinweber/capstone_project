@@ -16,6 +16,8 @@ public:
 
     void buttonClicked(juce::Button *button) override;
 
+    std::string getIP();
+
 private:
     juce::TextEditor m_ipEditor;
     juce::TextButton m_button{"Connect"};

@@ -139,32 +139,33 @@ void ConnectionManagerThread::initCMTMessenger()
 
 void ConnectionManagerThread::handleMessage(const juce::Message &message)
 {
-    if (auto *customMessage = dynamic_cast<const MessageToCMT *>(&message))
+    m_fileLogger->logMessage("ConnectionManagerThread | handleMessage | "
+                             "Received message from GUI");
+    if (auto *addressMessage = dynamic_cast<const AddressMessage *>(&message))
     {
-        // if (customMessage->type == "stop")
-        // {
-        //     m_stopConnection = true;
-        // }
-        // else
-        // {
-        //     std::cout << "ConnectionManagerThread::handleMessage | "
-        //                  "Received unknown message from GUI"
-        //               << std::endl;
-        // }
-        m_fileLogger->logMessage("ConnectionManagerThread | handleMessage | "
-                                 "Received message from GUI");
-        m_fileLogger->logMessage(customMessage->ip + " | " +
-                                 std::to_string(customMessage->port));
-        m_fileLogger->logMessage("ConnectionManagerThread | handleMessage | "
-                                 "setting m_startConnection to true...");
-        m_remoteConfigurationData.set_ip(customMessage->ip);
-        m_remoteConfigurationData.set_host_port(customMessage->port);
-        m_startConnection = true;
+        m_fileLogger->logMessage(addressMessage->m_ip + " | " +
+                                 std::to_string(addressMessage->m_port));
+        m_remoteConfigurationData.set_ip(addressMessage->m_ip);
+        m_remoteConfigurationData.set_host_port(addressMessage->m_port);
     }
-    else
+    else if (auto *statusMessage =
+                 dynamic_cast<const StatusMessage *>(&message))
     {
-        m_fileLogger->logMessage("ConnectionManagerThread | handleMessage | "
-                                 "Received unknown message from GUI");
+        m_fileLogger->logMessage(statusMessage->m_messageType + " | " +
+                                 statusMessage->m_message);
+        if (statusMessage->m_messageType == "stop")
+        {
+            m_stopConnection = true;
+        }
+        else if (statusMessage->m_messageType == "start")
+        {
+            m_startConnection = true;
+        }
+        else
+        {
+            m_fileLogger->logMessage(
+                "type of message unknown, no action taken");
+        }
     }
 }
 
@@ -450,5 +451,5 @@ void ConnectionManagerThread::sendMessageToGUI(std::string type,
     m_fileLogger->logMessage("ConnectionManagerThread | sendMessageToGUI | "
                              "Sending message to GUI | " +
                              message);
-    m_guiMessenger->postMessage(new MessageToGUI(type, message));
+    m_guiMessenger->postMessage(new StatusMessage(type, message));
 }

@@ -24,7 +24,8 @@ public:
     bool m_isConnected = false;
 
 private:
-    void sendMessageToCMT(std::string type, std::string message);
+    void sendStatusMessageToCMT(std::string type, std::string message);
+    void sendAddressMessageToCMT(std::string ip, int port);
 
     std::shared_ptr<Messenger> &m_guiMessenger;
     std::shared_ptr<Messenger> &m_cmtMessenger;
