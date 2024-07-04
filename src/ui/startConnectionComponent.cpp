@@ -12,7 +12,7 @@ StartConnectionComponent::StartConnectionComponent(
     m_ipEditor.setMultiLine(false);
     m_ipEditor.setTextToShowWhenEmpty("Enter IP address", juce::Colours::grey);
     m_ipEditor.setInputFilter(
-        new juce::TextEditor::LengthAndCharacterRestriction(15, "0123456789."),
+        new juce::TextEditor::LengthAndCharacterRestriction(39, ""),
         true);
 }
 

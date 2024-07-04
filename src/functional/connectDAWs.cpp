@@ -21,7 +21,7 @@ std::string ConnectDAWs::getIp()
         // Step 2: Resolve the server name
         boost::asio::ip::tcp::resolver resolver(io_context);
         boost::asio::ip::tcp::resolver::results_type endpoints =
-            resolver.resolve("api.ipify.org", "http");
+            resolver.resolve("api6.ipify.org", "http");
 
         // Step 3: Create and connect the socket
         boost::asio::ip::tcp::socket socket(io_context);
@@ -29,7 +29,7 @@ std::string ConnectDAWs::getIp()
 
         // Step 4: Form the HTTP GET request
         std::string request = "GET /?format=text HTTP/1.1\r\n";
-        request += "Host: api.ipify.org\r\n";
+        request += "Host: api6.ipify.org\r\n";
         request += "Connection: close\r\n\r\n";
 
         // Step 5: Send the request

@@ -28,7 +28,7 @@ void UdpHost::setupSocket(boost::asio::io_context &ioContext,
         }
         m_socket = std::make_unique<boost::asio::ip::udp::socket>(
             ioContext,
-            boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port));
+            boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v6(), port));
     }
     catch (const std::exception &e)
     {

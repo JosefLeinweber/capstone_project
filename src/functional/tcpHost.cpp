@@ -4,7 +4,7 @@
 TcpHost::TcpHost(boost::asio::io_context &ioContext, unsigned short port)
     : m_acceptor(
           ioContext,
-          boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port))
+          boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), port))
 {
     std::cout << "TcpHost created" << std::endl;
     m_timer =
