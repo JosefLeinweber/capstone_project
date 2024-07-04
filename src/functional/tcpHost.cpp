@@ -45,15 +45,25 @@ void TcpHost::asyncWaitForConnection(
                 m_acceptor.cancel();
             }
         });
-    }
+        m_acceptor.async_accept(
+            *m_socket,
+            [this, callback](const boost::system::error_code &error) {
+                callback(error);
 
-    m_acceptor.async_accept(
-        *m_socket,
-        [this, callback](const boost::system::error_code &error) {
-            callback(error);
-            m_timer->cancel();
-            m_isConnected = true;
-        });
+                m_timer->cancel();
+
+                m_isConnected = true;
+            });
+    }
+    else
+    {
+        m_acceptor.async_accept(
+            *m_socket,
+            [this, callback](const boost::system::error_code &error) {
+                callback(error);
+                m_isConnected = true;
+            });
+    }
 }
 
 void TcpHost::startAccept()
@@ -126,6 +136,7 @@ void TcpHost::initializeConnection(std::string ip,
     {
         m_timer->expires_after(timeout);
         std::cout << "Connecting to remote host" << std::endl;
+
         m_socket->async_connect(boost::asio::ip::tcp::endpoint(
                                     boost::asio::ip::address::from_string(ip),
                                     port),
@@ -141,6 +152,21 @@ void TcpHost::initializeConnection(std::string ip,
     {
         std::cout << "No socket available" << std::endl;
         throw std::runtime_error("No socket available");
+    }
+}
+
+bool TcpHost::validateIpAddress(std::string ip)
+{
+    try
+    {
+        auto ipAddress = boost::asio::ip::address::from_string(ip);
+        return true;
+    }
+    catch (...)
+    {
+        std::cout << "TcpHost::validateIpAddress | Invalid IP address"
+                  << std::endl;
+        return false;
     }
 }
 

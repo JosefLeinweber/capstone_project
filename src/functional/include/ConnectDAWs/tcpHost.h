@@ -34,7 +34,7 @@ public:
     std::string serializeConfigurationData(ConfigurationData dataCollection);
 
     ConfigurationData deserializeConfigurationData(std::string &serializedData);
-
+    bool validateIpAddress(std::string ip);
     bool isConnected();
 
 private:

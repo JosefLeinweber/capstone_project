@@ -76,6 +76,7 @@ public:
     ConfigurationData m_remoteConfigurationData;
 
 private:
+    bool validateIpAddress(std::string ip);
     std::atomic<bool> m_incomingConnection = false;
 
     std::unique_ptr<FileLogger> m_fileLogger;

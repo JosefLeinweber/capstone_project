@@ -50,75 +50,83 @@ ConnectionManagerThread::~ConnectionManagerThread()
 void ConnectionManagerThread::run()
 {
 
-    setup();
-
-    asyncWaitForConnection(std::chrono::milliseconds(0));
-
-    //TODO change m_incomingConnection to isConnected()??
-    while (!m_incomingConnection && !m_startConnection)
+    while (!threadShouldExit())
     {
-        if (threadShouldExit())
+        setup();
+        asyncWaitForConnection(std::chrono::milliseconds(0));
+
+        //TODO change m_incomingConnection to isConnected()??
+        while (!m_incomingConnection && !m_startConnection)
         {
-            return;
-        }
-        wait(100);
-    }
-
-    m_fileLogger->logMessage("ConnectionManagerThread | run | Incoming "
-                             "connection: " +
-                             std::to_string(isConnected()));
-
-    if (m_startConnection)
-    {
-        initializeConnection(m_remoteConfigurationData);
-    }
-
-    if (isConnected())
-    {
-        if (exchangeConfigurationDataWithRemote(m_localConfigurationData) &&
-            startUpProviderAndConsumerThreads(m_localConfigurationData,
-                                              m_remoteConfigurationData,
-                                              std::chrono::milliseconds(2000)))
-        {
-            sendMessageToGUI("status", "Started stream");
-            while (m_providerThread->isThreadRunning() &&
-                   m_consumerThread->isThreadRunning() && !m_stopConnection &&
-                   !threadShouldExit())
-
+            if (threadShouldExit())
             {
-                wait(100);
+                return;
             }
-            m_fileLogger->logMessage("ConnectionManagerThread | "
-                                     "run | Stopped streaming...");
-            m_fileLogger->logMessage(
-                "providerThread is running: " +
-                std::to_string(m_providerThread->isThreadRunning()));
-            m_fileLogger->logMessage(
-                "consumerThread is running: " +
-                std::to_string(m_consumerThread->isThreadRunning()));
-            m_fileLogger->logMessage("m_stopConnection: " +
-                                     std::to_string(m_stopConnection));
-            stopProviderAndConsumerThreads(std::chrono::seconds(5));
-            sendMessageToGUI("status", "Stoped stream");
+            wait(100);
+        }
+
+        m_fileLogger->logMessage("ConnectionManagerThread | run | Incoming "
+                                 "connection: " +
+                                 std::to_string(isConnected()));
+
+        if (m_startConnection &&
+            validateIpAddress(m_remoteConfigurationData.ip()))
+        {
+            initializeConnection(m_remoteConfigurationData);
+        }
+
+        if (isConnected())
+        {
+            if (exchangeConfigurationDataWithRemote(m_localConfigurationData) &&
+                startUpProviderAndConsumerThreads(
+                    m_localConfigurationData,
+                    m_remoteConfigurationData,
+                    std::chrono::milliseconds(2000)))
+            {
+                sendMessageToGUI("status", "Started stream");
+                while (m_providerThread->isThreadRunning() &&
+                       m_consumerThread->isThreadRunning() &&
+                       !m_stopConnection && !threadShouldExit())
+
+                {
+                    wait(100);
+                }
+                m_fileLogger->logMessage("ConnectionManagerThread | "
+                                         "run | Stopped streaming...");
+                m_fileLogger->logMessage(
+                    "providerThread is running: " +
+                    std::to_string(m_providerThread->isThreadRunning()));
+                m_fileLogger->logMessage(
+                    "consumerThread is running: " +
+                    std::to_string(m_consumerThread->isThreadRunning()));
+                m_fileLogger->logMessage("m_stopConnection: " +
+                                         std::to_string(m_stopConnection));
+                stopProviderAndConsumerThreads(std::chrono::seconds(5));
+                sendMessageToGUI("status", "Stoped stream");
+            }
+            else
+            {
+                sendMessageToGUI("status", "Failed to start stream");
+            }
         }
         else
         {
-            sendMessageToGUI("status", "Failed to start stream");
+            sendMessageToGUI("status", "Failed to connect");
         }
-    }
-    else
-    {
-        sendMessageToGUI("status", "Failed to connect");
-    }
 
 
-    m_startConnection = false;
-    // resetToStartState();
+        // m_startConnection = false;
+        resetToStartState();
+    }
 }
 
 void ConnectionManagerThread::setup()
 {
-    initCMTMessenger();
+    if (!m_cmtMessenger)
+    {
+        initCMTMessenger();
+    }
+
     setupHost();
     m_fileLogger->logMessage("ConnectionManagerThread | setup finished!");
 }
@@ -249,11 +257,18 @@ void ConnectionManagerThread::stopAsyncWaitForConnection()
     }
 }
 
+bool ConnectionManagerThread::validateIpAddress(std::string ip)
+{
+    return m_host->validateIpAddress(ip);
+}
+
 bool ConnectionManagerThread::initializeConnection(
     ConfigurationData remoteConfigurationData)
 {
     try
     {
+        //TODO: refactor this function, it does too much
+
         stopAsyncWaitForConnection();
         m_fileLogger->logMessage(
             "ConnectionManagerThread | initializeConnection | Trying to "
@@ -283,10 +298,6 @@ bool ConnectionManagerThread::initializeConnection(
             std::to_string(remoteConfigurationData.host_port()) +
             " with error: ");
         m_fileLogger->logMessage(e.what());
-        sendMessageToGUI(
-            "status",
-            "Failed to connect to remote: " + remoteConfigurationData.ip() +
-                ":" + std::to_string(remoteConfigurationData.host_port()));
         return false;
     }
 }
@@ -438,11 +449,17 @@ void ConnectionManagerThread::resetToStartState()
     m_incomingConnection = false;
     m_remoteConfigurationData = ConfigurationData();
 
+    m_host.reset();
+
     if (m_ioContextThread.joinable())
     {
+        m_ioContext.stop();
         m_ioContextThread.join();
     }
-    m_ioContext.stop();
+    if (!m_ioContext.stopped())
+    {
+        m_ioContext.stop();
+    }
     m_ioContext.restart();
     m_fileLogger->logMessage("ConnectionManagerThread | ready for new "
                              "connection...");
