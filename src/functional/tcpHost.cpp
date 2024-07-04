@@ -150,7 +150,7 @@ void TcpHost::initializeConnection(std::string ip,
     else
     {
         std::cout << "No socket available" << std::endl;
-        throw std::runtime_error("No socket available");
+        m_isConnected = false;
     }
 }
 

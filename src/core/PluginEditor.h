@@ -18,14 +18,14 @@
 //==============================================================================
 /**
 */
-class MainAudioProcessorEditor : public juce::AudioProcessorEditor
+class AudioProcessorEditor : public juce::AudioProcessorEditor
 {
 public:
-    MainAudioProcessorEditor(MainAudioProcessor &,
-                             juce::AudioProcessorValueTreeState &vts,
-                             std::shared_ptr<Messenger> &guiMessenger,
-                             std::shared_ptr<Messenger> &cmtMessenger);
-    ~MainAudioProcessorEditor() override;
+    AudioProcessorEditor(MainAudioProcessor &,
+                         juce::AudioProcessorValueTreeState &vts,
+                         std::shared_ptr<Messenger> &guiMessenger,
+                         std::shared_ptr<Messenger> &cmtMessenger);
+    ~AudioProcessorEditor() override;
 
     //==============================================================================
     void paint(juce::Graphics &) override;
@@ -40,5 +40,5 @@ private:
     MainAudioProcessor &audioProcessor;
     ConnectDAWsComponent m_connectDAWsComponent;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioProcessorEditor)
 };

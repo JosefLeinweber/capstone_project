@@ -281,14 +281,14 @@ bool ConnectionManagerThread::initializeConnection(
         m_fileLogger->logMessage(
             "ConnectionManagerThread | initializeConnection | Trying to "
             "connect to remote: " +
-            remoteConfigurationData.ip() + ":" +
-            std::to_string(remoteConfigurationData.host_port()));
+            remoteConfigurationData.ip());
         sendMessageToGUI(
             "status",
             "Trying to connected to remote: " + remoteConfigurationData.ip() +
                 ":" + std::to_string(remoteConfigurationData.host_port()));
         m_host->initializeConnection(remoteConfigurationData.ip(),
-                                     remoteConfigurationData.host_port());
+                                     remoteConfigurationData.host_port(),
+                                     std::chrono::milliseconds(5000));
         // blocking call to wait for either connection or timeout
         m_ioContext.run_one_for(std::chrono::milliseconds(5000));
         m_fileLogger->logMessage(
@@ -340,8 +340,21 @@ bool ConnectionManagerThread::exchangeConfigurationDataWithRemote(
 bool ConnectionManagerThread::sendConfigurationData(
     ConfigurationData localConfigurationData)
 {
-    std::string serializedData =
-        m_host->serializeConfigurationData(localConfigurationData);
+    std::string serializedData;
+    try
+    {
+        serializedData =
+            m_host->serializeConfigurationData(localConfigurationData);
+    }
+    catch (std::exception &e)
+    {
+        m_fileLogger->logMessage(
+            "ConnectionManagerThread | sendConfigurationData | Failed to "
+            "serialize configuration data with error: ");
+        m_fileLogger->logMessage(e.what());
+        return false;
+    }
+
     try
     {
         m_host->send(serializedData);

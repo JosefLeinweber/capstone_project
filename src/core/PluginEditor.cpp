@@ -11,16 +11,15 @@
 
 
 //==============================================================================
-MainAudioProcessorEditor::MainAudioProcessorEditor(
+AudioProcessorEditor::AudioProcessorEditor(
     MainAudioProcessor &p,
     juce::AudioProcessorValueTreeState &vts,
     std::shared_ptr<Messenger> &guiMessenger,
     std::shared_ptr<Messenger> &cmtMessenger)
     : AudioProcessorEditor(&p), audioProcessor(p),
-      m_connectDAWsComponent(
-          guiMessenger,
-          cmtMessenger,
-          std::bind(&MainAudioProcessorEditor::resized, this))
+      m_connectDAWsComponent(guiMessenger,
+                             cmtMessenger,
+                             std::bind(&AudioProcessorEditor::resized, this))
 {
     constexpr auto HEIGHT = 500;
     constexpr auto WIDTH = 500;
@@ -53,12 +52,12 @@ MainAudioProcessorEditor::MainAudioProcessorEditor(
     setSize(WIDTH, HEIGHT);
 }
 
-MainAudioProcessorEditor::~MainAudioProcessorEditor()
+AudioProcessorEditor::~AudioProcessorEditor()
 {
 }
 
 //==============================================================================
-void MainAudioProcessorEditor::paint(juce::Graphics &g)
+void AudioProcessorEditor::paint(juce::Graphics &g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll(
@@ -68,7 +67,7 @@ void MainAudioProcessorEditor::paint(juce::Graphics &g)
     g.setFont(15.0f);
 }
 
-void MainAudioProcessorEditor::resized()
+void AudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..

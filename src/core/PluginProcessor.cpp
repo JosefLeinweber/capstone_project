@@ -123,6 +123,7 @@ void MainAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     int numInputChannels = getTotalNumInputChannels();
     int numOutputChannels = getTotalNumOutputChannels();
+    //TODO: change to start or update
     if (connectDAWs.m_connectionManagerThread == nullptr)
     {
         connectDAWs.startUpConnectionManagerThread(sampleRate,
