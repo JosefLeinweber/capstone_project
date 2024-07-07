@@ -54,13 +54,17 @@ void ConnectionManagerThread::run()
 {
     while (!threadShouldExit())
     {
-        std::invoke(m_currentTask);
+        if (establishConnection())
+        {
+            streamAudio();
+        }
     }
 }
 
 
-void ConnectionManagerThread::establishConnection()
+bool ConnectionManagerThread::establishConnection()
 {
+    //TODO: Move setup out of the while loop
     setup();
     asyncWaitForConnection(std::chrono::milliseconds(0));
 
@@ -69,7 +73,7 @@ void ConnectionManagerThread::establishConnection()
     {
         if (threadShouldExit())
         {
-            return;
+            return false;
         }
         wait(100);
     }
@@ -83,14 +87,12 @@ void ConnectionManagerThread::establishConnection()
     if (isConnected() && validatePluginConfiguration(m_localConfigurationData,
                                                      m_remoteConfigurationData))
     {
-        m_currentTask = std::bind(&ConnectionManagerThread::streamAudio, this);
+        return true;
     }
-    else
-    {
-        m_errorString = "Failed to connect";
-        m_currentTask =
-            std::bind(&ConnectionManagerThread::encounteredError, this);
-    }
+
+    encounteredError("Failed to connect");
+
+    return false;
 }
 
 void ConnectionManagerThread::streamAudio()
@@ -98,9 +100,7 @@ void ConnectionManagerThread::streamAudio()
     if (!startUpProviderAndConsumerThreads(m_localConfigurationData,
                                            m_remoteConfigurationData))
     {
-        m_errorString = "Failed to start stream";
-        m_currentTask =
-            std::bind(&ConnectionManagerThread::encounteredError, this);
+        encounteredError("Failed to start stream");
         return;
     }
 
@@ -119,14 +119,15 @@ void ConnectionManagerThread::streamAudio()
 
     resetToStartState();
 
+    waitForUserToReadErrorMessage();
+}
+
+void ConnectionManagerThread::waitForUserToReadErrorMessage()
+{
     while (!m_readyForNextConnection && !threadShouldExit())
     {
-
         wait(100);
     }
-
-    m_currentTask =
-        std::bind(&ConnectionManagerThread::establishConnection, this);
 }
 
 bool ConnectionManagerThread::validatePluginConfiguration(
@@ -146,18 +147,17 @@ bool ConnectionManagerThread::validatePluginConfiguration(
 }
 
 
-void ConnectionManagerThread::encounteredError()
+void ConnectionManagerThread::encounteredError(std::string errorString)
 {
     m_fileLogger->logMessage(std::string("ConnectionManagerThread | "
                                          "encounteredError | Error: ") +
-                             m_errorString);
+                             errorString);
 
-    m_guiMessenger->postMessage(new StatusMessage("status", m_errorString));
+    m_guiMessenger->postMessage(new StatusMessage("status", errorString));
 
     resetToStartState();
 
-    m_currentTask =
-        std::bind(&ConnectionManagerThread::establishConnection, this);
+    waitForUserToReadErrorMessage();
 }
 
 // void ConnectionManagerThread::setNextTask(std::function<void()> task)
@@ -562,7 +562,8 @@ void ConnectionManagerThread::stopProviderAndConsumerThreads(
     m_fileLogger->logMessage(
         "ConnectionManagerThread | stopProviderAndConsumerThreads | "
         "Provider and Consumer threads stopped");
-    m_readyForNextConnection = true;
+    //TODO: make gui show continue button when threads are stoped and set m_readyForNextConnection on continue button press
+    //m_readyForNextConnection = true;
 }
 
 void ConnectionManagerThread::resetToStartState()

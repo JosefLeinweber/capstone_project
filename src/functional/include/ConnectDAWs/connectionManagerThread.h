@@ -69,14 +69,14 @@ public:
 
     void stopAsyncWaitForConnection();
 
-    void establishConnection();
+    bool establishConnection();
 
     void streamAudio();
 
     bool validatePluginConfiguration(ConfigurationData localConfigurationData,
                                      ConfigurationData remoteConfigurationData);
 
-    void encounteredError();
+    void encounteredError(std::string errorString);
 
     boost::asio::io_context m_ioContext;
     std::jthread m_ioContextThread;
@@ -88,6 +88,7 @@ private:
     // void setNextTask(std::function<void()> task);
     std::string m_errorString;
     std::function<void()> m_currentTask;
+    void waitForUserToReadErrorMessage();
     bool validateIpAddress(std::string ip);
     std::atomic<bool> m_incomingConnection = false;
     std::atomic<bool> m_readyForNextConnection = false;
