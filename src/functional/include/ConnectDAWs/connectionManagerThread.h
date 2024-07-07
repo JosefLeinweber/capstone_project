@@ -35,7 +35,7 @@ public:
 
     void startIOContextInDifferentThread();
 
-    bool initializeConnection(ConfigurationData remoteConfigurationData);
+    void initializeConnection(ConfigurationData remoteConfigurationData);
 
     bool sendConfigurationData(ConfigurationData localConfigurationData);
 
@@ -69,6 +69,15 @@ public:
 
     void stopAsyncWaitForConnection();
 
+    void establishConnection();
+
+    void streamAudio();
+
+    bool validatePluginConfiguration(ConfigurationData localConfigurationData,
+                                     ConfigurationData remoteConfigurationData);
+
+    void encounteredError();
+
     boost::asio::io_context m_ioContext;
     std::jthread m_ioContextThread;
     std::atomic<bool> &m_startConnection;
@@ -76,6 +85,9 @@ public:
     ConfigurationData m_remoteConfigurationData;
 
 private:
+    // void setNextTask(std::function<void()> task);
+    std::string m_errorString;
+    std::function<void()> m_currentTask;
     bool validateIpAddress(std::string ip);
     std::atomic<bool> m_incomingConnection = false;
     std::atomic<bool> m_readyForNextConnection = false;

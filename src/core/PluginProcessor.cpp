@@ -10,7 +10,7 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-MainAudioProcessor::MainAudioProcessor()
+ConnectDAWsAudioProcessor::ConnectDAWsAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
     : AudioProcessor(
           BusesProperties()
@@ -21,43 +21,44 @@ MainAudioProcessor::MainAudioProcessor()
               .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
               ),
-      visualiser(2), outputVisualiser(2),
-      parameters(*this,
-                 nullptr,
-                 juce::Identifier("LowpassAndHighpassPlugin"),
-                 {std::make_unique<juce::AudioParameterFloat>(
-                      "cutoff_frequency",
-                      "Cutoff Frequency",
-                      juce::NormalisableRange{20.f, 20000.f, 0.1f, 0.2f, false},
-                      500.f),
-                  std::make_unique<juce::AudioParameterBool>("highpass",
-                                                             "Highpass",
-                                                             false)})
+      m_visualiser(2), m_outputVisualiser(2),
+      m_parameters(
+          *this,
+          nullptr,
+          juce::Identifier("LowpassAndHighpassPlugin"),
+          {std::make_unique<juce::AudioParameterFloat>(
+               "cutoff_frequency",
+               "Cutoff Frequency",
+               juce::NormalisableRange{20.f, 20000.f, 0.1f, 0.2f, false},
+               500.f),
+           std::make_unique<juce::AudioParameterBool>("highpass",
+                                                      "Highpass",
+                                                      false)})
 #endif
 {
-    visualiser.setRepaintRate(30);
-    visualiser.setBufferSize(448);
+    m_visualiser.setRepaintRate(30);
+    m_visualiser.setBufferSize(448);
 
-    outputVisualiser.setRepaintRate(30);
-    outputVisualiser.setBufferSize(448);
+    m_outputVisualiser.setRepaintRate(30);
+    m_outputVisualiser.setBufferSize(448);
 
     cutoffFrequencyParameter =
-        parameters.getRawParameterValue("cutoff_frequency");
-    highpassParameter = parameters.getRawParameterValue("highpass");
+        m_parameters.getRawParameterValue("cutoff_frequency");
+    highpassParameter = m_parameters.getRawParameterValue("highpass");
 }
 
-MainAudioProcessor::~MainAudioProcessor()
+ConnectDAWsAudioProcessor::~ConnectDAWsAudioProcessor()
 {
-    connectDAWs.releaseResources();
+    m_connectDAWs.releaseResources();
 }
 
 //==============================================================================
-const juce::String MainAudioProcessor::getName() const
+const juce::String ConnectDAWsAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool MainAudioProcessor::acceptsMidi() const
+bool ConnectDAWsAudioProcessor::acceptsMidi() const
 {
 #if JucePlugin_WantsMidiInput
     return true;
@@ -66,7 +67,7 @@ bool MainAudioProcessor::acceptsMidi() const
 #endif
 }
 
-bool MainAudioProcessor::producesMidi() const
+bool ConnectDAWsAudioProcessor::producesMidi() const
 {
 #if JucePlugin_ProducesMidiOutput
     return true;
@@ -75,7 +76,7 @@ bool MainAudioProcessor::producesMidi() const
 #endif
 }
 
-bool MainAudioProcessor::isMidiEffect() const
+bool ConnectDAWsAudioProcessor::isMidiEffect() const
 {
 #if JucePlugin_IsMidiEffect
     return true;
@@ -84,63 +85,64 @@ bool MainAudioProcessor::isMidiEffect() const
 #endif
 }
 
-double MainAudioProcessor::getTailLengthSeconds() const
+double ConnectDAWsAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int MainAudioProcessor::getNumPrograms()
+int ConnectDAWsAudioProcessor::getNumPrograms()
 {
     return 1; // NB: some hosts don't cope very well if you tell them there are 0 programs,
         // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int MainAudioProcessor::getCurrentProgram()
+int ConnectDAWsAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void MainAudioProcessor::setCurrentProgram(int index)
+void ConnectDAWsAudioProcessor::setCurrentProgram(int index)
 {
     juce::ignoreUnused(index);
 }
 
-const juce::String MainAudioProcessor::getProgramName(int index)
+const juce::String ConnectDAWsAudioProcessor::getProgramName(int index)
 {
     juce::ignoreUnused(index);
     return {};
 }
 
-void MainAudioProcessor::changeProgramName(int index,
-                                           const juce::String &newName)
+void ConnectDAWsAudioProcessor::changeProgramName(int index,
+                                                  const juce::String &newName)
 {
     juce::ignoreUnused(index);
     juce::ignoreUnused(newName);
 }
 
 //==============================================================================
-void MainAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+void ConnectDAWsAudioProcessor::prepareToPlay(double sampleRate,
+                                              int samplesPerBlock)
 {
     int numInputChannels = getTotalNumInputChannels();
     int numOutputChannels = getTotalNumOutputChannels();
     //TODO: change to start or update
-    if (connectDAWs.m_connectionManagerThread == nullptr)
+    if (m_connectDAWs.m_connectionManagerThread == nullptr)
     {
-        connectDAWs.startUpConnectionManagerThread(sampleRate,
-                                                   samplesPerBlock,
-                                                   numInputChannels,
-                                                   numOutputChannels);
+        m_connectDAWs.startUpConnectionManagerThread(sampleRate,
+                                                     samplesPerBlock,
+                                                     numInputChannels,
+                                                     numOutputChannels);
     }
 }
 
-void MainAudioProcessor::releaseResources()
+void ConnectDAWsAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool MainAudioProcessor::isBusesLayoutSupported(
+bool ConnectDAWsAudioProcessor::isBusesLayoutSupported(
     const BusesLayout &layouts) const
 {
 #if JucePlugin_IsMidiEffect
@@ -166,8 +168,8 @@ bool MainAudioProcessor::isBusesLayoutSupported(
 }
 #endif
 
-void MainAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
-                                      juce::MidiBuffer &midiMessages)
+void ConnectDAWsAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
+                                             juce::MidiBuffer &midiMessages)
 {
     juce::ignoreUnused(midiMessages);
     juce::ScopedNoDenormals noDenormals;
@@ -184,42 +186,43 @@ void MainAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     //     buffer.clear(i, 0, buffer.getNumSamples());
 
     // filter.processBlock(buffer, midiMessages);
-    visualiser.pushBuffer(buffer);
+    m_visualiser.pushBuffer(buffer);
 
-    connectDAWs.processBlock(buffer);
+    m_connectDAWs.processBlock(buffer);
 
-    outputVisualiser.pushBuffer(buffer);
+    m_outputVisualiser.pushBuffer(buffer);
 }
 
 //==============================================================================
-bool MainAudioProcessor::hasEditor() const
+bool ConnectDAWsAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor *MainAudioProcessor::createEditor()
+juce::AudioProcessorEditor *ConnectDAWsAudioProcessor::createEditor()
 {
 
-    return new MainAudioProcessorEditor(*this,
-                                        parameters,
-                                        connectDAWs.m_guiMessenger,
-                                        connectDAWs.m_cmtMessenger);
+    return new ConnectDAWsAudioProcessorEditor(*this,
+                                               m_parameters,
+                                               m_connectDAWs.m_guiMessenger,
+                                               m_connectDAWs.m_cmtMessenger);
 }
 
 //==============================================================================
-void MainAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
+void ConnectDAWsAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
 {
     juce::ignoreUnused(destData);
-    // You should use this method to store your parameters in the memory block.
+    // You should use this method to store your m_parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
 }
 
-void MainAudioProcessor::setStateInformation(const void *data, int sizeInBytes)
+void ConnectDAWsAudioProcessor::setStateInformation(const void *data,
+                                                    int sizeInBytes)
 {
     juce::ignoreUnused(data);
     juce::ignoreUnused(sizeInBytes);
-    // You should use this method to restore your parameters from this memory block,
+    // You should use this method to restore your m_parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
 }
 
@@ -227,5 +230,5 @@ void MainAudioProcessor::setStateInformation(const void *data, int sizeInBytes)
 // This creates new instances of the plugin..
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter()
 {
-    return new MainAudioProcessor();
+    return new ConnectDAWsAudioProcessor();
 }

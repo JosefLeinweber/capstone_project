@@ -11,28 +11,29 @@
 
 
 //==============================================================================
-AudioProcessorEditor::AudioProcessorEditor(
-    MainAudioProcessor &p,
+ConnectDAWsAudioProcessorEditor::ConnectDAWsAudioProcessorEditor(
+    ConnectDAWsAudioProcessor &p,
     juce::AudioProcessorValueTreeState &vts,
     std::shared_ptr<Messenger> &guiMessenger,
     std::shared_ptr<Messenger> &cmtMessenger)
-    : AudioProcessorEditor(&p), audioProcessor(p),
-      m_connectDAWsComponent(guiMessenger,
-                             cmtMessenger,
-                             std::bind(&AudioProcessorEditor::resized, this))
+    : AudioProcessorEditor(&p), m_audioProcessor(p),
+      m_connectDAWsComponent(
+          guiMessenger,
+          cmtMessenger,
+          std::bind(&ConnectDAWsAudioProcessorEditor::resized, this))
 {
     constexpr auto HEIGHT = 500;
     constexpr auto WIDTH = 500;
 
     addAndMakeVisible(m_connectDAWsComponent);
 
-    addAndMakeVisible(audioProcessor.visualiser);
-    audioProcessor.visualiser.setColours(
+    addAndMakeVisible(m_audioProcessor.m_visualiser);
+    m_audioProcessor.m_visualiser.setColours(
         juce::Colours::black,
         juce::Colours::whitesmoke.withAlpha(0.5f));
 
-    addAndMakeVisible(audioProcessor.outputVisualiser);
-    audioProcessor.outputVisualiser.setColours(
+    addAndMakeVisible(m_audioProcessor.m_outputVisualiser);
+    m_audioProcessor.m_outputVisualiser.setColours(
         juce::Colours::black,
         juce::Colours::whitesmoke.withAlpha(0.5f));
 
@@ -52,12 +53,12 @@ AudioProcessorEditor::AudioProcessorEditor(
     setSize(WIDTH, HEIGHT);
 }
 
-AudioProcessorEditor::~AudioProcessorEditor()
+ConnectDAWsAudioProcessorEditor::~ConnectDAWsAudioProcessorEditor()
 {
 }
 
 //==============================================================================
-void AudioProcessorEditor::paint(juce::Graphics &g)
+void ConnectDAWsAudioProcessorEditor::paint(juce::Graphics &g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll(
@@ -67,7 +68,7 @@ void AudioProcessorEditor::paint(juce::Graphics &g)
     g.setFont(15.0f);
 }
 
-void AudioProcessorEditor::resized()
+void ConnectDAWsAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
@@ -76,22 +77,23 @@ void AudioProcessorEditor::resized()
     m_connectDAWsComponent.setBounds(area.removeFromTop(150).reduced(0, 5));
     m_outputVisualiserLabel.setBounds(
         area.removeFromTop(textFieldHeight).reduced(0, 5));
-    audioProcessor.visualiser.setBounds(area.removeFromTop(150).reduced(0, 5));
+    m_audioProcessor.m_visualiser.setBounds(
+        area.removeFromTop(150).reduced(0, 5));
     m_inputVisualiserLabel.setBounds(
         area.removeFromTop(textFieldHeight).reduced(0, 5));
-    audioProcessor.outputVisualiser.setBounds(
+    m_audioProcessor.m_outputVisualiser.setBounds(
         area.removeFromTop(150).reduced(0, 5));
     if (m_connectDAWsComponent.m_isConnected)
     {
-        audioProcessor.visualiser.setVisible(true);
-        audioProcessor.outputVisualiser.setVisible(true);
+        m_audioProcessor.m_visualiser.setVisible(true);
+        m_audioProcessor.m_outputVisualiser.setVisible(true);
         m_outputVisualiserLabel.setVisible(true);
         m_inputVisualiserLabel.setVisible(true);
     }
     else
     {
-        audioProcessor.visualiser.setVisible(false);
-        audioProcessor.outputVisualiser.setVisible(false);
+        m_audioProcessor.m_visualiser.setVisible(false);
+        m_audioProcessor.m_outputVisualiser.setVisible(false);
         m_outputVisualiserLabel.setVisible(false);
         m_inputVisualiserLabel.setVisible(false);
     }

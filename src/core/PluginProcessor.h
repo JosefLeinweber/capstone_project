@@ -18,12 +18,12 @@
 //==============================================================================
 /**
 */
-class MainAudioProcessor : public juce::AudioProcessor
+class ConnectDAWsAudioProcessor : public juce::AudioProcessor
 {
 public:
     //==============================================================================
-    MainAudioProcessor();
-    ~MainAudioProcessor() override;
+    ConnectDAWsAudioProcessor();
+    ~ConnectDAWsAudioProcessor() override;
 
     //==============================================================================
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -59,17 +59,17 @@ public:
     void setStateInformation(const void *data, int sizeInBytes) override;
 
     // void connectToClient();
-    juce::AudioVisualiserComponent visualiser;
-    juce::AudioVisualiserComponent outputVisualiser;
+    juce::AudioVisualiserComponent m_visualiser;
+    juce::AudioVisualiserComponent m_outputVisualiser;
     void sendToConnectionManagerThread(const std::string &ip, int port);
     void sendToPluginEditor(const std::string &ip, int port);
 
-    ConnectDAWs connectDAWs;
+    ConnectDAWs m_connectDAWs;
 
 private:
     // std::atomic<bool> startConnection = false;
     // std::atomic<bool> stopConnection = false;
-    juce::AudioProcessorValueTreeState parameters;
+    juce::AudioProcessorValueTreeState m_parameters;
     std::atomic<float> *cutoffFrequencyParameter = nullptr;
     std::atomic<float> *highpassParameter = nullptr;
     // std::unique_ptr<ConnectionManagerThread> connectionManagerThread;
@@ -78,5 +78,5 @@ private:
 
 
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ConnectDAWsAudioProcessor)
 };

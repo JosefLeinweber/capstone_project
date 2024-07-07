@@ -108,56 +108,65 @@ void ConnectDAWsComponent::updateComponentVisibility(bool isConnected)
 
 void ConnectDAWsComponent::handleMessage(const juce::Message &message)
 {
-    if (auto *statusMessage = dynamic_cast<const StatusMessage *>(&message))
+    if (!dynamic_cast<const StatusMessage *>(&message))
+
     {
-        if (statusMessage->m_messageType == "status")
+        std::cout << "ConnectDAWsComponent::handleMessage | Received "
+                     "unknown message from CMT"
+                  << std::endl;
+        return;
+    }
+
+    auto statusMessage = static_cast<const StatusMessage *>(&message);
+
+    if (statusMessage->m_messageType == "status")
+    {
+        m_statusLabel.setText(statusMessage->m_message,
+                              juce::dontSendNotification);
+        if (statusMessage->m_message == "Ready to connect")
         {
-            m_statusLabel.setText(statusMessage->m_message,
+            m_isConnected = false;
+        }
+        else if (statusMessage->m_message == "Started stream")
+        {
+            m_inConnectionComponent.setButtonText("Stop");
+            m_isConnected = true;
+        }
+        else if (statusMessage->m_message == "Stoped stream")
+        {
+            m_inConnectionComponent.setButtonText("Cancel");
+            m_isConnected = false;
+        }
+        else if (statusMessage->m_message == "Failed to connect")
+        {
+            m_statusLabel.setText("Could not connect to remote with that IP",
                                   juce::dontSendNotification);
-            if (statusMessage->m_message == "Ready to connect")
-            {
-                m_isConnected = false;
-            }
-            else if (statusMessage->m_message == "Started stream")
-            {
-                m_inConnectionComponent.setButtonText("Stop");
-                m_isConnected = true;
-            }
-            else if (statusMessage->m_message == "Stoped stream")
-            {
-                m_inConnectionComponent.setButtonText("Cancel");
-                m_isConnected = false;
-            }
-            else if (statusMessage->m_message == "Failed to connect")
-            {
-                m_statusLabel.setText(
-                    "Could not connect to remote with that IP",
-                    juce::dontSendNotification);
-                m_error = true;
-                m_isConnected = false;
-            }
-            else if (statusMessage->m_message == "Failed to start stream")
-            {
-                m_statusLabel.setText(
-                    "Could not start stream, check remote configuration",
-                    juce::dontSendNotification);
-                m_error = true;
-                m_isConnected = false;
-            }
+            m_error = true;
+            m_isConnected = false;
+        }
+        else if (statusMessage->m_message == "Failed to start stream")
+        {
+            m_statusLabel.setText(
+                "Could not start stream, check remote configuration",
+                juce::dontSendNotification);
+            m_error = true;
+            m_isConnected = false;
         }
         else
         {
             std::cout << "ConnectDAWsComponent::handleMessage | Received "
-                         "unknown message type from CMT"
-                      << std::endl;
+                         "unknown status message from CMT: "
+                      << statusMessage->m_message << std::endl;
         }
     }
     else
     {
         std::cout << "ConnectDAWsComponent::handleMessage | Received "
-                     "unknown message from CMT"
-                  << std::endl;
+                     "unknown message type from CMT: "
+                  << statusMessage->m_messageType << std::endl;
     }
+
+
     updateComponentVisibility(m_isConnected);
     repaint();
     m_forceResizeCallback();

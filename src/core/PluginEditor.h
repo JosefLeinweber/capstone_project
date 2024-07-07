@@ -18,14 +18,14 @@
 //==============================================================================
 /**
 */
-class AudioProcessorEditor : public juce::AudioProcessorEditor
+class ConnectDAWsAudioProcessorEditor : public juce::AudioProcessorEditor
 {
 public:
-    AudioProcessorEditor(MainAudioProcessor &,
-                         juce::AudioProcessorValueTreeState &vts,
-                         std::shared_ptr<Messenger> &guiMessenger,
-                         std::shared_ptr<Messenger> &cmtMessenger);
-    ~AudioProcessorEditor() override;
+    ConnectDAWsAudioProcessorEditor(ConnectDAWsAudioProcessor &,
+                                    juce::AudioProcessorValueTreeState &vts,
+                                    std::shared_ptr<Messenger> &guiMessenger,
+                                    std::shared_ptr<Messenger> &cmtMessenger);
+    ~ConnectDAWsAudioProcessorEditor() override;
 
     //==============================================================================
     void paint(juce::Graphics &) override;
@@ -37,8 +37,9 @@ private:
     juce::Label m_outputVisualiserLabel{"Output Visualiser",
                                         "Output Visualiser"};
     juce::Label m_inputVisualiserLabel{"Input Visualiser", "Input Visualiser"};
-    MainAudioProcessor &audioProcessor;
+    ConnectDAWsAudioProcessor &m_audioProcessor;
     ConnectDAWsComponent m_connectDAWsComponent;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(
+        ConnectDAWsAudioProcessorEditor)
 };

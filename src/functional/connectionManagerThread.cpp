@@ -17,6 +17,8 @@ ConnectionManagerThread::ConnectionManagerThread(
       m_startConnection(startConnection), m_stopConnection(stopConnection)
 {
     m_fileLogger = std::make_unique<FileLogger>("ConnectDAWs", threadName);
+    m_currentTask =
+        std::bind(&ConnectionManagerThread::establishConnection, this);
 }
 
 ConnectionManagerThread::~ConnectionManagerThread()
@@ -47,83 +49,185 @@ ConnectionManagerThread::~ConnectionManagerThread()
     waitForThreadToExit(1000);
 }
 
+
 void ConnectionManagerThread::run()
 {
-    //why is the setup inside the while loop?
-
     while (!threadShouldExit())
     {
-        setup();
-        asyncWaitForConnection(std::chrono::milliseconds(0));
-
-        //TODO change m_incomingConnection to isConnected()??
-        while (!m_incomingConnection && !m_startConnection)
-        {
-            if (threadShouldExit())
-            {
-                return;
-            }
-            wait(100);
-        }
-
-        m_fileLogger->logMessage("ConnectionManagerThread | run | Incoming "
-                                 "connection: " +
-                                 std::to_string(isConnected()));
-
-        if (m_startConnection &&
-            validateIpAddress(m_remoteConfigurationData.ip()))
-        {
-            initializeConnection(m_remoteConfigurationData);
-        }
-
-        if (isConnected())
-        {
-            if (exchangeConfigurationDataWithRemote(m_localConfigurationData) &&
-                startUpProviderAndConsumerThreads(
-                    m_localConfigurationData,
-                    m_remoteConfigurationData,
-                    std::chrono::milliseconds(2000)))
-            {
-                sendMessageToGUI("status", "Started stream");
-                while (m_providerThread->isThreadRunning() &&
-                       m_consumerThread->isThreadRunning() &&
-                       !m_stopConnection && !threadShouldExit())
-
-                {
-                    wait(100);
-                }
-                m_fileLogger->logMessage("ConnectionManagerThread | "
-                                         "run | Stopped streaming...");
-                m_fileLogger->logMessage(
-                    "providerThread is running: " +
-                    std::to_string(m_providerThread->isThreadRunning()));
-                m_fileLogger->logMessage(
-                    "consumerThread is running: " +
-                    std::to_string(m_consumerThread->isThreadRunning()));
-                m_fileLogger->logMessage("m_stopConnection: " +
-                                         std::to_string(m_stopConnection));
-                stopProviderAndConsumerThreads(std::chrono::seconds(5));
-                sendMessageToGUI("status", "Stoped stream");
-            }
-            else
-            {
-                sendMessageToGUI("status", "Failed to start stream");
-            }
-        }
-        else
-        {
-            sendMessageToGUI("status", "Failed to connect");
-        }
-        while (!m_readyForNextConnection && !threadShouldExit())
-        {
-
-            wait(100);
-        }
-
-        // m_startConnection = false;
-        resetToStartState();
+        std::invoke(m_currentTask);
     }
 }
+
+
+void ConnectionManagerThread::establishConnection()
+{
+    setup();
+    asyncWaitForConnection(std::chrono::milliseconds(0));
+
+    //TODO change m_incomingConnection to isConnected()??
+    while (!isConnected() && !m_startConnection)
+    {
+        if (threadShouldExit())
+        {
+            return;
+        }
+        wait(100);
+    }
+
+    if (m_startConnection)
+    {
+        stopAsyncWaitForConnection();
+        initializeConnection(m_remoteConfigurationData);
+    }
+
+    if (isConnected() && validatePluginConfiguration(m_localConfigurationData,
+                                                     m_remoteConfigurationData))
+    {
+        m_currentTask = std::bind(&ConnectionManagerThread::streamAudio, this);
+    }
+    else
+    {
+        m_errorString = "Failed to connect";
+        m_currentTask =
+            std::bind(&ConnectionManagerThread::encounteredError, this);
+    }
+}
+
+void ConnectionManagerThread::streamAudio()
+{
+    if (!startUpProviderAndConsumerThreads(m_localConfigurationData,
+                                           m_remoteConfigurationData))
+    {
+        m_errorString = "Failed to start stream";
+        m_currentTask =
+            std::bind(&ConnectionManagerThread::encounteredError, this);
+        return;
+    }
+
+    sendMessageToGUI("status", "Started stream");
+
+    while (m_providerThread->isThreadRunning() &&
+           m_consumerThread->isThreadRunning() && !m_stopConnection &&
+           !threadShouldExit())
+    {
+        wait(100);
+    }
+
+    stopProviderAndConsumerThreads(std::chrono::seconds(5));
+
+    sendMessageToGUI("status", "Stoped stream");
+
+    resetToStartState();
+
+    while (!m_readyForNextConnection && !threadShouldExit())
+    {
+
+        wait(100);
+    }
+
+    m_currentTask =
+        std::bind(&ConnectionManagerThread::establishConnection, this);
+}
+
+bool ConnectionManagerThread::validatePluginConfiguration(
+    ConfigurationData localConfigurationData,
+    ConfigurationData remoteConfigurationData)
+{
+
+    if (localConfigurationData.samples_per_block() !=
+            remoteConfigurationData.samples_per_block() ||
+        localConfigurationData.sample_rate() !=
+            remoteConfigurationData.sample_rate())
+    {
+        return false;
+    }
+
+    return true;
+}
+
+
+void ConnectionManagerThread::encounteredError()
+{
+    m_fileLogger->logMessage(std::string("ConnectionManagerThread | "
+                                         "encounteredError | Error: ") +
+                             m_errorString);
+
+    m_guiMessenger->postMessage(new StatusMessage("status", m_errorString));
+
+    resetToStartState();
+
+    m_currentTask =
+        std::bind(&ConnectionManagerThread::establishConnection, this);
+}
+
+// void ConnectionManagerThread::setNextTask(std::function<void()> task)
+// {
+//     m_currentTask = task;
+// }
+
+
+// void ConnectionManagerThread::run()
+// {
+//     //why is the setup inside the while loop?
+//     setup();
+//     while (!threadShouldExit())
+//     {
+
+
+//         m_fileLogger->logMessage("ConnectionManagerThread | run | Incoming "
+//                                  "connection: " +
+//                                  std::to_string(isConnected()));
+
+//         if (m_startConnection &&
+//             validateIpAddress(m_remoteConfigurationData.ip()))
+//         {
+//             initializeConnection(m_remoteConfigurationData);
+//         }
+
+//         if (isConnected())
+//         {
+//             if (exchangeConfigurationDataWithRemote(m_localConfigurationData) &&
+//                 startUpProviderAndConsumerThreads(
+//                     m_localConfigurationData,
+//                     m_remoteConfigurationData,
+//                     std::chrono::milliseconds(2000)))
+//             {
+//                 sendMessageToGUI("status", "Started stream");
+//                 while (m_providerThread->isThreadRunning() &&
+//                        m_consumerThread->isThreadRunning() &&
+//                        !m_stopConnection && !threadShouldExit())
+
+//                 {
+//                     wait(100);
+//                 }
+//                 m_fileLogger->logMessage("ConnectionManagerThread | "
+//                                          "run | Stopped streaming...");
+//                 m_fileLogger->logMessage(
+//                     "providerThread is running: " +
+//                     std::to_string(m_providerThread->isThreadRunning()));
+//                 m_fileLogger->logMessage(
+//                     "consumerThread is running: " +
+//                     std::to_string(m_consumerThread->isThreadRunning()));
+//                 m_fileLogger->logMessage("m_stopConnection: " +
+//                                          std::to_string(m_stopConnection));
+//                 stopProviderAndConsumerThreads(std::chrono::seconds(5));
+//                 sendMessageToGUI("status", "Stoped stream");
+//             }
+//             else
+//             {
+//                 sendMessageToGUI("status", "Failed to start stream");
+//             }
+//         }
+//         else
+//         {
+//             sendMessageToGUI("status", "Failed to connect");
+//         }
+
+
+//         // m_startConnection = false;
+//         resetToStartState();
+//     }
+// }
 
 void ConnectionManagerThread::setup()
 {
@@ -193,7 +297,6 @@ void ConnectionManagerThread::setupHost()
     m_host = std::make_unique<TcpHost>(m_ioContext,
                                        m_localConfigurationData.host_port());
     m_host->setupSocket();
-    sendMessageToGUI("ip", "   ");
 }
 
 
@@ -202,9 +305,9 @@ void ConnectionManagerThread::callbackFunction(
 {
     if (!error)
     {
-        m_fileLogger->logMessage(
-            "ConnectionManagerThread | callbackFunction | Incoming connection "
-            "accepted");
+        m_fileLogger->logMessage("ConnectionManagerThread | "
+                                 "callbackFunction | Incoming connection "
+                                 "accepted");
         m_incomingConnection = true;
     }
     else
@@ -259,9 +362,9 @@ void ConnectionManagerThread::stopAsyncWaitForConnection()
     }
     catch (std::exception &e)
     {
-        m_fileLogger->logMessage(
-            "ConnectionManagerThread | stopAsyncWaitForConnection | Failed to "
-            "stop io context thread with error: ");
+        m_fileLogger->logMessage("ConnectionManagerThread | "
+                                 "stopAsyncWaitForConnection | Failed to "
+                                 "stop io context thread with error: ");
         m_fileLogger->logMessage(e.what());
     }
 }
@@ -271,7 +374,7 @@ bool ConnectionManagerThread::validateIpAddress(std::string ip)
     return m_host->validateIpAddress(ip);
 }
 
-bool ConnectionManagerThread::initializeConnection(
+void ConnectionManagerThread::initializeConnection(
     ConfigurationData remoteConfigurationData)
 {
     try
@@ -296,7 +399,6 @@ bool ConnectionManagerThread::initializeConnection(
             "ConnectionManagerThread | "
             "initializeConnection | Connected to remote? " +
             isConnected());
-        return isConnected();
     }
     catch (std::exception &e)
     {
@@ -307,7 +409,6 @@ bool ConnectionManagerThread::initializeConnection(
             std::to_string(remoteConfigurationData.host_port()) +
             " with error: ");
         m_fileLogger->logMessage(e.what());
-        return false;
     }
 }
 
@@ -322,17 +423,17 @@ bool ConnectionManagerThread::exchangeConfigurationDataWithRemote(
     sendMessageToGUI("status", "Exchanging configuration data...");
     if (m_incomingConnection)
     {
-        m_fileLogger->logMessage(
-            "ConnectionManagerThread | exchangeConfigurationDataWithRemote | "
-            "incoming connection...");
+        m_fileLogger->logMessage("ConnectionManagerThread | "
+                                 "exchangeConfigurationDataWithRemote | "
+                                 "incoming connection...");
         return receiveConfigurationData() &&
                sendConfigurationData(configurationData);
     }
     else
     {
-        m_fileLogger->logMessage(
-            "ConnectionManagerThread | exchangeConfigurationDataWithRemote | "
-            "outgoing connection...");
+        m_fileLogger->logMessage("ConnectionManagerThread | "
+                                 "exchangeConfigurationDataWithRemote | "
+                                 "outgoing connection...");
         return sendConfigurationData(configurationData) &&
                receiveConfigurationData();
     }
@@ -367,9 +468,9 @@ bool ConnectionManagerThread::sendConfigurationData(
     }
     catch (std::exception &e)
     {
-        m_fileLogger->logMessage(
-            "ConnectionManagerThread | sendConfigurationData | Failed to send "
-            "configuration data with error: ");
+        m_fileLogger->logMessage("ConnectionManagerThread | "
+                                 "sendConfigurationData | Failed to send "
+                                 "configuration data with error: ");
         m_fileLogger->logMessage(e.what());
         return false;
     }
@@ -433,9 +534,9 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
                 std::chrono::high_resolution_clock::now() - startTime)
                 .count() > timeout.count())
         {
-            m_fileLogger->logMessage(
-                "ConnectionManagerThread | startUpProviderAndConsumerThreads | "
-                "Timeout");
+            m_fileLogger->logMessage("ConnectionManagerThread | "
+                                     "startUpProviderAndConsumerThreads | "
+                                     "Timeout");
             return false;
         }
         wait(100);
