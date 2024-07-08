@@ -86,7 +86,7 @@ The project is structured in the following way:
 
 ```
 
-├── cmake/                  # CMake modules
+├── cmake/                  # CMake functions and macros
 ├── external/               # External dependencies
 ├── src/                    # Source files
 │   ├── core/               # Juce Framework Plugin code
