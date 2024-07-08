@@ -100,4 +100,4 @@ The VST3 plugin is based on the JUCE framework. The plugin is structured in thre
 ├── tools/                  # Tools for development
 ```
 
-[link](docs/diagram_of_main_objects.pdf)
+![alt text](https://github.com/JosefLeinweber/capstone_project/blob/trunk/docs/diagram_of_main_objects-1.png)
