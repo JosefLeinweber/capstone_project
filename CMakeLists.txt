@@ -1,6 +1,4 @@
 cmake_minimum_required(VERSION 3.27)
-message(STATUS "Starting CMake configuration")
-
 project(ConnectDAWs VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -15,13 +13,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 
 option(ENABLE_TESTING "Enable building tests" ON)
-
 option(ENABLE_WARNINGS "Enable compiler warnings" ON)
-
 option(ENABLE_WARNINGS_AS_ERRORS "Enable compiler warnings as errors" OFF)
-
 option(ENABLE_SANITIZERS "Enable sanitizers" ON)
-
 option(ENABLE_LTO "Enable LTO/IPO" OFF)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -35,12 +29,9 @@ set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Vcpkg target triplet
 
 include(${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake)
 
-# Set vcpkg target triplet for static libraries
 
 find_package(juce 7.0.12 REQUIRED)
-
 find_package(Boost 1.83.0 REQUIRED COMPONENTS system coroutine context)
-
 find_package(Protobuf REQUIRED)
 
 
