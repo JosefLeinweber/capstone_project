@@ -100,4 +100,29 @@ The VST3 plugin is based on the JUCE framework. The plugin is structured in thre
 ├── tools/                  # Tools for development
 ```
 
+### Relationships Between Main Objects
+
 ![alt text](https://github.com/JosefLeinweber/capstone_project/blob/trunk/docs/diagram_of_main_objects-1.png)
+
+### UML Sequence Diagram
+
+### User Flow Diagram
+
+## Next Steps
+
+### Testing
+
+* Restructure testing. Most of current unit tests are integration tests, testing not one but at least two different units. Refactor the code to make it more testable.
+* Create automated end-to-end tests to test the plugin as a whole.
+
+### "Refactoring"
+
+* Instead of declaring classes in the header files, create interfaces in the header files and implement them in the cpp files. This will allow mocking the classes and their behavior in the tests.
+* Use dependency injection to make the code more testable. This will make the constructor of the classes longer, but will allow to inject mock objects in the tests.
+* Rework the message system between gui and cmt.
+  
+### Banchmarking
+* Develop a benchmarking tool to measure the latency of the plugin. Separate between the latency of the connection and the latency of the audio processing.
+
+### Features
+* Implement a method to connect two plugins on different networks.
