@@ -99,3 +99,5 @@ The VST3 plugin is based on the JUCE framework. The plugin is structured in thre
 │   ├── unit/               # Unit tests
 ├── tools/                  # Tools for development
 ```
+
+[link](docs/diagram_of_main_objects.pdf)
