@@ -152,6 +152,16 @@ void ConnectDAWsComponent::handleMessage(const juce::Message &message)
             m_error = true;
             m_isConnected = false;
         }
+        else if (statusMessage->m_message ==
+                 "Failed to validate plugin configuration")
+        {
+            m_statusLabel.setText(
+                "Could not validate plugin configuration, make sure remote and "
+                "local configurations match",
+                juce::dontSendNotification);
+            m_error = true;
+            m_isConnected = false;
+        }
         else
         {
             std::cout << "ConnectDAWsComponent::handleMessage | Received "

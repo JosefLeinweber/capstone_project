@@ -73,8 +73,7 @@ public:
 
     void streamAudio();
 
-    bool validatePluginConfiguration(ConfigurationData localConfigurationData,
-                                     ConfigurationData remoteConfigurationData);
+    bool validatePluginConfiguration();
 
     void encounteredError(std::string errorString);
 
@@ -88,6 +87,8 @@ private:
     // void setNextTask(std::function<void()> task);
     std::string m_errorString;
     std::function<void()> m_currentTask;
+    bool areConfigurationsEqual(ConfigurationData localConfigurationData,
+                                ConfigurationData remoteConfigurationData);
     void waitForUserToReadErrorMessage();
     bool validateIpAddress(std::string ip);
     std::atomic<bool> m_incomingConnection = false;

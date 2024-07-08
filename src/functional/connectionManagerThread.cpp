@@ -84,15 +84,21 @@ bool ConnectionManagerThread::establishConnection()
         initializeConnection(m_remoteConfigurationData);
     }
 
-    if (isConnected() && validatePluginConfiguration(m_localConfigurationData,
-                                                     m_remoteConfigurationData))
+    if (!isConnected())
     {
-        return true;
+        encounteredError("Failed to connect");
+        return false;
     }
 
-    encounteredError("Failed to connect");
+    if (!validatePluginConfiguration())
+    {
+        encounteredError("Failed to validate plugin configuration: " +
+                         m_localConfigurationData.DebugString() + " | " +
+                         m_remoteConfigurationData.DebugString());
+        return false;
+    }
 
-    return false;
+    return true;
 }
 
 void ConnectionManagerThread::streamAudio()
@@ -130,20 +136,30 @@ void ConnectionManagerThread::waitForUserToReadErrorMessage()
     }
 }
 
-bool ConnectionManagerThread::validatePluginConfiguration(
-    ConfigurationData localConfigurationData,
-    ConfigurationData remoteConfigurationData)
+bool ConnectionManagerThread::validatePluginConfiguration()
 {
+    if (!exchangeConfigurationDataWithRemote(m_localConfigurationData))
+    {
+        return false;
+    }
 
-    if (localConfigurationData.samples_per_block() !=
-            remoteConfigurationData.samples_per_block() ||
-        localConfigurationData.sample_rate() !=
-            remoteConfigurationData.sample_rate())
+    if (!areConfigurationsEqual(m_localConfigurationData,
+                                m_remoteConfigurationData))
     {
         return false;
     }
 
     return true;
+}
+
+bool ConnectionManagerThread::areConfigurationsEqual(
+    ConfigurationData localConfigurationData,
+    ConfigurationData remoteConfigurationData)
+{
+    return localConfigurationData.samples_per_block() ==
+               remoteConfigurationData.samples_per_block() &&
+           localConfigurationData.sample_rate() ==
+               remoteConfigurationData.sample_rate();
 }
 
 
@@ -152,6 +168,7 @@ void ConnectionManagerThread::encounteredError(std::string errorString)
     m_fileLogger->logMessage(std::string("ConnectionManagerThread | "
                                          "encounteredError | Error: ") +
                              errorString);
+
 
     m_guiMessenger->postMessage(new StatusMessage("status", errorString));
 
