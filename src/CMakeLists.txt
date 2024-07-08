@@ -2,8 +2,6 @@ add_subdirectory(utility)
 
 message(STATUS "Configuring Plugin CMakeLists.txt ...")
 
-project(ConnectDAWs VERSION 0.1.0 LANGUAGES C CXX)
-
 juce_add_plugin(${PROJECT_NAME}
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT FALSE

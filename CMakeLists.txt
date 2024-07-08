@@ -1,8 +1,7 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.27)
 message(STATUS "Starting CMake configuration")
 
-project(PlaceHolderNAME VERSION 0.1.0 LANGUAGES C CXX)
-
+project(ConnectDAWs VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -58,17 +57,23 @@ if (ENABLE_TESTING)
     enable_testing()
 
     add_subdirectory(tests)
+else()
+    message(STATUS "Testing disabled")
 endif()
 
 if (ENABLE_SANITIZERS)
     message(STATUS "Sanitizers enabled")
     include(Sanitizer)
     add_sanitizer_flags()
+else()
+    message(STATUS "Sanitizers disabled")
 endif()
 
 if (ENABLE_LTO)
     message(STATUS "LTO enabled")
     include(LTO)
+else()
+    message(STATUS "LTO disabled")
 endif()
 
 message(STATUS "Finished CMake configuration")
