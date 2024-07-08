@@ -80,20 +80,21 @@ Integreation Tests: `$ cmake --build build --config Debug --target ConnectDAWsIn
 
 ## Project Documentation
 
+The VST3 plugin is based on the JUCE framework. The plugin is structured in three main parts: the core, the functional part and the user interface. The core part olds the juce plugin structure and intializes the functional part and the user interface. The functional part is responsible for the logic of the plugin, such as establishing a connection and streaming audio. The user interface is responsible for the visual representation of the plugin and the user interaction.
+
 ### Project Structure
 
-The project is structured in the following way:
-
-```
-
+```bash
+├── github/                 # Github configuration and workflows
 ├── cmake/                  # CMake functions and macros
 ├── external/               # External dependencies
 ├── src/                    # Source files
 │   ├── core/               # Juce Framework Plugin code
 │   ├── functional/         # Logic of the plugin
-│   ├── ui/                 # User interface components
-|   ├── utils/              # Utility functions
+│   ├── ui/                 # User interface of the plugin
+|   ├── utils/              # Utility 
 ├── tests/                  # Test files
 │   ├── integration/        # Integration tests
 │   ├── unit/               # Unit tests
-├── tools/
+├── tools/                  # Tools for development
+```
