@@ -68,7 +68,6 @@ bool ConnectionManagerThread::establishConnection()
     setup();
     asyncWaitForConnection(std::chrono::milliseconds(0));
 
-    //TODO change m_incomingConnection to isConnected()??
     while (!isConnected() && !m_startConnection)
     {
         if (threadShouldExit())

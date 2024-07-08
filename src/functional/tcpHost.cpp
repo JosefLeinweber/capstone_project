@@ -51,8 +51,14 @@ void TcpHost::asyncWaitForConnection(
                 callback(error);
 
                 m_timer->cancel();
-
-                m_isConnected = true;
+                if (!error)
+                {
+                    m_isConnected = true;
+                }
+                else
+                {
+                    m_isConnected = false;
+                }
             });
     }
     else

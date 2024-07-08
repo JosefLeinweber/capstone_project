@@ -52,6 +52,8 @@ TEST_CASE("ConnectionManagerThread | asyncWaitForConnection unsuccessfull")
             std::chrono::milliseconds(5));
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         connectionEstablished = connectionManagerThread.isConnected();
+        std::cout << connectionEstablished << std::endl;
+        std::cout << "waitingThread finishes" << std::endl;
     });
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     waitingThread.join();
