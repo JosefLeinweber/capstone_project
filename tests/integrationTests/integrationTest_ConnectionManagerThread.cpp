@@ -109,10 +109,6 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
                                          remoteStopConnection,
                                          "RemoteCMT");
 
-    std::cout << "RemoteThread | inputRingBuffer" << std::endl;
-    printBuffer(remoteInputRingBuffer.buffer);
-    std::cout << "RemoteThread | outputRingBuffer" << std::endl;
-    printBuffer(remoteOutputRingBuffer.buffer);
 
     // 3. Setting up the local thread
     audioBuffer.clear();
@@ -150,6 +146,10 @@ TEST_CASE("ConnectionManagerThread & ConnectionManagerThread | successfully "
     remoteThread.signalThreadShouldExit();
     localThread.waitForThreadToExit(1000);
     remoteThread.waitForThreadToExit(1000);
+    std::cout << "RemoteThread | inputRingBuffer" << std::endl;
+    printBuffer(remoteInputRingBuffer.buffer);
+    std::cout << "RemoteThread | outputRingBuffer" << std::endl;
+    printBuffer(remoteOutputRingBuffer.buffer);
     std::cout << "LocalThread | inputRingBuffer" << std::endl;
     printBuffer(inputRingBuffer.buffer);
     std::cout << "LocalThread | outputRingBuffer" << std::endl;

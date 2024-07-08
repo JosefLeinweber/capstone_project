@@ -91,9 +91,8 @@ bool ConnectionManagerThread::establishConnection()
 
     if (!validatePluginConfiguration())
     {
-        encounteredError("Failed to validate plugin configuration: " +
-                         m_localConfigurationData.DebugString() + " | " +
-                         m_remoteConfigurationData.DebugString());
+        //TODO: add additional field to encounterError to pass extra information for logging (maybe create error class)
+        encounteredError("Failed to validate plugin configuration");
         return false;
     }
 

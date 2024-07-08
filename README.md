@@ -1,7 +1,7 @@
 # ConnectDAWs VST3 Audio Plugin
 
 Source code for the ConnectDAWs VST3 audio plugin. The plugin allows you to connect two DAWs (digital audio workstations) via internet and stream audio between them. The goal is to stream audio with low latency to allow for real-time collaboration between musicians.
-The plugin is still in development, and only the basic functionality is implemented.
+The plugin is still in development. The current version is a prototype with basic functionality and a lot of limitations.
 
 **The basic functionality includes:**
 
@@ -12,6 +12,16 @@ The plugin is still in development, and only the basic functionality is implemen
 * basic GUI
 
 * error handling for connection and plugin configuration issues
+
+**Current biggest limitations:**
+
+* only compatible with machines on the same local network
+
+* only compatible with ipV6 addresses
+
+* high latency
+
+* only compatible with Windows
 
 ## Getting started with development
 
@@ -37,16 +47,53 @@ $ cd capstone_project
 2. Create a build directory and run CMake:
 
 ```bash
-$ cmake -S . -B build
+$ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 $ cmake --build build --config Debug --target ALL_BUILD
 ```
 
-### Running tests
+### Building the VST3 in Release mode
 
-To run the tests, execute the following command in the main directory:
+When building in Release mode, tests have to be disabled. This can be done by setting the option `ENABLE_TESTING` to `OFF`. 
 
 ```bash
-"C:\Program Files\CMake\bin\cmake.EXE" --build c:/Users/herr_/CODE/bachelor/v0.1.0/capstone_project/build --config Debug --target ConnectDAWsUnitTests -j 14 --
-
-ctest -j14 -C Debug -T test --output-on-failure 
+$ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTING=OFF
+$ cmake --build build --config Release --target ConnectDAWs_VST3
 ```
+
+### Building and Running Tests
+
+#### 1. Building
+
+Either build everything
+
+`$ cmake --build build --config Debug --target ALL_BUILD`
+
+or build the tests separately:
+
+Unit Tests: `$ cmake --build build --config Debug --target ConnectDAWsUnitTests`
+
+Integreation Tests: `$ cmake --build build --config Debug --target ConnectDAWsIntegrationTests`
+
+#### 2. Running
+
+`& ctest -T test --test-dir build/ -C Debug --output-on-failure`
+
+## Project Documentation
+
+### Project Structure
+
+The project is structured in the following way:
+
+```
+
+├── cmake/                  # CMake modules
+├── external/               # External dependencies
+├── src/                    # Source files
+│   ├── core/               # Juce Framework Plugin code
+│   ├── functional/         # Logic of the plugin
+│   ├── ui/                 # User interface components
+|   ├── utils/              # Utility functions
+├── tests/                  # Test files
+│   ├── integration/        # Integration tests
+│   ├── unit/               # Unit tests
+├── tools/

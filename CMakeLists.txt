@@ -12,20 +12,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 
-option(ENABLE_TESTING "Enable building tests" ON)
+option(ENABLE_TESTING "Enable building tests, will be disabled automatically in release mode" ON)
 option(ENABLE_WARNINGS "Enable compiler warnings" ON)
 option(ENABLE_WARNINGS_AS_ERRORS "Enable compiler warnings as errors" OFF)
 option(ENABLE_SANITIZERS "Enable sanitizers" ON)
 option(ENABLE_LTO "Enable LTO/IPO" OFF)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-set(BUILD_SHARED_LIBS OFF)
 
+# Ensure static linking
+set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Vcpkg target triplet")
 
 message(STATUS "Installing with VCPKG")
-# Set vcpkg target triplet for static libraries
-set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Vcpkg target triplet")
 
 include(${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake)
 
@@ -36,7 +36,6 @@ find_package(Protobuf REQUIRED)
 
 
 add_subdirectory(src)
-
 
 if (ENABLE_TESTING)
     message(STATUS "Testing enabled")
