@@ -14,11 +14,18 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(ENABLE_TESTING "Enable building tests, will be disabled automatically in release mode" ON)
 option(ENABLE_WARNINGS "Enable compiler warnings" ON)
-option(ENABLE_WARNINGS_AS_ERRORS "Enable compiler warnings as errors" OFF)
+option(ENABLE_WARNINGS_AS_ERRORS "Enable compiler warnings as errors" ON)
 option(ENABLE_SANITIZERS "Enable sanitizers" ON)
 option(ENABLE_LTO "Enable LTO/IPO" OFF)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+if (ENABLE_WARNINGS)
+    message(STATUS "Warnings enabled")
+    include(Warnings)
+else()
+    message(STATUS "Warnings disabled")
+endif()
 
 # Ensure static linking
 set(BUILD_SHARED_LIBS OFF)
@@ -36,6 +43,8 @@ find_package(Protobuf REQUIRED)
 
 
 add_subdirectory(src)
+
+
 
 if (ENABLE_TESTING)
     message(STATUS "Testing enabled")

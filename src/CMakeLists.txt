@@ -89,6 +89,8 @@ target_compile_definitions(${PROJECT_NAME}
         JUCE_VST3_CAN_REPLACE_VST2=0
 )
 
+target_set_warnings(${PROJECT_NAME} ENABLE ALL AS_ERROR ALL)
+
 
 if (MSVC)
     # Silences some deprecation warnings that (hopefully) will be fixed in a future release of JUCE.
