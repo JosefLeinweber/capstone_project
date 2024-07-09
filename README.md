@@ -83,6 +83,11 @@ or to build tests only change the target to `ConnectDAWsUnitTests` or `ConnectDA
 
 The VST3 plugin is based on the JUCE framework. The plugin is structured in three main parts: the core, the functional part and the user interface. The core part holds the juce plugin structure and intializes the functional part and the user interface. The functional part is responsible for the logic of the plugin, such as establishing a connection and streaming audio. The user interface is responsible for the visual representation of the plugin and the user interaction.
 
+### Introduction to JUCE AudioProcessor
+
+The JUCE AudioProcessor is the main class of the plugin. It is responsible for the audio processing and the communication between the plugin and the DAW. The AudioProcessor has several methods that are called by the DAW, such as `prepareToPlay`, `processBlock` and `releaseResources`. The `processBlock` method is called in real-time and is responsible for processing the audio data. Every time the DAW processes a block of audio data, the `processBlock` method is called.
+In the ConnectDAWs plugin the ConnectDAWsAudioProcessor derives from the JUCE AudioProcessor and implements the audio processing and the communication with the functional part of the plugin.
+
 ### Project Structure
 
 ```bash
@@ -102,9 +107,11 @@ The VST3 plugin is based on the JUCE framework. The plugin is structured in thre
 
 ### Relationships Between Main Objects
 
-![alt text](https://github.com/JosefLeinweber/capstone_project/blob/trunk/docs/diagram_of_main_objects-1.png)
+![alt text](https://github.com/JosefLeinweber/capstone_project/blob/trunk/docs/diagram_of_main_objects-1.png) 
 
 ### Sequence Diagram
+
+The following sequence diagram shows the an abstraction of the core functionality of the plugin.
 
 ![alt text](https://github.com/JosefLeinweber/capstone_project/blob/trunk/docs/sequence_diagram.jpg)
 
