@@ -503,8 +503,8 @@ void ConnectionManagerThread::stopProviderAndConsumerThreads(
     if (m_consumerThread->isThreadRunning())
         m_consumerThread->signalThreadShouldExit();
 
-    m_providerThread->waitForThreadToExit(timeout.count());
-    m_consumerThread->waitForThreadToExit(timeout.count());
+    m_providerThread->waitForThreadToExit(static_cast<int>(timeout.count()));
+    m_consumerThread->waitForThreadToExit(static_cast<int>(timeout.count()));
     m_fileLogger->logMessage(
         "ConnectionManagerThread | stopProviderAndConsumerThreads | "
         "Provider and Consumer threads stopped");

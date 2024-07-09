@@ -6,7 +6,7 @@
 class TcpHost
 {
 public:
-    TcpHost(boost::asio::io_context &ioContext, unsigned short port);
+    TcpHost(boost::asio::io_context &ioContext, int32_t port);
 
     ~TcpHost();
 
@@ -20,7 +20,7 @@ public:
 
     void initializeConnection(
         std::string ip,
-        unsigned short port,
+        int32_t port,
         std::chrono::milliseconds timeout = std::chrono::milliseconds(1000));
 
     void send(std::string &message);

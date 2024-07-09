@@ -15,7 +15,7 @@ public:
 
     ~UdpHost();
 
-    void setupSocket(boost::asio::io_context &ioContext, unsigned short port);
+    void setupSocket(boost::asio::io_context &ioContext, int32_t port);
 
     void sendAudioBuffer(juce::AudioBuffer<float> buffer,
                          boost::asio::ip::udp::endpoint remoteEndpoint);

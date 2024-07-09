@@ -55,8 +55,8 @@ std::string ConnectDAWs::getIp()
     catch (std::exception &e)
     {
         std::cerr << "Error: " << e.what() << std::endl;
-        std::string();
     }
+    return std::string();
 }
 
 

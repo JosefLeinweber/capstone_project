@@ -73,7 +73,8 @@ bool ProviderThread::sendAudioToRemoteConsumer()
             boost::asio::ip::udp::endpoint(
                 boost::asio::ip::address::from_string(
                     m_remoteConfigurationData.ip()),
-                m_remoteConfigurationData.consumer_port()));
+                static_cast<unsigned short>(
+                    m_remoteConfigurationData.consumer_port())));
         return true;
     }
     catch (...)

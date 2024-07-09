@@ -1,6 +1,6 @@
 #include "ConnectDAWs/UdpHost.h"
 
-UdpHost::UdpHost(){};
+UdpHost::UdpHost() {};
 
 UdpHost::~UdpHost()
 {
@@ -17,8 +17,7 @@ UdpHost::~UdpHost()
     }
 };
 
-void UdpHost::setupSocket(boost::asio::io_context &ioContext,
-                          unsigned short port)
+void UdpHost::setupSocket(boost::asio::io_context &ioContext, int32_t port)
 {
     try
     {
@@ -28,7 +27,8 @@ void UdpHost::setupSocket(boost::asio::io_context &ioContext,
         }
         m_socket = std::make_unique<boost::asio::ip::udp::socket>(
             ioContext,
-            boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v6(), port));
+            boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v6(),
+                                           static_cast<unsigned short>(port)));
     }
     catch (const std::exception &e)
     {

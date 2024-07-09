@@ -126,6 +126,9 @@ bool ConsumerThread::timeOut(
 void ConsumerThread::receiveHandler(const boost::system::error_code &error,
                                     std::size_t bytes_transferred)
 {
+    // to avoid unsuded warning
+    (void)bytes_transferred;
+
     if (!error)
     {
         m_receivedData = true;

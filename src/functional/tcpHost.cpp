@@ -1,10 +1,11 @@
 #include "ConnectDAWs/tcpHost.h"
 
 
-TcpHost::TcpHost(boost::asio::io_context &ioContext, unsigned short port)
+TcpHost::TcpHost(boost::asio::io_context &ioContext, int32_t port)
     : m_acceptor(
           ioContext,
-          boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(), port))
+          boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v6(),
+                                         static_cast<unsigned short>(port)))
 {
     std::cout << "TcpHost created" << std::endl;
     m_timer =
@@ -131,7 +132,7 @@ void TcpHost::stopAsyncOperations()
 }
 
 void TcpHost::initializeConnection(std::string ip,
-                                   unsigned short port,
+                                   int32_t port,
                                    std::chrono::milliseconds timeout)
 {
     std::cout << "tcpHost initConnection  | Connecting to remote host"
@@ -144,7 +145,7 @@ void TcpHost::initializeConnection(std::string ip,
 
         m_socket->async_connect(boost::asio::ip::tcp::endpoint(
                                     boost::asio::ip::address::from_string(ip),
-                                    port),
+                                    static_cast<unsigned short>(port)),
                                 [this](const boost::system::error_code &error) {
                                     handleConnect(error);
                                     m_timer->cancel();
