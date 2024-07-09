@@ -119,17 +119,17 @@ In the ConnectDAWs plugin the ConnectDAWsAudioProcessor derives from the JUCE Au
 
 ### Relationships Between Main Objects
 
-![alt text](https://github.com/JosefLeinweber/capstone_project/blob/trunk/docs/diagram_of_main_objects-1.png)
+![Diagram of the main object](https://github.com/JosefLeinweber/capstone_project/blob/trunk/docs/diagram_of_main_objects-1.png)
 
 ### Sequence Diagram
 
 The following sequence diagram shows the an abstraction of the core functionality of the plugin.
 
-![alt text](https://github.com/JosefLeinweber/capstone_project/blob/trunk/docs/sequence_diagram.jpg)
+![Mix of flow and data flow diagram, visualizing core functionality of the plugin](https://github.com/JosefLeinweber/capstone_project/blob/trunk/docs/sequence_diagram.jpg)
 
 ### User Flow Diagram
 
-![alt text](https://github.com/JosefLeinweber/capstone_project/blob/trunk/docs/user_flow_diagram.jpg)
+![Simple user flow diagram](https://github.com/JosefLeinweber/capstone_project/blob/trunk/docs/user_flow_diagram.jpg)
 
 ## Next Steps
 
