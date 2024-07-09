@@ -1,6 +1,6 @@
 #include "ConnectDAWs/UdpHost.h"
 
-UdpHost::UdpHost() {};
+UdpHost::UdpHost(){};
 
 UdpHost::~UdpHost()
 {
