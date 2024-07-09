@@ -21,19 +21,7 @@ ConnectDAWsAudioProcessor::ConnectDAWsAudioProcessor()
               .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
               ),
-      m_visualiser(2), m_outputVisualiser(2),
-      m_parameters(
-          *this,
-          nullptr,
-          juce::Identifier("LowpassAndHighpassPlugin"),
-          {std::make_unique<juce::AudioParameterFloat>(
-               "cutoff_frequency",
-               "Cutoff Frequency",
-               juce::NormalisableRange{20.f, 20000.f, 0.1f, 0.2f, false},
-               500.f),
-           std::make_unique<juce::AudioParameterBool>("highpass",
-                                                      "Highpass",
-                                                      false)})
+      m_visualiser(2), m_outputVisualiser(2)
 #endif
 {
     m_visualiser.setRepaintRate(30);
@@ -41,10 +29,6 @@ ConnectDAWsAudioProcessor::ConnectDAWsAudioProcessor()
 
     m_outputVisualiser.setRepaintRate(30);
     m_outputVisualiser.setBufferSize(448);
-
-    cutoffFrequencyParameter =
-        m_parameters.getRawParameterValue("cutoff_frequency");
-    highpassParameter = m_parameters.getRawParameterValue("highpass");
 }
 
 ConnectDAWsAudioProcessor::~ConnectDAWsAudioProcessor()
@@ -202,7 +186,6 @@ juce::AudioProcessorEditor *ConnectDAWsAudioProcessor::createEditor()
 {
 
     return new ConnectDAWsAudioProcessorEditor(*this,
-                                               m_parameters,
                                                m_connectDAWs.m_guiMessenger,
                                                m_connectDAWs.m_cmtMessenger);
 }

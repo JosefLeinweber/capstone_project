@@ -22,7 +22,6 @@ class ConnectDAWsAudioProcessorEditor : public juce::AudioProcessorEditor
 {
 public:
     ConnectDAWsAudioProcessorEditor(ConnectDAWsAudioProcessor &,
-                                    juce::AudioProcessorValueTreeState &vts,
                                     std::shared_ptr<Messenger> &guiMessenger,
                                     std::shared_ptr<Messenger> &cmtMessenger);
     ~ConnectDAWsAudioProcessorEditor() override;

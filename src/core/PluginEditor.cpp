@@ -13,7 +13,6 @@
 //==============================================================================
 ConnectDAWsAudioProcessorEditor::ConnectDAWsAudioProcessorEditor(
     ConnectDAWsAudioProcessor &p,
-    juce::AudioProcessorValueTreeState &vts,
     std::shared_ptr<Messenger> &guiMessenger,
     std::shared_ptr<Messenger> &cmtMessenger)
     : AudioProcessorEditor(&p), m_audioProcessor(p),

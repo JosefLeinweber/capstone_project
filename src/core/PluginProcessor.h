@@ -67,16 +67,6 @@ public:
     ConnectDAWs m_connectDAWs;
 
 private:
-    // std::atomic<bool> startConnection = false;
-    // std::atomic<bool> stopConnection = false;
-    juce::AudioProcessorValueTreeState m_parameters;
-    std::atomic<float> *cutoffFrequencyParameter = nullptr;
-    std::atomic<float> *highpassParameter = nullptr;
-    // std::unique_ptr<ConnectionManagerThread> connectionManagerThread;
-    // std::shared_ptr<AudioBufferFIFO> outputBufferFIFO;
-    // std::shared_ptr<AudioBufferFIFO> inputBufferFIFO;
-
-
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ConnectDAWsAudioProcessor)
 };
