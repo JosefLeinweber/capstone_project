@@ -1,4 +1,5 @@
-# ConnectDAWs VST3 Audio Plugin
+# ConnectDAWs - VST3 Audio Plugin
+
 [![pre-commit](https://github.com/JosefLeinweber/capstone_project/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/JosefLeinweber/capstone_project/actions/workflows/pre-commit.yml)
 
 Source code for the ConnectDAWs VST3 audio plugin. The plugin allows you to connect two DAWs (digital audio workstations) via internet and stream audio between them. The goal is to stream audio with low latency to allow for real-time collaboration between musicians.
@@ -23,6 +24,8 @@ The plugin is still in development. The current version is a prototype with basi
 * high latency
 
 * only compatible with Windows
+
+* has to be reloaded on audio device changes
 
 ## Getting started with development
 
@@ -65,23 +68,20 @@ $ cmake --build build --config Release --target ConnectDAWs_VST3
 
 #### 1. Building
 
-Either build everything
+```bash
+$ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+$ cmake --build build --config Debug --target ALL_BUILD
+```
 
-`$ cmake --build build --config Debug --target ALL_BUILD`
-
-or build the tests separately:
-
-Unit Tests: `$ cmake --build build --config Debug --target ConnectDAWsUnitTests`
-
-Integreation Tests: `$ cmake --build build --config Debug --target ConnectDAWsIntegrationTests`
+or to build tests only change the target to `ConnectDAWsUnitTests` or `ConnectDAWsIntegrationTests`
 
 #### 2. Running
 
-`& ctest -T test --test-dir build/ -C Debug --output-on-failure`
+`$ ctest -T test --test-dir build/ -C Debug --output-on-failure`
 
 ## Project Documentation
 
-The VST3 plugin is based on the JUCE framework. The plugin is structured in three main parts: the core, the functional part and the user interface. The core part olds the juce plugin structure and intializes the functional part and the user interface. The functional part is responsible for the logic of the plugin, such as establishing a connection and streaming audio. The user interface is responsible for the visual representation of the plugin and the user interaction.
+The VST3 plugin is based on the JUCE framework. The plugin is structured in three main parts: the core, the functional part and the user interface. The core part holds the juce plugin structure and intializes the functional part and the user interface. The functional part is responsible for the logic of the plugin, such as establishing a connection and streaming audio. The user interface is responsible for the visual representation of the plugin and the user interaction.
 
 ### Project Structure
 
@@ -104,11 +104,17 @@ The VST3 plugin is based on the JUCE framework. The plugin is structured in thre
 
 ![alt text](https://github.com/JosefLeinweber/capstone_project/blob/trunk/docs/diagram_of_main_objects-1.png)
 
-### UML Sequence Diagram
+### Sequence Diagram
+
+![alt text](https://github.com/JosefLeinweber/capstone_project/blob/trunk/docs/sequence_diagram.jpg)
 
 ### User Flow Diagram
 
 ## Next Steps
+
+### Plugin Settings
+
+* Get rid of hardcoded values, make them configurable in the plugin settings.
 
 ### Testing
 
@@ -120,9 +126,26 @@ The VST3 plugin is based on the JUCE framework. The plugin is structured in thre
 * Instead of declaring classes in the header files, create interfaces in the header files and implement them in the cpp files. This will allow mocking the classes and their behavior in the tests.
 * Use dependency injection to make the code more testable. This will make the constructor of the classes longer, but will allow to inject mock objects in the tests.
 * Rework the message system between gui and cmt.
+
+### Security
+
+* Make sure the configuration data is encripted before sending them over the network.
+* Analyze the security of the plugin, what do I need to secure? What are the risks?
   
 ### Banchmarking
+
 * Develop a benchmarking tool to measure the latency of the plugin. Separate between the latency of the connection and the latency of the audio processing.
 
 ### Features
+
 * Implement a method to connect two plugins on different networks.
+* Try to decrease the latency of the audio streaming.
+
+## Aknowledgements
+
+1. CppProjectTemplate
+   * Author: franneck94
+   * Link: https://github.com/franneck94/CppProjectTemplate
+2. Wolfsounds Audio Plugin Template
+   * Author: JanWilczek
+   * Link: https://github.com/JanWilczek/audio-plugin-template
