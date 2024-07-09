@@ -76,7 +76,7 @@ bool ProviderThread::sendAudioToRemoteConsumer()
                 m_remoteConfigurationData.consumer_port()));
         return true;
     }
-    catch (const std::exception &e)
+    catch (...)
     {
         return false;
     }
@@ -90,7 +90,7 @@ void ProviderThread::setupHost()
         m_udpHost->setupSocket(m_ioContext,
                                m_localConfigurationData.provider_port());
     }
-    catch (const std::exception &e)
+    catch (...)
     {
         signalThreadShouldExit();
     }

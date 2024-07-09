@@ -66,7 +66,7 @@ void ConsumerThread::setupHost()
             boost::asio::make_work_guard(m_ioContext));
         startIOContextInDifferentThread();
     }
-    catch (std::exception &e)
+    catch (...)
     {
 
         signalThreadShouldExit();
