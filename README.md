@@ -110,6 +110,9 @@ The VST3 plugin is based on the JUCE framework. The plugin is structured in thre
 
 ### User Flow Diagram
 
+![alt text](https://github.com/JosefLeinweber/capstone_project/blob/trunk/docs/user_flow_diagram.jpg)
+
+
 ## Next Steps
 
 ### Plugin Settings
