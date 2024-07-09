@@ -27,6 +27,18 @@ The plugin is still in development. The current version is a prototype with basi
 
 * has to be reloaded on audio device changes
 
+#### Tools and Libraries
+
+* [JUCE Framework](https://juce.com/)
+* [Boost Asio](https://www.boost.org/doc/libs/1_85_0/doc/html/boost_asio.html)
+* [Protobuf](https://developers.google.com/protocol-buffers)
+* [CMake](https://cmake.org/)
+* [Ctest](https://cmake.org/cmake/help/latest/manual/ctest.1.html)
+* [Catch2](https://github.com/catchorg/Catch2)
+* [pre-commit](https://pre-commit.com/)
+* [Clang-tidy](https://clang.llvm.org/extra/clang-tidy/)
+* [Clang-format](https://clang.llvm.org/docs/ClangFormat.html)
+
 ## Getting started with development
 
 *Disclaimer: the project is currently only develped on Windows with the MSVC compiler. Developing on other platforms or other compilers might need additional configuration!*
