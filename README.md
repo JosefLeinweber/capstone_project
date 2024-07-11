@@ -1,6 +1,6 @@
 # ConnectDAWs - VST3 Audio Plugin
 
-[![pre-commit](https://github.com/JosefLeinweber/capstone_project/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/JosefLeinweber/capstone_project/actions/workflows/pre-commit.yml) [![CMake](https://github.com/JosefLeinweber/capstone_project/actions/workflows/cmake.yml/badge.svg)](https://github.com/JosefLeinweber/capstone_project/actions/workflows/cmake.yml)
+[![pre-commit](https://github.com/JosefLeinweber/capstone_project/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/JosefLeinweber/capstone_project/actions/workflows/pre-commit.yml) [![Build and Test](https://github.com/JosefLeinweber/capstone_project/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/JosefLeinweber/capstone_project/actions/workflows/build-and-test.yml)
 
 Source code for the ConnectDAWs VST3 audio plugin. The plugin allows you to connect two DAWs (digital audio workstations) via internet and stream audio between them. The goal is to stream audio with low latency to allow for real-time collaboration between musicians. The plugin is developed with the JUCE framework and Boost Asio.
 The plugin is still in development. The current version is a prototype with basic functionality and a lot of limitations.
