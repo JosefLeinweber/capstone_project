@@ -40,10 +40,9 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
-            vcpkg_installed
-            vcpkg/packages
-            vcpkg/downloads
-            vcpgk/buildtrees
+            external/vcpkg/packages
+            external/vcpkg/downloads
+            external/vcpgk/buildtrees
         key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
 
     - name: Configure CMake
