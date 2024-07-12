@@ -44,8 +44,6 @@ find_package(Protobuf REQUIRED)
 
 add_subdirectory(src)
 
-
-
 if (ENABLE_TESTING)
     message(STATUS "Testing enabled")
     find_package(catch2 3.5.4 REQUIRED)
