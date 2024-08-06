@@ -3,10 +3,10 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_utils/juce_audio_utils.h>
 
-class AudioBufferFIFO
+class RingBuffer
 {
 public:
-    AudioBufferFIFO(int numChannels, int bufferSize);
+    RingBuffer(int numChannels, int bufferSize);
 
     // Function to write data to the buffer
     //TODO:

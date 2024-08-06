@@ -2,14 +2,14 @@
 #include "sharedValues.h"
 #include <catch2/catch_test_macros.hpp>
 
-TEST_CASE("AudioBufferFIFO | Constructor")
+TEST_CASE("RingBuffer | Constructor")
 {
     SECTION("Initialize with valid parameters")
     {
         const int numChannels = 2;
         const int bufferSize = 1024;
 
-        AudioBufferFIFO audioBufferFIFO(numChannels, bufferSize);
+        RingBuffer audioBufferFIFO(numChannels, bufferSize);
 
         // Assert that the FIFO and buffer are initialized correctly
         REQUIRE(audioBufferFIFO.getTotalSize() == bufferSize);
@@ -19,13 +19,13 @@ TEST_CASE("AudioBufferFIFO | Constructor")
 }
 
 
-TEST_CASE("AudioBufferFIFO | Write")
+TEST_CASE("RingBuffer | Write")
 {
     const int numChannels = 2;
     const int fifoBufferSize = 20;
     const int bufferSize = 10;
 
-    AudioBufferFIFO audioBufferFIFO(numChannels, fifoBufferSize);
+    RingBuffer audioBufferFIFO(numChannels, fifoBufferSize);
 
     SECTION("Write data to buffer")
     {
@@ -70,13 +70,13 @@ TEST_CASE("AudioBufferFIFO | Write")
 }
 
 
-TEST_CASE("AudioBufferFIFO | Read")
+TEST_CASE("RingBuffer | Read")
 {
     const int numChannels = 2;
     const int fifoBufferSize = 20;
     const int bufferSize = 10;
 
-    AudioBufferFIFO audioBufferFIFO(numChannels, fifoBufferSize);
+    RingBuffer audioBufferFIFO(numChannels, fifoBufferSize);
 
     SECTION("Read data from buffer")
     {
@@ -129,7 +129,7 @@ TEST_CASE("AudioBuffer | continously read and write to buffer")
     const int fifoBufferSize = 20;
     const int bufferSize = 10;
 
-    AudioBufferFIFO audioBufferFIFO(numChannels, fifoBufferSize);
+    RingBuffer audioBufferFIFO(numChannels, fifoBufferSize);
 
     juce::AudioBuffer<float> sourceBuffer(numChannels, bufferSize);
     fillBuffer(sourceBuffer, 0.2f);
@@ -171,7 +171,7 @@ TEST_CASE("AudioBuffer | getNumReady test")
     const int fifoBufferSize = 20;
     const int bufferSize = 10;
 
-    AudioBufferFIFO audioBufferFIFO(numChannels, fifoBufferSize);
+    RingBuffer audioBufferFIFO(numChannels, fifoBufferSize);
 
     juce::AudioBuffer<float> sourceBuffer(numChannels, bufferSize);
     fillBuffer(sourceBuffer, 0.2f);

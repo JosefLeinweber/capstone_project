@@ -16,8 +16,8 @@ public:
         std::shared_ptr<Messenger> &guiMessenger,
         std::shared_ptr<Messenger> &cmtMessenger,
         ConfigurationData localConfigurationData,
-        AudioBufferFIFO &inputRingBuffer,
-        AudioBufferFIFO &outputRingBuffer,
+        RingBuffer &inputRingBuffer,
+        RingBuffer &outputRingBuffer,
         std::atomic<bool> &startConnection,
         std::atomic<bool> &stopConnection,
         const std::string threadName = "ConnectionManagerThread");
@@ -102,7 +102,7 @@ private:
     std::shared_ptr<Messenger> &m_guiMessenger;
     std::shared_ptr<Messenger> &m_cmtMessenger;
 
-    AudioBufferFIFO &m_inputRingBuffer;
-    AudioBufferFIFO &m_outputRingBuffer;
+    RingBuffer &m_inputRingBuffer;
+    RingBuffer &m_outputRingBuffer;
     ConfigurationData m_localConfigurationData;
 };

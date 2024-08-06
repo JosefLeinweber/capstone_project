@@ -11,7 +11,7 @@ public:
     ConsumerThread(
         ConfigurationData remoteConfigurationData,
         ConfigurationData localConfigurationData,
-        AudioBufferFIFO &inputRingBuffer,
+        RingBuffer &inputRingBuffer,
         std::chrono::milliseconds timeout = std::chrono::milliseconds(2000),
         const std::string threadName = "ConsumerThread");
 
@@ -31,7 +31,7 @@ public:
         std::chrono::time_point<std::chrono::high_resolution_clock> start);
 
     juce::AudioBuffer<float> m_inputBuffer;
-    AudioBufferFIFO &m_inputRingBuffer;
+    RingBuffer &m_inputRingBuffer;
 
 private:
     void receiveHandler(const boost::system::error_code &error,

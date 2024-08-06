@@ -3,7 +3,7 @@
 
 ConsumerThread::ConsumerThread(ConfigurationData remoteConfigurationData,
                                ConfigurationData localConfigurationData,
-                               AudioBufferFIFO &inputRingBuffer,
+                               RingBuffer &inputRingBuffer,
                                std::chrono::milliseconds timeout,
                                const std::string threadName)
 

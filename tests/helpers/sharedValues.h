@@ -28,11 +28,11 @@ extern std::shared_ptr<Messenger> cmtMessenger1;
 extern std::shared_ptr<Messenger> guiMessenger2;
 extern std::shared_ptr<Messenger> cmtMessenger2;
 
-extern AudioBufferFIFO inputRingBuffer;
-extern AudioBufferFIFO outputRingBuffer;
+extern RingBuffer inputRingBuffer;
+extern RingBuffer outputRingBuffer;
 
-extern AudioBufferFIFO remoteInputRingBuffer;
-extern AudioBufferFIFO remoteOutputRingBuffer;
+extern RingBuffer remoteInputRingBuffer;
+extern RingBuffer remoteOutputRingBuffer;
 
 extern std::atomic<bool> startConnection;
 extern std::atomic<bool> stopConnection;

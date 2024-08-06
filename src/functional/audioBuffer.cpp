@@ -1,18 +1,18 @@
 #include "ConnectDAWs/audioBuffer.h"
 
-// Constructor for the AudioBufferFIFO class
+// Constructor for the RingBuffer class
 // Initialises the FIFO and buffer
 // bufferSize: the size of the buffer
 // numChannels: the number of channels in the buffer
 
-AudioBufferFIFO::AudioBufferFIFO(int numChannels, int bufferSize)
+RingBuffer::RingBuffer(int numChannels, int bufferSize)
     : fifo(bufferSize), buffer(numChannels, bufferSize)
 {
     buffer.clear();
 };
 
 // Function to write data to the buffer
-void AudioBufferFIFO::read(const juce::AudioBuffer<float> &source)
+void RingBuffer::read(const juce::AudioBuffer<float> &source)
 {
     auto writeHandle = fifo.write(source.getNumSamples());
 
@@ -40,7 +40,7 @@ void AudioBufferFIFO::read(const juce::AudioBuffer<float> &source)
 };
 
 // Function to read data from the buffer
-void AudioBufferFIFO::write(juce::AudioBuffer<float> &destination)
+void RingBuffer::write(juce::AudioBuffer<float> &destination)
 {
 
     auto readHandle = fifo.read(destination.getNumSamples());

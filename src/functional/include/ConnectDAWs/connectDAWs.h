@@ -45,6 +45,6 @@ private:
     ConfigurationData m_localConfigurationData;
     std::atomic<bool> m_startConnection = false;
     std::atomic<bool> m_stopConnection = false;
-    std::shared_ptr<AudioBufferFIFO> m_outputBufferFIFO;
-    std::shared_ptr<AudioBufferFIFO> m_inputBufferFIFO;
+    std::shared_ptr<RingBuffer> m_outputBufferFIFO;
+    std::shared_ptr<RingBuffer> m_inputBufferFIFO;
 };

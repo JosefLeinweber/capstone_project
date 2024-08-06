@@ -11,7 +11,7 @@ public:
     ProviderThread(
         ConfigurationData remoteConfigurationData,
         ConfigurationData localConfigurationData,
-        AudioBufferFIFO &outputRingBuffer,
+        RingBuffer &outputRingBuffer,
         std::chrono::milliseconds timeout = std::chrono::milliseconds(2000),
         const std::string threadName = "ProviderThread");
 
@@ -27,7 +27,7 @@ public:
 
     bool sendAudioToRemoteConsumer();
 
-    AudioBufferFIFO &m_outputRingBuffer;
+    RingBuffer &m_outputRingBuffer;
     juce::AudioBuffer<float> m_outputBuffer;
 
 private:

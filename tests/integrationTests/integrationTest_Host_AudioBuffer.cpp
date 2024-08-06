@@ -68,7 +68,7 @@ TEST_CASE("Host & AudioBuffer | back & forth with abstractFIFO write and read "
         addressData hostAddress("::1", 8001);
         Host host(hostAddress);
         host.setupSocket();
-        AudioBufferFIFO audioBufferFifo(2, 20);
+        RingBuffer audioBufferFifo(2, 20);
         std::cout << "Thread 1 Host created" << std::endl;
         host.waitForHandshake();
         std::cout << "Thread 1 Connected" << std::endl;
@@ -99,7 +99,7 @@ TEST_CASE("Host & AudioBuffer | back & forth with abstractFIFO write and read "
         addressData hostAddress("::1", 8010);
         Host host(hostAddress);
         host.setupSocket();
-        AudioBufferFIFO audioBufferFifo2(2, 20);
+        RingBuffer audioBufferFifo2(2, 20);
         std::cout << "Thread 2 Sending connection request" << std::endl;
         addressData remoteAddress("::1", 8001);
         host.sendHandshake(remoteAddress);

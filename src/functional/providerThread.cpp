@@ -3,7 +3,7 @@
 
 ProviderThread::ProviderThread(ConfigurationData remoteConfigurationData,
                                ConfigurationData localConfigurationData,
-                               AudioBufferFIFO &outputRingBuffer,
+                               RingBuffer &outputRingBuffer,
                                std::chrono::milliseconds timeout,
                                const std::string threadName)
     : juce::Thread(threadName), m_timeout(timeout),
