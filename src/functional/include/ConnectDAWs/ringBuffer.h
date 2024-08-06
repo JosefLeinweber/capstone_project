@@ -8,12 +8,11 @@ class RingBuffer
 public:
     RingBuffer(int numChannels, int bufferSize);
 
-    // Function to write data to the buffer
-    //TODO:
-    void read(const juce::AudioBuffer<float> &source);
+    // Function to copy data from source buffer to the ring buffer
+    void copyFrom(const juce::AudioBuffer<float> &source);
 
-    // Function to read data from the buffer
-    void write(juce::AudioBuffer<float> &destination);
+    // Function to copy data from the ring buffer to the destination buffer
+    void copyTo(juce::AudioBuffer<float> &destination);
 
     //TODO: rename to getNumReadyToRead
     int getNumReady() const

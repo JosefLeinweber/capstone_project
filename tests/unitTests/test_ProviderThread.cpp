@@ -1,5 +1,5 @@
-#include "ConnectDAWs/audioBuffer.h"
 #include "ConnectDAWs/providerThread.h"
+#include "ConnectDAWs/ringBuffer.h"
 #include "ConnectDAWs/udpHost.h"
 #include "sharedValues.h"
 #include <catch2/catch_test_macros.hpp>
@@ -42,7 +42,7 @@ TEST_CASE("ProviderThread | readFromFIFOBuffer")
         juce::AudioBuffer<float> tempBuffer(2, 10);
         fillBuffer(tempBuffer, 0.5);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        outputRingBuffer.read(tempBuffer);
+        outputRingBuffer.copyFrom(tempBuffer);
     });
 
     ProviderThread providerThread(remoteConfigurationData,

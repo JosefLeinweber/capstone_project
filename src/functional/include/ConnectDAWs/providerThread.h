@@ -1,6 +1,6 @@
 #pragma once
-#include "audioBuffer.h"
 #include "datagram.pb.h"
+#include "ringBuffer.h"
 #include "udpHost.h"
 #include <boost/asio.hpp>
 #include <juce_core/juce_core.h>

@@ -141,5 +141,5 @@ void ConsumerThread::receiveHandler(const boost::system::error_code &error,
 
 void ConsumerThread::writeToFIFOBuffer()
 {
-    return m_inputRingBuffer.read(m_inputBuffer);
+    return m_inputRingBuffer.copyFrom(m_inputBuffer);
 };

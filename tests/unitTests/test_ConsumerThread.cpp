@@ -1,5 +1,5 @@
-#include "ConnectDAWs/audioBuffer.h"
 #include "ConnectDAWs/consumerThread.h"
+#include "ConnectDAWs/ringBuffer.h"
 #include "sharedValues.h"
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>

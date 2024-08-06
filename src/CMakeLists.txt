@@ -26,7 +26,7 @@ target_sources(${PROJECT_NAME}
         core/PluginEditor.h
         core/PluginProcessor.h
 
-        functional/audioBuffer.cpp
+        functional/ringBuffer.cpp
         functional/connectDAWs.cpp
         functional/connectionManagerThread.cpp
         functional/consumerThread.cpp
@@ -35,7 +35,7 @@ target_sources(${PROJECT_NAME}
         functional/tcpHost.cpp
         functional/udpHost.cpp
 
-        ${INCLUDE_DIR}/audioBuffer.h
+        ${INCLUDE_DIR}/ringBuffer.h
         ${INCLUDE_DIR}/connectDAWs.h
         ${INCLUDE_DIR}/connectionManagerThread.h
         ${INCLUDE_DIR}/consumerThread.h

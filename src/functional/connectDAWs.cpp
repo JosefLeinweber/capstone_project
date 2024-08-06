@@ -123,9 +123,9 @@ void ConnectDAWs::releaseResources()
 
 void ConnectDAWs::processBlock(juce::AudioBuffer<float> &buffer)
 {
-    m_outputBufferFIFO->read(buffer);
+    m_outputBufferFIFO->copyFrom(buffer);
 
     buffer.clear();
 
-    m_inputBufferFIFO->write(buffer);
+    m_inputBufferFIFO->copyTo(buffer);
 }

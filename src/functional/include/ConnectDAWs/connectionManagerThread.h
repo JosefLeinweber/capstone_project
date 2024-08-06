@@ -1,10 +1,10 @@
 #pragma once
-#include "audioBuffer.h"
 #include "consumerThread.h"
 #include "datagram.pb.h"
 #include "logger.h"
 #include "messenger.h"
 #include "providerThread.h"
+#include "ringBuffer.h"
 #include "tcpHost.h"
 #include <functional>
 #include <juce_core/juce_core.h>

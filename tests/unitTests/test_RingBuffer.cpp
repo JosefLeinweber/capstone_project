@@ -1,4 +1,4 @@
-#include "ConnectDAWs/audioBuffer.h"
+#include "ConnectDAWs/ringBuffer.h"
 #include "sharedValues.h"
 #include <catch2/catch_test_macros.hpp>
 
@@ -36,7 +36,7 @@ TEST_CASE("RingBuffer | Write")
         fillBuffer(sourceBuffer, 1.0f);
 
         // Write data to the buffer
-        ringBuffer.read(sourceBuffer);
+        ringBuffer.copyFrom(sourceBuffer);
 
         bool areBuffersEqual = true;
 
@@ -88,11 +88,11 @@ TEST_CASE("RingBuffer | Read")
         fillBuffer(sourceBuffer, 0.2f);
 
         // Fill the buffer
-        ringBuffer.read(sourceBuffer);
+        ringBuffer.copyFrom(sourceBuffer);
 
 
         // Read data from the buffer
-        ringBuffer.write(destinationBuffer);
+        ringBuffer.copyTo(destinationBuffer);
 
         bool areBuffersEqual = true;
 
@@ -139,8 +139,8 @@ TEST_CASE("RingBuffer | continously read and write to buffer")
 
     for (int i = 0; i < 10; i++)
     {
-        ringBuffer.read(sourceBuffer);
-        ringBuffer.write(destinationBuffer);
+        ringBuffer.copyFrom(sourceBuffer);
+        ringBuffer.copyTo(destinationBuffer);
     }
 
     bool areBuffersEqual = true;
@@ -178,6 +178,6 @@ TEST_CASE("RingBuffer | getNumReady test")
 
     REQUIRE(ringBuffer.getNumReady() == 0);
 
-    ringBuffer.read(sourceBuffer);
+    ringBuffer.copyFrom(sourceBuffer);
     REQUIRE(ringBuffer.getNumReady() == bufferSize);
 }

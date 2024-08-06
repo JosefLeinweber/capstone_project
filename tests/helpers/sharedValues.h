@@ -1,7 +1,7 @@
 #pragma once
-#include "ConnectDAWs/audioBuffer.h"
 #include "ConnectDAWs/connectionManagerThread.h"
 #include "ConnectDAWs/messenger.h"
+#include "ConnectDAWs/ringBuffer.h"
 #include "datagram.pb.h"
 #include <juce_audio_basics/juce_audio_basics.h>
 
