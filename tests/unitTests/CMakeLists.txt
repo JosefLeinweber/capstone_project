@@ -3,7 +3,7 @@ message("Building Unit tests")
 set(TEST_NAME "ConnectDAWsUnitTests")
 
 set(TESTS_SOURCES
-    test_AudioBuffer.cpp
+    test_RingBuffer.cpp
     test_UdpHost.cpp
     test_ProviderThread.cpp
     test_ConsumerThread.cpp

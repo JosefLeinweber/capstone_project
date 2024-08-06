@@ -123,7 +123,7 @@ TEST_CASE("RingBuffer | Read")
     }
 }
 
-TEST_CASE("AudioBuffer | continously read and write to buffer")
+TEST_CASE("RingBuffer | continously read and write to buffer")
 {
     const int numChannels = 2;
     const int fifoBufferSize = 20;
@@ -165,7 +165,7 @@ TEST_CASE("AudioBuffer | continously read and write to buffer")
 }
 
 
-TEST_CASE("AudioBuffer | getNumReady test")
+TEST_CASE("RingBuffer | getNumReady test")
 {
     const int numChannels = 2;
     const int fifoBufferSize = 20;
