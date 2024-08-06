@@ -9,12 +9,12 @@ TEST_CASE("RingBuffer | Constructor")
         const int numChannels = 2;
         const int bufferSize = 1024;
 
-        RingBuffer audioBufferFIFO(numChannels, bufferSize);
+        RingBuffer ringBuffer(numChannels, bufferSize);
 
         // Assert that the FIFO and buffer are initialized correctly
-        REQUIRE(audioBufferFIFO.getTotalSize() == bufferSize);
-        REQUIRE(audioBufferFIFO.buffer.getNumChannels() == numChannels);
-        REQUIRE(audioBufferFIFO.buffer.getNumSamples() == bufferSize);
+        REQUIRE(ringBuffer.getTotalSize() == bufferSize);
+        REQUIRE(ringBuffer.buffer.getNumChannels() == numChannels);
+        REQUIRE(ringBuffer.buffer.getNumSamples() == bufferSize);
     }
 }
 
@@ -25,7 +25,7 @@ TEST_CASE("RingBuffer | Write")
     const int fifoBufferSize = 20;
     const int bufferSize = 10;
 
-    RingBuffer audioBufferFIFO(numChannels, fifoBufferSize);
+    RingBuffer ringBuffer(numChannels, fifoBufferSize);
 
     SECTION("Write data to buffer")
     {
@@ -36,7 +36,7 @@ TEST_CASE("RingBuffer | Write")
         fillBuffer(sourceBuffer, 1.0f);
 
         // Write data to the buffer
-        audioBufferFIFO.read(sourceBuffer);
+        ringBuffer.read(sourceBuffer);
 
         bool areBuffersEqual = true;
 
@@ -44,13 +44,13 @@ TEST_CASE("RingBuffer | Write")
         {
             for (int i = 0; i < bufferSize; i++)
             {
-                if (audioBufferFIFO.buffer.getSample(channel, i) !=
+                if (ringBuffer.buffer.getSample(channel, i) !=
                     sourceBuffer.getSample(channel, i))
                 {
                     areBuffersEqual = false;
                     // std::cout << "Buffers are not equal at index " << i << std::endl;
                     // std::cout << "Expected: " << sourceBuffer.getSample(channel, i) << std::endl;
-                    // std::cout << "Actual: " << audioBufferFIFO.buffer.getSample(channel, i) << std::endl;
+                    // std::cout << "Actual: " << ringBuffer.buffer.getSample(channel, i) << std::endl;
                     break;
                 }
             }
@@ -62,8 +62,8 @@ TEST_CASE("RingBuffer | Write")
         printBuffer(sourceBuffer);
         std::cout << "Destination buffer: " << std::endl;
         std::cout << "Destination buffer length: "
-                  << audioBufferFIFO.buffer.getNumSamples() << std::endl;
-        printBuffer(audioBufferFIFO.buffer);
+                  << ringBuffer.buffer.getNumSamples() << std::endl;
+        printBuffer(ringBuffer.buffer);
 
         REQUIRE(areBuffersEqual);
     }
@@ -76,7 +76,7 @@ TEST_CASE("RingBuffer | Read")
     const int fifoBufferSize = 20;
     const int bufferSize = 10;
 
-    RingBuffer audioBufferFIFO(numChannels, fifoBufferSize);
+    RingBuffer ringBuffer(numChannels, fifoBufferSize);
 
     SECTION("Read data from buffer")
     {
@@ -88,11 +88,11 @@ TEST_CASE("RingBuffer | Read")
         fillBuffer(sourceBuffer, 0.2f);
 
         // Fill the buffer
-        audioBufferFIFO.read(sourceBuffer);
+        ringBuffer.read(sourceBuffer);
 
 
         // Read data from the buffer
-        audioBufferFIFO.write(destinationBuffer);
+        ringBuffer.write(destinationBuffer);
 
         bool areBuffersEqual = true;
 
@@ -101,7 +101,7 @@ TEST_CASE("RingBuffer | Read")
             for (int i = 0; i < bufferSize; i++)
             {
                 if (destinationBuffer.getSample(channel, i) !=
-                    audioBufferFIFO.buffer.getSample(channel, i))
+                    ringBuffer.buffer.getSample(channel, i))
                 {
                     areBuffersEqual = false;
                     break;
@@ -111,8 +111,8 @@ TEST_CASE("RingBuffer | Read")
 
         std::cout << "Source buffer: " << std::endl;
         std::cout << "Source buffer length: "
-                  << audioBufferFIFO.buffer.getNumSamples() << std::endl;
-        printBuffer(audioBufferFIFO.buffer);
+                  << ringBuffer.buffer.getNumSamples() << std::endl;
+        printBuffer(ringBuffer.buffer);
 
         std::cout << "Destination buffer: " << std::endl;
         std::cout << "Destination buffer length: "
@@ -129,7 +129,7 @@ TEST_CASE("AudioBuffer | continously read and write to buffer")
     const int fifoBufferSize = 20;
     const int bufferSize = 10;
 
-    RingBuffer audioBufferFIFO(numChannels, fifoBufferSize);
+    RingBuffer ringBuffer(numChannels, fifoBufferSize);
 
     juce::AudioBuffer<float> sourceBuffer(numChannels, bufferSize);
     fillBuffer(sourceBuffer, 0.2f);
@@ -139,8 +139,8 @@ TEST_CASE("AudioBuffer | continously read and write to buffer")
 
     for (int i = 0; i < 10; i++)
     {
-        audioBufferFIFO.read(sourceBuffer);
-        audioBufferFIFO.write(destinationBuffer);
+        ringBuffer.read(sourceBuffer);
+        ringBuffer.write(destinationBuffer);
     }
 
     bool areBuffersEqual = true;
@@ -159,7 +159,7 @@ TEST_CASE("AudioBuffer | continously read and write to buffer")
     }
     printBuffer(destinationBuffer);
     printBuffer(sourceBuffer);
-    printBuffer(audioBufferFIFO.buffer);
+    printBuffer(ringBuffer.buffer);
 
     REQUIRE(areBuffersEqual);
 }
@@ -171,13 +171,13 @@ TEST_CASE("AudioBuffer | getNumReady test")
     const int fifoBufferSize = 20;
     const int bufferSize = 10;
 
-    RingBuffer audioBufferFIFO(numChannels, fifoBufferSize);
+    RingBuffer ringBuffer(numChannels, fifoBufferSize);
 
     juce::AudioBuffer<float> sourceBuffer(numChannels, bufferSize);
     fillBuffer(sourceBuffer, 0.2f);
 
-    REQUIRE(audioBufferFIFO.getNumReady() == 0);
+    REQUIRE(ringBuffer.getNumReady() == 0);
 
-    audioBufferFIFO.read(sourceBuffer);
-    REQUIRE(audioBufferFIFO.getNumReady() == bufferSize);
+    ringBuffer.read(sourceBuffer);
+    REQUIRE(ringBuffer.getNumReady() == bufferSize);
 }
