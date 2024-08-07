@@ -49,7 +49,7 @@ void ConsumerThread::run()
         if (receiveAudioFromRemoteProvider(m_timeout))
         {
 
-            writeToFIFOBuffer();
+            writeToRingBuffer();
         }
     }
 };
@@ -139,7 +139,7 @@ void ConsumerThread::receiveHandler(const boost::system::error_code &error,
     }
 }
 
-void ConsumerThread::writeToFIFOBuffer()
+void ConsumerThread::writeToRingBuffer()
 {
     return m_inputRingBuffer.copyFrom(m_inputBuffer);
 };

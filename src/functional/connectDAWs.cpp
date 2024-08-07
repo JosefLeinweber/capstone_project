@@ -75,15 +75,15 @@ void ConnectDAWs::setLocalConfigurationData(double sampleRate,
     m_localConfigurationData.set_num_output_channels(numOutputChannels);
 }
 
-void ConnectDAWs::initFIFOBuffers(int numInputChannels,
+void ConnectDAWs::initRingBuffers(int numInputChannels,
                                   int numOutputChannels,
                                   int samplesPerBlock)
 {
     //TODO: remove magic number (10) determin what the best value is and set a constant
     int bufferSize = samplesPerBlock * 10;
-    m_inputBufferFIFO =
+    m_inputRingBuffer =
         std::make_shared<RingBuffer>(numInputChannels, bufferSize);
-    m_outputBufferFIFO =
+    m_outputRingBuffer =
         std::make_shared<RingBuffer>(numOutputChannels, bufferSize);
 }
 
@@ -92,7 +92,7 @@ void ConnectDAWs::startUpConnectionManagerThread(double sampleRate,
                                                  int numInputChannels,
                                                  int numOutputChannels)
 {
-    initFIFOBuffers(numInputChannels, numOutputChannels, samplesPerBlock);
+    initRingBuffers(numInputChannels, numOutputChannels, samplesPerBlock);
 
     setLocalConfigurationData(sampleRate,
                               samplesPerBlock,
@@ -103,8 +103,8 @@ void ConnectDAWs::startUpConnectionManagerThread(double sampleRate,
         std::make_unique<ConnectionManagerThread>(m_guiMessenger,
                                                   m_cmtMessenger,
                                                   m_localConfigurationData,
-                                                  *m_inputBufferFIFO,
-                                                  *m_outputBufferFIFO,
+                                                  *m_inputRingBuffer,
+                                                  *m_outputRingBuffer,
                                                   m_startConnection,
                                                   m_stopConnection);
     m_connectionManagerThread->startThread(juce::Thread::Priority::high);
@@ -123,9 +123,9 @@ void ConnectDAWs::releaseResources()
 
 void ConnectDAWs::processBlock(juce::AudioBuffer<float> &buffer)
 {
-    m_outputBufferFIFO->copyFrom(buffer);
+    m_outputRingBuffer->copyFrom(buffer);
 
     buffer.clear();
 
-    m_inputBufferFIFO->copyTo(buffer);
+    m_inputRingBuffer->copyTo(buffer);
 }

@@ -1,7 +1,6 @@
 #include "ConnectDAWs/ringBuffer.h"
 
 // Constructor for the RingBuffer class
-// Initialises the FIFO and buffer
 // bufferSize: the size of the buffer
 // numChannels: the number of channels in the buffer
 

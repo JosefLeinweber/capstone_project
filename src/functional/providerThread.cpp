@@ -33,14 +33,14 @@ void ProviderThread::run()
     setupHost();
     while (!threadShouldExit())
     {
-        if (readFromFIFOBuffer(m_timeout))
+        if (readFromRingBuffer(m_timeout))
         {
             sendAudioToRemoteConsumer();
         }
     }
 };
 
-bool ProviderThread::readFromFIFOBuffer(std::chrono::milliseconds timeout)
+bool ProviderThread::readFromRingBuffer(std::chrono::milliseconds timeout)
 {
     auto start = std::chrono::high_resolution_clock::now();
     //TODO: change 0 to not be hardcoded

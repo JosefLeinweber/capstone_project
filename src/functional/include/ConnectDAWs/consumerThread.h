@@ -23,7 +23,7 @@ public:
 
     bool receiveAudioFromRemoteProvider(std::chrono::milliseconds timeout);
 
-    void writeToFIFOBuffer();
+    void writeToRingBuffer();
 
     void startIOContextInDifferentThread();
     bool timeOut(

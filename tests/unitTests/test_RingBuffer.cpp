@@ -11,7 +11,6 @@ TEST_CASE("RingBuffer | Constructor")
 
         RingBuffer ringBuffer(numChannels, bufferSize);
 
-        // Assert that the FIFO and buffer are initialized correctly
         REQUIRE(ringBuffer.getTotalSize() == bufferSize);
         REQUIRE(ringBuffer.buffer.getNumChannels() == numChannels);
         REQUIRE(ringBuffer.buffer.getNumSamples() == bufferSize);

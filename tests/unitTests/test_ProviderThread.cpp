@@ -34,7 +34,7 @@ TEST_CASE("ProviderThread | setupHost")
     REQUIRE_NOTHROW(providerThread.setupHost());
 }
 
-TEST_CASE("ProviderThread | readFromFIFOBuffer")
+TEST_CASE("ProviderThread | readFromRingBuffer")
 {
 
 
@@ -48,20 +48,20 @@ TEST_CASE("ProviderThread | readFromFIFOBuffer")
     ProviderThread providerThread(remoteConfigurationData,
                                   localConfigurationData,
                                   outputRingBuffer);
-    REQUIRE_NOTHROW(providerThread.readFromFIFOBuffer());
+    REQUIRE_NOTHROW(providerThread.readFromRingBuffer());
     REQUIRE(outputRingBuffer.buffer.getSample(0, 0) == 0.5);
     printBuffer(outputRingBuffer.buffer);
     fillThread.join();
 }
 
-TEST_CASE("ProviderThread | readFromFIFOBuffer timeout")
+TEST_CASE("ProviderThread | readFromRingBuffer timeout")
 {
 
 
     ProviderThread providerThread(remoteConfigurationData,
                                   localConfigurationData,
                                   outputRingBuffer);
-    REQUIRE_FALSE(providerThread.readFromFIFOBuffer());
+    REQUIRE_FALSE(providerThread.readFromRingBuffer());
     printBuffer(outputRingBuffer.buffer);
 }
 

@@ -31,7 +31,7 @@ TEST_CASE("ConsumerThread | setupHost")
     REQUIRE_NOTHROW(consumerThread.setupHost());
 }
 
-TEST_CASE("ConsumerThread | writeToFIFOBuffer")
+TEST_CASE("ConsumerThread | writeToRingBuffer")
 {
 
     printBuffer(inputRingBuffer.buffer);
@@ -40,7 +40,7 @@ TEST_CASE("ConsumerThread | writeToFIFOBuffer")
                                   inputRingBuffer);
 
     fillBuffer(consumerThread.m_inputBuffer, 1.0f);
-    REQUIRE_NOTHROW(consumerThread.writeToFIFOBuffer());
+    REQUIRE_NOTHROW(consumerThread.writeToRingBuffer());
     REQUIRE(consumerThread.m_inputRingBuffer.buffer.getSample(0, 0) == 1.0f);
 }
 

@@ -22,7 +22,7 @@ public:
 
     void setupHost();
 
-    bool readFromFIFOBuffer(
+    bool readFromRingBuffer(
         std::chrono::milliseconds timeout = std::chrono::milliseconds(1000));
 
     bool sendAudioToRemoteConsumer();
