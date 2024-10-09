@@ -14,19 +14,18 @@ public:
     // Function to copy data from the ring buffer to the destination buffer
     void copyTo(juce::AudioBuffer<float> &destination);
 
-    //TODO: rename to getNumReadyToRead
-    int getNumReady() const
+    int getNumReadyToRead() const
     {
-        return fifo.getNumReady();
+        return m_fifo.getNumReady();
     }
 
     int getTotalSize() const
     {
-        return fifo.getTotalSize();
+        return m_fifo.getTotalSize();
     }
 
-    juce::AudioBuffer<float> buffer;
-    juce::AbstractFifo fifo;
+    juce::AudioBuffer<float> m_buffer;
 
 private:
+    juce::AbstractFifo m_fifo;
 };

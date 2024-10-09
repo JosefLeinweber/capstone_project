@@ -49,8 +49,8 @@ TEST_CASE("ProviderThread | readFromRingBuffer")
                                   localConfigurationData,
                                   outputRingBuffer);
     REQUIRE_NOTHROW(providerThread.readFromRingBuffer());
-    REQUIRE(outputRingBuffer.buffer.getSample(0, 0) == 0.5);
-    printBuffer(outputRingBuffer.buffer);
+    REQUIRE(outputRingBuffer.m_buffer.getSample(0, 0) == 0.5);
+    printBuffer(outputRingBuffer.m_buffer);
     fillThread.join();
 }
 
@@ -62,7 +62,7 @@ TEST_CASE("ProviderThread | readFromRingBuffer timeout")
                                   localConfigurationData,
                                   outputRingBuffer);
     REQUIRE_FALSE(providerThread.readFromRingBuffer());
-    printBuffer(outputRingBuffer.buffer);
+    printBuffer(outputRingBuffer.m_buffer);
 }
 
 TEST_CASE("ProviderThread | sendAudioToRemoteConsumer")
@@ -75,5 +75,5 @@ TEST_CASE("ProviderThread | sendAudioToRemoteConsumer")
 
     providerThread.setupHost();
     REQUIRE(providerThread.sendAudioToRemoteConsumer());
-    printBuffer(outputRingBuffer.buffer);
+    printBuffer(outputRingBuffer.m_buffer);
 }

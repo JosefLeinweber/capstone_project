@@ -45,7 +45,8 @@ bool ProviderThread::readFromRingBuffer(std::chrono::milliseconds timeout)
     auto start = std::chrono::high_resolution_clock::now();
     //TODO: change 0 to not be hardcoded
     // Only read from
-    while (m_outputRingBuffer.getNumReady() < m_outputBuffer.getNumSamples())
+    while (m_outputRingBuffer.getNumReadyToRead() <
+           m_outputBuffer.getNumSamples())
 
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));

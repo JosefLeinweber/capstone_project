@@ -34,14 +34,14 @@ TEST_CASE("ConsumerThread | setupHost")
 TEST_CASE("ConsumerThread | writeToRingBuffer")
 {
 
-    printBuffer(inputRingBuffer.buffer);
+    printBuffer(inputRingBuffer.m_buffer);
     ConsumerThread consumerThread(remoteConfigurationData,
                                   localConfigurationData,
                                   inputRingBuffer);
 
     fillBuffer(consumerThread.m_inputBuffer, 1.0f);
     REQUIRE_NOTHROW(consumerThread.writeToRingBuffer());
-    REQUIRE(consumerThread.m_inputRingBuffer.buffer.getSample(0, 0) == 1.0f);
+    REQUIRE(consumerThread.m_inputRingBuffer.m_buffer.getSample(0, 0) == 1.0f);
 }
 
 TEST_CASE("ConsumerThread | receiveAudioFromRemoteProvider")

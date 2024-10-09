@@ -17,6 +17,7 @@ option(ENABLE_WARNINGS "Enable compiler warnings" ON)
 option(ENABLE_WARNINGS_AS_ERRORS "Enable compiler warnings as errors" ON)
 option(ENABLE_SANITIZERS "Enable sanitizers" ON)
 option(ENABLE_LTO "Enable LTO/IPO" OFF)
+option(ENABLE_DOCS "Enable building documentation" ON)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -71,6 +72,13 @@ if (ENABLE_LTO)
     include(LTO)
 else()
     message(STATUS "LTO disabled")
+endif()
+
+if (ENABLE_DOCS)
+    message(STATUS "Docs enabled")
+    include(Docs)
+else()
+    message(STATUS "Docs disabled")
 endif()
 
 message(STATUS "Finished CMake configuration")

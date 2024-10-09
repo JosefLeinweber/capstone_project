@@ -12,8 +12,6 @@ TEST_CASE("RingBuffer | Constructor")
         RingBuffer ringBuffer(numChannels, bufferSize);
 
         REQUIRE(ringBuffer.getTotalSize() == bufferSize);
-        REQUIRE(ringBuffer.buffer.getNumChannels() == numChannels);
-        REQUIRE(ringBuffer.buffer.getNumSamples() == bufferSize);
     }
 }
 
@@ -43,7 +41,7 @@ TEST_CASE("RingBuffer | Write")
         {
             for (int i = 0; i < bufferSize; i++)
             {
-                if (ringBuffer.buffer.getSample(channel, i) !=
+                if (ringBuffer.m_buffer.getSample(channel, i) !=
                     sourceBuffer.getSample(channel, i))
                 {
                     areBuffersEqual = false;
@@ -61,8 +59,8 @@ TEST_CASE("RingBuffer | Write")
         printBuffer(sourceBuffer);
         std::cout << "Destination buffer: " << std::endl;
         std::cout << "Destination buffer length: "
-                  << ringBuffer.buffer.getNumSamples() << std::endl;
-        printBuffer(ringBuffer.buffer);
+                  << ringBuffer.m_buffer.getNumSamples() << std::endl;
+        printBuffer(ringBuffer.m_buffer);
 
         REQUIRE(areBuffersEqual);
     }
@@ -100,7 +98,7 @@ TEST_CASE("RingBuffer | Read")
             for (int i = 0; i < bufferSize; i++)
             {
                 if (destinationBuffer.getSample(channel, i) !=
-                    ringBuffer.buffer.getSample(channel, i))
+                    ringBuffer.m_buffer.getSample(channel, i))
                 {
                     areBuffersEqual = false;
                     break;
@@ -110,8 +108,8 @@ TEST_CASE("RingBuffer | Read")
 
         std::cout << "Source buffer: " << std::endl;
         std::cout << "Source buffer length: "
-                  << ringBuffer.buffer.getNumSamples() << std::endl;
-        printBuffer(ringBuffer.buffer);
+                  << ringBuffer.m_buffer.getNumSamples() << std::endl;
+        printBuffer(ringBuffer.m_buffer);
 
         std::cout << "Destination buffer: " << std::endl;
         std::cout << "Destination buffer length: "
@@ -158,13 +156,13 @@ TEST_CASE("RingBuffer | continously read and write to buffer")
     }
     printBuffer(destinationBuffer);
     printBuffer(sourceBuffer);
-    printBuffer(ringBuffer.buffer);
+    printBuffer(ringBuffer.m_buffer);
 
     REQUIRE(areBuffersEqual);
 }
 
 
-TEST_CASE("RingBuffer | getNumReady test")
+TEST_CASE("RingBuffer | getNumReadyToRead test")
 {
     const int numChannels = 2;
     const int fifoBufferSize = 20;
@@ -175,8 +173,8 @@ TEST_CASE("RingBuffer | getNumReady test")
     juce::AudioBuffer<float> sourceBuffer(numChannels, bufferSize);
     fillBuffer(sourceBuffer, 0.2f);
 
-    REQUIRE(ringBuffer.getNumReady() == 0);
+    REQUIRE(ringBuffer.getNumReadyToRead() == 0);
 
     ringBuffer.copyFrom(sourceBuffer);
-    REQUIRE(ringBuffer.getNumReady() == bufferSize);
+    REQUIRE(ringBuffer.getNumReadyToRead() == bufferSize);
 }
