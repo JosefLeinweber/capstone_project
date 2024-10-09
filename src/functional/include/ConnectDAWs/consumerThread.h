@@ -1,5 +1,5 @@
 #pragma once
-#include "audioBuffer.h"
+#include "ringBuffer.h"
 #include "udpHost.h"
 #include <boost/asio.hpp>
 #include <juce_core/juce_core.h>
@@ -11,7 +11,7 @@ public:
     ConsumerThread(
         ConfigurationData remoteConfigurationData,
         ConfigurationData localConfigurationData,
-        AudioBufferFIFO &inputRingBuffer,
+        RingBuffer &inputRingBuffer,
         std::chrono::milliseconds timeout = std::chrono::milliseconds(2000),
         const std::string threadName = "ConsumerThread");
 
@@ -23,7 +23,7 @@ public:
 
     bool receiveAudioFromRemoteProvider(std::chrono::milliseconds timeout);
 
-    void writeToFIFOBuffer();
+    void writeToRingBuffer();
 
     void startIOContextInDifferentThread();
     bool timeOut(
@@ -31,7 +31,7 @@ public:
         std::chrono::time_point<std::chrono::high_resolution_clock> start);
 
     juce::AudioBuffer<float> m_inputBuffer;
-    AudioBufferFIFO &m_inputRingBuffer;
+    RingBuffer &m_inputRingBuffer;
 
 private:
     void receiveHandler(const boost::system::error_code &error,

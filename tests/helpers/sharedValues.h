@@ -1,7 +1,7 @@
 #pragma once
-#include "ConnectDAWs/audioBuffer.h"
 #include "ConnectDAWs/connectionManagerThread.h"
 #include "ConnectDAWs/messenger.h"
+#include "ConnectDAWs/ringBuffer.h"
 #include "datagram.pb.h"
 #include <juce_audio_basics/juce_audio_basics.h>
 
@@ -28,11 +28,11 @@ extern std::shared_ptr<Messenger> cmtMessenger1;
 extern std::shared_ptr<Messenger> guiMessenger2;
 extern std::shared_ptr<Messenger> cmtMessenger2;
 
-extern AudioBufferFIFO inputRingBuffer;
-extern AudioBufferFIFO outputRingBuffer;
+extern RingBuffer inputRingBuffer;
+extern RingBuffer outputRingBuffer;
 
-extern AudioBufferFIFO remoteInputRingBuffer;
-extern AudioBufferFIFO remoteOutputRingBuffer;
+extern RingBuffer remoteInputRingBuffer;
+extern RingBuffer remoteOutputRingBuffer;
 
 extern std::atomic<bool> startConnection;
 extern std::atomic<bool> stopConnection;

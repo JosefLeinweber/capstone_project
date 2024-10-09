@@ -1,5 +1,5 @@
-#include "ConnectDAWs/audioBuffer.h"
 #include "ConnectDAWs/providerThread.h"
+#include "ConnectDAWs/ringBuffer.h"
 #include "ConnectDAWs/udpHost.h"
 #include "sharedValues.h"
 #include <catch2/catch_test_macros.hpp>
@@ -34,7 +34,7 @@ TEST_CASE("ProviderThread | setupHost")
     REQUIRE_NOTHROW(providerThread.setupHost());
 }
 
-TEST_CASE("ProviderThread | readFromFIFOBuffer")
+TEST_CASE("ProviderThread | readFromRingBuffer")
 {
 
 
@@ -42,27 +42,27 @@ TEST_CASE("ProviderThread | readFromFIFOBuffer")
         juce::AudioBuffer<float> tempBuffer(2, 10);
         fillBuffer(tempBuffer, 0.5);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        outputRingBuffer.read(tempBuffer);
+        outputRingBuffer.copyFrom(tempBuffer);
     });
 
     ProviderThread providerThread(remoteConfigurationData,
                                   localConfigurationData,
                                   outputRingBuffer);
-    REQUIRE_NOTHROW(providerThread.readFromFIFOBuffer());
-    REQUIRE(outputRingBuffer.buffer.getSample(0, 0) == 0.5);
-    printBuffer(outputRingBuffer.buffer);
+    REQUIRE_NOTHROW(providerThread.readFromRingBuffer());
+    REQUIRE(outputRingBuffer.m_buffer.getSample(0, 0) == 0.5);
+    printBuffer(outputRingBuffer.m_buffer);
     fillThread.join();
 }
 
-TEST_CASE("ProviderThread | readFromFIFOBuffer timeout")
+TEST_CASE("ProviderThread | readFromRingBuffer timeout")
 {
 
 
     ProviderThread providerThread(remoteConfigurationData,
                                   localConfigurationData,
                                   outputRingBuffer);
-    REQUIRE_FALSE(providerThread.readFromFIFOBuffer());
-    printBuffer(outputRingBuffer.buffer);
+    REQUIRE_FALSE(providerThread.readFromRingBuffer());
+    printBuffer(outputRingBuffer.m_buffer);
 }
 
 TEST_CASE("ProviderThread | sendAudioToRemoteConsumer")
@@ -75,5 +75,5 @@ TEST_CASE("ProviderThread | sendAudioToRemoteConsumer")
 
     providerThread.setupHost();
     REQUIRE(providerThread.sendAudioToRemoteConsumer());
-    printBuffer(outputRingBuffer.buffer);
+    printBuffer(outputRingBuffer.m_buffer);
 }

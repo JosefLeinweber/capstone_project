@@ -1,7 +1,7 @@
-#include "ConnectDAWs/audioBuffer.h"
 #include "ConnectDAWs/connectionManagerThread.h"
 #include "ConnectDAWs/consumerThread.h"
 #include "ConnectDAWs/providerThread.h"
+#include "ConnectDAWs/ringBuffer.h"
 #include "ConnectDAWs/tcpHost.h"
 #include "datagram.pb.h"
 #include "sharedValues.h"

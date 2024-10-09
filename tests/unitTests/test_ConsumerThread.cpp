@@ -1,5 +1,5 @@
-#include "ConnectDAWs/audioBuffer.h"
 #include "ConnectDAWs/consumerThread.h"
+#include "ConnectDAWs/ringBuffer.h"
 #include "sharedValues.h"
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
@@ -31,17 +31,17 @@ TEST_CASE("ConsumerThread | setupHost")
     REQUIRE_NOTHROW(consumerThread.setupHost());
 }
 
-TEST_CASE("ConsumerThread | writeToFIFOBuffer")
+TEST_CASE("ConsumerThread | writeToRingBuffer")
 {
 
-    printBuffer(inputRingBuffer.buffer);
+    printBuffer(inputRingBuffer.m_buffer);
     ConsumerThread consumerThread(remoteConfigurationData,
                                   localConfigurationData,
                                   inputRingBuffer);
 
     fillBuffer(consumerThread.m_inputBuffer, 1.0f);
-    REQUIRE_NOTHROW(consumerThread.writeToFIFOBuffer());
-    REQUIRE(consumerThread.m_inputRingBuffer.buffer.getSample(0, 0) == 1.0f);
+    REQUIRE_NOTHROW(consumerThread.writeToRingBuffer());
+    REQUIRE(consumerThread.m_inputRingBuffer.m_buffer.getSample(0, 0) == 1.0f);
 }
 
 TEST_CASE("ConsumerThread | receiveAudioFromRemoteProvider")

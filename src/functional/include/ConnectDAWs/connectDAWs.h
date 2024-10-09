@@ -3,9 +3,9 @@
 #include <boost/asio.hpp>
 #include <juce_audio_basics/juce_audio_basics.h>
 
-#include "audioBuffer.h"
 #include "connectionManagerThread.h"
 #include "datagram.pb.h"
+#include "ringBuffer.h"
 
 #include "messenger.h"
 
@@ -34,7 +34,7 @@ public:
     std::unique_ptr<ConnectionManagerThread> m_connectionManagerThread;
 
 private:
-    void initFIFOBuffers(int numInputChannels,
+    void initRingBuffers(int numInputChannels,
                          int numOutputChannels,
                          int samplesPerBlock);
     void setLocalConfigurationData(double sampleRate,
@@ -45,6 +45,6 @@ private:
     ConfigurationData m_localConfigurationData;
     std::atomic<bool> m_startConnection = false;
     std::atomic<bool> m_stopConnection = false;
-    std::shared_ptr<AudioBufferFIFO> m_outputBufferFIFO;
-    std::shared_ptr<AudioBufferFIFO> m_inputBufferFIFO;
+    std::shared_ptr<RingBuffer> m_outputRingBuffer;
+    std::shared_ptr<RingBuffer> m_inputRingBuffer;
 };

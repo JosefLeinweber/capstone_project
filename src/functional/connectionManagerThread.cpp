@@ -5,8 +5,8 @@ ConnectionManagerThread::ConnectionManagerThread(
     std::shared_ptr<Messenger> &guiMessenger,
     std::shared_ptr<Messenger> &cmtMessenger,
     ConfigurationData localConfigurationData,
-    AudioBufferFIFO &inputRingBuffer,
-    AudioBufferFIFO &outputRingBuffer,
+    RingBuffer &inputRingBuffer,
+    RingBuffer &outputRingBuffer,
     std::atomic<bool> &startConnection,
     std::atomic<bool> &stopConnection,
     const std::string threadName)

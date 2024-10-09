@@ -51,11 +51,11 @@ ConfigurationData localConfigurationData =
 ConfigurationData remoteConfigurationData =
     setConfigurationData("::1", 6000, 6001, 6002, 44100, 512, 2, 2);
 
-AudioBufferFIFO inputRingBuffer(2, 1024);
-AudioBufferFIFO outputRingBuffer(2, 1024);
+RingBuffer inputRingBuffer(2, 1024);
+RingBuffer outputRingBuffer(2, 1024);
 
-AudioBufferFIFO remoteInputRingBuffer(2, 1024);
-AudioBufferFIFO remoteOutputRingBuffer(2, 1024);
+RingBuffer remoteInputRingBuffer(2, 1024);
+RingBuffer remoteOutputRingBuffer(2, 1024);
 
 std::atomic<bool> startConnection = false;
 std::atomic<bool> stopConnection = false;
