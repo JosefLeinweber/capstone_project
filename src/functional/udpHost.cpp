@@ -96,37 +96,12 @@ void UdpHost::asyncReceiveAudioBuffer(
     // Create a buffer to hold the timestamp and the audio data
     std::vector<uint8_t> recvBuffer(sizeof(std::uint64_t) + length);
 
-    m_socket->async_receive_from(
-        boost::asio::buffer(recvBuffer),
-        m_remoteEndpoint,
-        [this, &buffer, handler, recvBuffer](
-            const boost::system::error_code &error,
-            std::size_t bytes_transferred) {
-            if (!error && bytes_transferred >= sizeof(std::uint64_t))
-            {
-                // Extract the timestamp from the received buffer
-                std::uint64_t timestamp;
-                std::memcpy(&timestamp,
-                            recvBuffer.data(),
-                            sizeof(std::uint64_t));
-
-                // Extract the audio data from the received buffer
-                float *data = buffer.getWritePointer(0);
-                std::memcpy(data,
-                            recvBuffer.data() + sizeof(std::uint64_t),
-                            bytes_transferred - sizeof(std::uint64_t));
-
-                // Call the handler with the timestamp
-                handler(error,
-                        bytes_transferred - sizeof(std::uint64_t),
-                        timestamp);
-            }
-            else
-            {
-                // Call the handler with an error
-                handler(error, 0, 0);
-            }
-        });
+    m_socket->async_receive_from(boost::asio::buffer(recvBuffer),
+                                 m_remoteEndpoint,
+                                 std::bind(handler,
+                                           std::placeholders::_1,
+                                           std::placeholders::_2,
+                                           std::placeholders::_3));
 }
 
 void UdpHost::cancelReceive()
