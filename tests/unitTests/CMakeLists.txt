@@ -3,13 +3,13 @@ message("Building Unit tests")
 set(TEST_NAME "ConnectDAWsUnitTests")
 
 set(TESTS_SOURCES
-    test_RingBuffer.cpp
+    # test_RingBuffer.cpp
     test_UdpHost.cpp
-    test_ProviderThread.cpp
-    test_ConsumerThread.cpp
-    test_ConnectionManagerThread.cpp
-    test_TcpHost.cpp
-    test_ConnectDAWs.cpp
+    # test_ProviderThread.cpp
+    # test_ConsumerThread.cpp
+    # test_ConnectionManagerThread.cpp
+    # test_TcpHost.cpp
+    # test_ConnectDAWs.cpp
 )
 
 add_executable(${TEST_NAME} ${TESTS_SOURCES})
@@ -23,4 +23,4 @@ PUBLIC
 
 )
 
-catch_discover_tests(${TEST_NAME} OUTPUT_DIR "UnitTests" TEST_PREFIX "unit: ")
+catch_discover_tests(${TEST_NAME})

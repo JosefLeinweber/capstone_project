@@ -82,11 +82,12 @@ void ConsumerThread::startIOContextInDifferentThread()
 bool ConsumerThread::receiveAudioFromRemoteProvider(
     std::chrono::milliseconds timeout)
 {
-    m_udpHost->receiveAudioBuffer(m_inputBuffer,
-                                  std::bind(&ConsumerThread::receiveHandler,
-                                            this,
-                                            std::placeholders::_1,
-                                            std::placeholders::_2));
+    m_udpHost->asyncReceiveAudioBuffer(
+        m_inputBuffer,
+        std::bind(&ConsumerThread::receiveHandler,
+                  this,
+                  std::placeholders::_1,
+                  std::placeholders::_2));
 
     auto startTime = std::chrono::high_resolution_clock::now();
     while (!m_receivedData)

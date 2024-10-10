@@ -4,7 +4,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <thread>
 
-TEST_CASE("UdpHost | Constructor")
+TEST_CASE("UdpHost Constructor")
 {
     bool sucess = false;
     try
@@ -21,7 +21,7 @@ TEST_CASE("UdpHost | Constructor")
     REQUIRE(sucess == true);
 }
 
-TEST_CASE("UdpHost | SetupSocket successfull")
+TEST_CASE("UdpHost SetupSocket successfull")
 
 {
     boost::asio::io_context ioContext;
@@ -57,7 +57,9 @@ TEST_CASE("UdpHost | sendAudioBuffer and receive")
     udpHost.setupSocket(ioContext, 8002);
     bool success = false;
     auto receiveCallback = [&success](const boost::system::error_code &error,
-                                      std::size_t bytes_transferred) {
+                                      std::size_t bytes_transferred,
+                                      std::uint64_t timestamp) {
+        std::cout << "Something received" << std::endl;
         if (error)
         {
             success = false;
@@ -69,10 +71,11 @@ TEST_CASE("UdpHost | sendAudioBuffer and receive")
     };
     printBuffer(buffer);
 
-    udpHost.receiveAudioBuffer(buffer,
-                               std::bind(receiveCallback,
-                                         std::placeholders::_1,
-                                         std::placeholders::_2));
+    udpHost.asyncReceiveAudioBuffer(buffer,
+                                    std::bind(receiveCallback,
+                                              std::placeholders::_1,
+                                              std::placeholders::_2,
+                                              std::placeholders::_3));
     ioContext.run();
     printBuffer(buffer);
     REQUIRE(success);
