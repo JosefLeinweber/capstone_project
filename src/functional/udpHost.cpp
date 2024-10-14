@@ -99,7 +99,10 @@ void UdpHost::asyncReceiveAudioBuffer(
     m_socket->async_receive_from(
         boost::asio::buffer(recvBuffer.data(), sizeof(std::uint64_t) + length),
         m_remoteEndpoint,
-        std::bind(handler, std::placeholders::_1, std::placeholders::_2));
+        std::bind(handler,
+                  std::placeholders::_1,
+                  std::placeholders::_2,
+                  std::placeholders::_3));
 }
 
 void UdpHost::cancelReceive()
