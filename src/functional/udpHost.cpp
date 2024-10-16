@@ -80,6 +80,7 @@ std::vector<uint8_t> UdpHost::concatenateBytes(const std::vector<uint8_t> &a,
 }
 
 
+//TODO: extraxt timestamp things and move them to a separate class ?
 void UdpHost::sendAudioBuffer(juce::AudioBuffer<float> buffer,
                               boost::asio::ip::udp::endpoint remoteEndpoint)
 {
@@ -117,39 +118,14 @@ void UdpHost::sendAudioBuffer(juce::AudioBuffer<float> buffer,
 
 
 void UdpHost::asyncReceiveAudioBuffer(
-    juce::AudioBuffer<float> &buffer,
+    std::vector<uint8_t> &recvBuffer,
     std::function<void(const boost::system::error_code &error,
-                       std::size_t bytes_transferred,
-                       std::uint64_t timestamp)> handler)
+                       std::size_t bytes_transferred)> handler)
 {
-    // Calculate the length of the audio data
-    std::size_t length =
-        buffer.getNumSamples() * sizeof(float) * buffer.getNumChannels();
-
-    // Create a buffer to hold the timestamp and the audio data
-    std::vector<uint8_t> recvBuffer(sizeof(std::uint64_t) + length);
-
-    //TODO: extract function to receive timestamp -> make it testable
     m_socket->async_receive_from(
-        boost::asio::buffer(recvBuffer.data(), 13 + length),
+        boost::asio::buffer(recvBuffer.data(), recvBuffer.size()),
         m_remoteEndpoint,
-        [this, &buffer, handler, recvBuffer = std::move(recvBuffer)](
-            const boost::system::error_code &error,
-            std::size_t bytes_transferred) mutable {
-            if (!error && bytes_transferred > 0)
-            {
-                std::uint64_t timestamp;
-                std::memcpy(&timestamp, recvBuffer.data(), sizeof(timestamp));
-                std::memcpy(buffer.getWritePointer(0),
-                            recvBuffer.data() + sizeof(timestamp),
-                            bytes_transferred - sizeof(timestamp));
-                handler(error, bytes_transferred, timestamp);
-            }
-            else
-            {
-                handler(error, 0, -1);
-            }
-        });
+        std::bind(handler, std::placeholders::_1, std::placeholders::_2));
 }
 
 void UdpHost::cancelReceive()

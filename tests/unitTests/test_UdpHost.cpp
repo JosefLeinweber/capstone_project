@@ -154,16 +154,19 @@ TEST_CASE("UdpHost | sendAudioBuffer and receive")
     });
 
     juce::AudioBuffer<float> buffer(2, 10);
+    uint64_t timestamp = 1234567891234;
+    std::vector<uint8_t> recvBuffer(
+        (buffer.getNumChannels() * buffer.getNumSamples() * sizeof(float)) +
+        sizeof(timestamp));
     buffer.clear();
+    printBuffer(buffer);
     boost::asio::io_context ioContext;
     UdpHost udpHost;
     udpHost.setupSocket(ioContext, 8002);
     bool success = false;
     auto receiveCallback = [&success](const boost::system::error_code &error,
-                                      std::size_t bytes_transferred,
-                                      std::uint64_t timestamp) {
+                                      std::size_t bytes_transferred) {
         std::cout << "Something received" << std::endl;
-        std::cout << "Timestamp: " << timestamp << std::endl;
         if (error)
         {
             std::cout << "Error: " << error.message() << std::endl;
@@ -171,72 +174,81 @@ TEST_CASE("UdpHost | sendAudioBuffer and receive")
         }
         else
         {
+            std::cout << "No error" << std::endl;
             success = true;
         }
     };
-    printBuffer(buffer);
 
-    udpHost.asyncReceiveAudioBuffer(buffer,
+
+    udpHost.asyncReceiveAudioBuffer(recvBuffer,
                                     std::bind(receiveCallback,
                                               std::placeholders::_1,
-                                              std::placeholders::_2,
-                                              std::placeholders::_3));
+                                              std::placeholders::_2));
     ioContext.run();
-    printBuffer(buffer);
-    REQUIRE(success);
-    REQUIRE(buffer.getSample(0, 0) == 0.5);
-    remoteThread.join();
-}
 
-TEST_CASE("UdpHost | sendAudioBuffer and handle timestamp in receive")
-{
-    std::jthread remoteThread([]() {
-        boost::asio::io_context ioContext;
-        UdpHost udpHost;
-        udpHost.setupSocket(ioContext, 8001);
-        juce::AudioBuffer<float> buffer(2, 10);
-        fillBuffer(buffer, 0.5);
-        boost::asio::ip::udp::endpoint remoteEndpoint(
-            boost::asio::ip::address::from_string("::1"),
-            8002);
-        udpHost.sendAudioBuffer(buffer, remoteEndpoint);
-    });
-
-    juce::AudioBuffer<float> buffer(2, 10);
-    buffer.clear();
-    boost::asio::io_context ioContext;
-    UdpHost udpHost;
-    udpHost.setupSocket(ioContext, 8002);
-    bool success = false;
-    auto receiveCallback = [&success](const boost::system::error_code &error,
-                                      std::size_t bytes_transferred,
-                                      std::uint64_t timestamp) {
-        std::cout << "Something received" << std::endl;
-        std::cout << "Timestamp: " << timestamp << std::endl;
-        if (error)
-        {
-            success = false;
-        }
-        else
-        {
-            success = true;
-        }
-    };
-    printBuffer(buffer);
-
-    std::cout << "Before receive" << std::endl;
-    udpHost.asyncReceiveAudioBuffer(buffer,
-                                    std::bind(receiveCallback,
-                                              std::placeholders::_1,
-                                              std::placeholders::_2,
-                                              std::placeholders::_3));
-    ioContext.run();
     std::cout << "After receive" << std::endl;
+
+    std::memcpy(&timestamp, recvBuffer.data(), sizeof(timestamp));
+    std::cout << "Timestamp: " << timestamp << std::endl;
+
+    std::memcpy(buffer.getWritePointer(0),
+                recvBuffer.data() + sizeof(timestamp),
+                buffer.getNumChannels() * buffer.getNumSamples() *
+                    sizeof(float));
     printBuffer(buffer);
     REQUIRE(success);
     REQUIRE(buffer.getSample(0, 0) == 0.5);
     remoteThread.join();
 }
+
+// TEST_CASE("UdpHost | sendAudioBuffer and handle timestamp in receive")
+// {
+//     std::jthread remoteThread([]() {
+//         boost::asio::io_context ioContext;
+//         UdpHost udpHost;
+//         udpHost.setupSocket(ioContext, 8001);
+//         juce::AudioBuffer<float> buffer(2, 10);
+//         fillBuffer(buffer, 0.5);
+//         boost::asio::ip::udp::endpoint remoteEndpoint(
+//             boost::asio::ip::address::from_string("::1"),
+//             8002);
+//         udpHost.sendAudioBuffer(buffer, remoteEndpoint);
+//     });
+
+//     juce::AudioBuffer<float> buffer(2, 10);
+//     buffer.clear();
+//     boost::asio::io_context ioContext;
+//     UdpHost udpHost;
+//     udpHost.setupSocket(ioContext, 8002);
+//     bool success = false;
+//     auto receiveCallback = [&success](const boost::system::error_code &error,
+//                                       std::size_t bytes_transferred,
+//                                       std::uint64_t timestamp) {
+//         std::cout << "Something received" << std::endl;
+//         std::cout << "Timestamp: " << timestamp << std::endl;
+//         if (error)
+//         {
+//             success = false;
+//         }
+//         else
+//         {
+//             success = true;
+//         }
+//     };
+//     printBuffer(buffer);
+
+//     std::cout << "Before receive" << std::endl;
+//     udpHost.asyncReceiveAudioBuffer(buffer,
+//                                     std::bind(receiveCallback,
+//                                               std::placeholders::_1,
+//                                               std::placeholders::_2);
+//     ioContext.run();
+//     std::cout << "After receive" << std::endl;
+//     printBuffer(buffer);
+//     REQUIRE(success);
+//     REQUIRE(buffer.getSample(0, 0) == 0.5);
+//     remoteThread.join();
+// }
 
 TEST_CASE("UdpHost | sendAudioBuffer to invalid endpoint still successfull")
 {

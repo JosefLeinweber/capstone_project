@@ -82,8 +82,11 @@ void ConsumerThread::startIOContextInDifferentThread()
 bool ConsumerThread::receiveAudioFromRemoteProvider(
     std::chrono::milliseconds timeout)
 {
+    //TODO: Implement correct version
+    //! TEMPORARY FIX
+    std::vector<uint8_t> buffer;
     m_udpHost->asyncReceiveAudioBuffer(
-        m_inputBuffer,
+        buffer,
         std::bind(&ConsumerThread::receiveHandler,
                   this,
                   std::placeholders::_1,
@@ -112,6 +115,7 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
         }
     }
 
+    //reset m_receivedData flag
     m_receivedData = false;
     return true;
 };

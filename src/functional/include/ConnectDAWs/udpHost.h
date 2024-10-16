@@ -21,10 +21,9 @@ public:
                          boost::asio::ip::udp::endpoint remoteEndpoint);
 
     void asyncReceiveAudioBuffer(
-        juce::AudioBuffer<float> &buffer,
+        std::vector<uint8_t> &recvBuffer,
         std::function<void(const boost::system::error_code &error,
-                           std::size_t bytes_transferred,
-                           std::uint64_t timestamp)> handler);
+                           std::size_t bytes_transferred)> handler);
 
     void cancelReceive();
 
