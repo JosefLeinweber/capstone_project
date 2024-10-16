@@ -37,6 +37,48 @@ void UdpHost::setupSocket(boost::asio::io_context &ioContext, int32_t port)
     }
 };
 
+uint64_t UdpHost::getTimestamp()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+               std::chrono::system_clock::now().time_since_epoch())
+        .count();
+};
+
+std::vector<uint8_t> UdpHost::timestampToBytes(uint64_t timestamp)
+{
+    std::vector<uint8_t> bytes(sizeof(timestamp));
+    std::memcpy(bytes.data(), &timestamp, sizeof(timestamp));
+    return bytes;
+}
+
+// Function to convert an AudioBuffer to a byte array
+std::vector<uint8_t> UdpHost::audioBufferToBytes(
+    const juce::AudioBuffer<float> &buffer)
+{
+    int numChannels = buffer.getNumChannels();
+    int numSamples = buffer.getNumSamples();
+    std::vector<uint8_t> bytes(numChannels * numSamples * sizeof(float));
+
+    for (int ch = 0; ch < numChannels; ++ch)
+    {
+        std::memcpy(bytes.data() + ch * numSamples * sizeof(float),
+                    buffer.getReadPointer(ch),
+                    numSamples * sizeof(float));
+    }
+
+    return bytes;
+}
+
+std::vector<uint8_t> UdpHost::concatenateBytes(const std::vector<uint8_t> &a,
+                                               const std::vector<uint8_t> &b)
+{
+    std::vector<uint8_t> result;
+    result.reserve(a.size() + b.size());
+    result.insert(result.end(), a.begin(), a.end());
+    result.insert(result.end(), b.begin(), b.end());
+    return result;
+}
+
 
 void UdpHost::sendAudioBuffer(juce::AudioBuffer<float> buffer,
                               boost::asio::ip::udp::endpoint remoteEndpoint)
@@ -45,20 +87,12 @@ void UdpHost::sendAudioBuffer(juce::AudioBuffer<float> buffer,
     std::size_t length =
         buffer.getNumSamples() * sizeof(float) * buffer.getNumChannels();
 
-    // Create a buffer to hold the timestamp and the audio data
-    std::vector<uint8_t> sendBuffer(sizeof(std::uint64_t) + length);
+    std::uint64_t timestamp = getTimestamp();
+    std::vector<uint8_t> timestampBytes = timestampToBytes(timestamp);
+    std::vector<uint8_t> audioBufferBytes = audioBufferToBytes(buffer);
+    std::vector<uint8_t> sendBuffer =
+        concatenateBytes(timestampBytes, audioBufferBytes);
 
-    // Get the current timestamp
-    std::uint64_t timestamp =
-        std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch())
-            .count();
-
-    // Copy the timestamp into the send buffer
-    std::memcpy(sendBuffer.data(), &timestamp, sizeof(std::uint64_t));
-
-    // Copy the audio data into the send buffer
-    std::memcpy(sendBuffer.data() + sizeof(std::uint64_t), data, length);
 
     try
     {
@@ -82,7 +116,6 @@ void UdpHost::sendAudioBuffer(juce::AudioBuffer<float> buffer,
 };
 
 
-//TODO: change name to asyncReceiveAudioBuffer
 void UdpHost::asyncReceiveAudioBuffer(
     juce::AudioBuffer<float> &buffer,
     std::function<void(const boost::system::error_code &error,
@@ -96,13 +129,27 @@ void UdpHost::asyncReceiveAudioBuffer(
     // Create a buffer to hold the timestamp and the audio data
     std::vector<uint8_t> recvBuffer(sizeof(std::uint64_t) + length);
 
+    //TODO: extract function to receive timestamp -> make it testable
     m_socket->async_receive_from(
-        boost::asio::buffer(recvBuffer.data(), sizeof(std::uint64_t) + length),
+        boost::asio::buffer(recvBuffer.data(), 13 + length),
         m_remoteEndpoint,
-        std::bind(handler,
-                  std::placeholders::_1,
-                  std::placeholders::_2,
-                  std::placeholders::_3));
+        [this, &buffer, handler, recvBuffer = std::move(recvBuffer)](
+            const boost::system::error_code &error,
+            std::size_t bytes_transferred) mutable {
+            if (!error && bytes_transferred > 0)
+            {
+                std::uint64_t timestamp;
+                std::memcpy(&timestamp, recvBuffer.data(), sizeof(timestamp));
+                std::memcpy(buffer.getWritePointer(0),
+                            recvBuffer.data() + sizeof(timestamp),
+                            bytes_transferred - sizeof(timestamp));
+                handler(error, bytes_transferred, timestamp);
+            }
+            else
+            {
+                handler(error, 0, -1);
+            }
+        });
 }
 
 void UdpHost::cancelReceive()
