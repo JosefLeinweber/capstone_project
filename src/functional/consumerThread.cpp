@@ -115,6 +115,16 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
         }
     }
 
+    //TODO: Implement correct version, move this code somewhere else
+
+    std::uint64_t timestamp;
+
+    std::memcpy(&timestamp, buffer.data(), sizeof(timestamp));
+
+    std::cout << "ConsumerThread | receiveAudioFromRemoteProvider | "
+                 "Timestamp: "
+              << timestamp << std::endl;
+
     //reset m_receivedData flag
     m_receivedData = false;
     return true;
