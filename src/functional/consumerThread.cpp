@@ -84,7 +84,10 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
 {
     //TODO: Implement correct version
     //! TEMPORARY FIX
-    std::vector<uint8_t> buffer;
+    std::vector<uint8_t> buffer(
+        (m_inputBuffer.getNumChannels() * m_inputBuffer.getNumSamples() *
+         sizeof(float)) +
+        sizeof(uint64_t));
     m_udpHost->asyncReceiveAudioBuffer(
         buffer,
         std::bind(&ConsumerThread::receiveHandler,
@@ -116,6 +119,14 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
     }
 
     //TODO: Implement correct version, move this code somewhere else
+
+    std::uint64_t timestamp;
+
+    std::memcpy(&timestamp, buffer.data(), sizeof(timestamp));
+    std::memcpy(m_inputBuffer.getWritePointer(0),
+                buffer.data() + sizeof(timestamp),
+                m_inputBuffer.getNumChannels() * m_inputBuffer.getNumSamples() *
+                    sizeof(float));
 
 
     //reset m_receivedData flag
