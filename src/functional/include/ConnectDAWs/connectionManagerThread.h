@@ -99,6 +99,12 @@ private:
     std::unique_ptr<ConsumerThread> m_consumerThread;
     std::unique_ptr<TcpHost> m_host;
 
+    //------------------------------ bachelor
+
+    std::shared_ptr<std::vector<std::uint64_t>> m_differenceBuffer;
+
+    // ------------------------------ bachelor
+
     std::shared_ptr<Messenger> &m_guiMessenger;
     std::shared_ptr<Messenger> &m_cmtMessenger;
 

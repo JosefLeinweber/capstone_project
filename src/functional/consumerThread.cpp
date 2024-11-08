@@ -120,17 +120,34 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
 
     //TODO: Implement correct version, move this code somewhere else
 
-    std::uint64_t timestamp;
+    if (inBenchmarkMode)
+    {
+        std::uint64_t timestamp;
+        std::memcpy(&timestamp, buffer.data(), sizeof(timestamp));
 
-    std::memcpy(&timestamp, buffer.data(), sizeof(timestamp));
+        std::uint64_t currentTimestamp =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now().time_since_epoch())
+                .count();
+
+        std::uint64_t difference = currentTimestamp - timestamp;
+
+
+        // 1. add difference to m_differenceBuffer
+
+        if (m_differenceBuffer == full)
+        {
+            signalThreadShouldExit();
+        }
+    }
+
     std::memcpy(m_inputBuffer.getWritePointer(0),
                 buffer.data() + sizeof(timestamp),
                 m_inputBuffer.getNumChannels() * m_inputBuffer.getNumSamples() *
                     sizeof(float));
 
 
-    //reset m_receivedData flag
-    m_receivedData = false;
+    m_receivedData = false; //reset m_receivedData flag
     return true;
 };
 
