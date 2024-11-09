@@ -75,6 +75,8 @@ public:
 
     bool validatePluginConfiguration();
 
+    void logBenchmarkResults();
+
     void encounteredError(std::string errorString);
 
     boost::asio::io_context m_ioContext;
@@ -82,6 +84,7 @@ public:
     std::atomic<bool> &m_startConnection;
     std::atomic<bool> &m_stopConnection;
     ConfigurationData m_remoteConfigurationData;
+
 
 private:
     // void setNextTask(std::function<void()> task);

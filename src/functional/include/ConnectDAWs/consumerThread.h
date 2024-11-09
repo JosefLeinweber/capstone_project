@@ -12,6 +12,7 @@ public:
         ConfigurationData remoteConfigurationData,
         ConfigurationData localConfigurationData,
         RingBuffer &inputRingBuffer,
+        std::shared_ptr<std::vector<std::uint64_t>> &differenceBuffer,
         std::chrono::milliseconds timeout = std::chrono::milliseconds(2000),
         const std::string threadName = "ConsumerThread");
 
@@ -46,4 +47,5 @@ private:
     std::chrono::milliseconds m_timeout;
     ConfigurationData m_remoteConfigurationData;
     ConfigurationData m_localConfigurationData;
+    std::shared_ptr<std::vector<std::uint64_t>> &m_differenceBuffer;
 };

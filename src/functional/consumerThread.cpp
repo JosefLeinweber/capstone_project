@@ -1,16 +1,18 @@
 #include "ConnectDAWs/consumerThread.h"
 
 
-ConsumerThread::ConsumerThread(ConfigurationData remoteConfigurationData,
-                               ConfigurationData localConfigurationData,
-                               RingBuffer &inputRingBuffer,
-                               std::chrono::milliseconds timeout,
-                               const std::string threadName)
+ConsumerThread::ConsumerThread(
+    ConfigurationData remoteConfigurationData,
+    ConfigurationData localConfigurationData,
+    RingBuffer &inputRingBuffer,
+    std::shared_ptr<std::vector<std::uint64_t>> &differenceBuffer,
+    std::chrono::milliseconds timeout,
+    const std::string threadName)
 
     : juce::Thread(threadName), m_timeout(timeout),
       m_remoteConfigurationData(remoteConfigurationData),
       m_localConfigurationData(localConfigurationData),
-      m_inputRingBuffer(inputRingBuffer)
+      m_inputRingBuffer(inputRingBuffer), m_differenceBuffer(differenceBuffer)
 {
     m_inputBuffer.setSize(localConfigurationData.num_input_channels(),
                           localConfigurationData.samples_per_block());
@@ -120,10 +122,12 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
 
     //TODO: Implement correct version, move this code somewhere else
 
-    if (inBenchmarkMode)
+    std::uint64_t timestamp;
+    std::memcpy(&timestamp, buffer.data(), sizeof(timestamp));
+
+    if (m_differenceBuffer != nullptr)
     {
-        std::uint64_t timestamp;
-        std::memcpy(&timestamp, buffer.data(), sizeof(timestamp));
+
 
         std::uint64_t currentTimestamp =
             std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -135,7 +139,10 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
 
         // 1. add difference to m_differenceBuffer
 
-        if (m_differenceBuffer == full)
+        m_differenceBuffer->push_back(difference);
+
+        // 2. check if m_differenceBuffer is full, which means the benchmark is finished
+        if (m_differenceBuffer->size() == 1000)
         {
             signalThreadShouldExit();
         }

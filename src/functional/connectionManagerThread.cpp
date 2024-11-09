@@ -19,6 +19,16 @@ ConnectionManagerThread::ConnectionManagerThread(
     m_fileLogger = std::make_unique<FileLogger>("ConnectDAWs", threadName);
     m_currentTask =
         std::bind(&ConnectionManagerThread::establishConnection, this);
+
+    if (std::getenv("BENCHMARK") == "1")
+    {
+        m_differenceBuffer = std::make_shared<std::vector<std::uint64_t>>();
+        m_differenceBuffer->reserve(1000);
+    }
+    else
+    {
+        m_differenceBuffer = nullptr;
+    }
 }
 
 ConnectionManagerThread::~ConnectionManagerThread()
@@ -465,6 +475,7 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
         std::make_unique<ConsumerThread>(remoteConfigurationData,
                                          localConfigurationData,
                                          m_inputRingBuffer,
+                                         m_differenceBuffer,
                                          timeoutForProviderAndConsumerThreads);
 
     //TODO: change to realtime threads
@@ -510,6 +521,26 @@ void ConnectionManagerThread::stopProviderAndConsumerThreads(
         "Provider and Consumer threads stopped");
     //TODO: make gui show continue button when threads are stoped and set m_readyForNextConnection on continue button press
     //m_readyForNextConnection = true;
+    if (m_differenceBuffer != nullptr)
+    {
+        logBenchmarkResults();
+    }
+}
+
+void ConnectionManagerThread::logBenchmarkResults()
+{
+    std::string benchmarkResults = "Benchmark results: ";
+    for (auto &difference : *m_differenceBuffer)
+    {
+        benchmarkResults += std::to_string(difference) + "\n";
+    }
+    //average
+    std::uint64_t sum = std::accumulate(m_differenceBuffer->begin(),
+                                        m_differenceBuffer->end(),
+                                        0);
+    benchmarkResults +=
+        "Average: " + std::to_string(sum / m_differenceBuffer->size());
+    m_fileLogger->logMessage(benchmarkResults);
 }
 
 void ConnectionManagerThread::resetToStartState()

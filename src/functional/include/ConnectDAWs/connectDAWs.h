@@ -45,6 +45,7 @@ private:
     ConfigurationData m_localConfigurationData;
     std::atomic<bool> m_startConnection = false;
     std::atomic<bool> m_stopConnection = false;
+
     std::shared_ptr<RingBuffer> m_outputRingBuffer;
     std::shared_ptr<RingBuffer> m_inputRingBuffer;
 };
