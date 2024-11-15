@@ -28,7 +28,8 @@ TEST_CASE(
 
     ConsumerThread consumerThread(providerConfigurationData,
                                   consumerConfigurationData,
-                                  inputRingBuffer);
+                                  inputRingBuffer,
+                                  differenceBuffer);
 
     consumerThread.startThread();
     providerThread.startThread();

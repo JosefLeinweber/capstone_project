@@ -90,3 +90,6 @@ ConnectionManagerThread connectionManagerThread(guiMessenger2,
                                                 startConnection,
                                                 stopConnection,
                                                 "LocalCMT");
+
+std::shared_ptr<std::vector<std::uint64_t>> differenceBuffer =
+    std::make_shared<std::vector<std::uint64_t>>();

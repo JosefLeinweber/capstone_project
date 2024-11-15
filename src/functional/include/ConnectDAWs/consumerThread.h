@@ -31,6 +31,10 @@ public:
         std::chrono::milliseconds timeout,
         std::chrono::time_point<std::chrono::high_resolution_clock> start);
 
+    std::uint64_t calculateLatency(std::uint64_t timestamp);
+    void saveLatencyToBuffer(std::uint64_t timestamp);
+    bool benchmarkFinishedCollectingData(int numValues);
+
     juce::AudioBuffer<float> m_inputBuffer;
     RingBuffer &m_inputRingBuffer;
 

@@ -20,7 +20,10 @@ ConnectionManagerThread::ConnectionManagerThread(
     m_currentTask =
         std::bind(&ConnectionManagerThread::establishConnection, this);
 
-    if (std::getenv("BENCHMARK") == "1")
+
+    //! setting this manually to true for now
+    // a env variable will be used to set this
+    if (true)
     {
         m_differenceBuffer = std::make_shared<std::vector<std::uint64_t>>();
         m_differenceBuffer->reserve(1000);
@@ -521,9 +524,19 @@ void ConnectionManagerThread::stopProviderAndConsumerThreads(
         "Provider and Consumer threads stopped");
     //TODO: make gui show continue button when threads are stoped and set m_readyForNextConnection on continue button press
     //m_readyForNextConnection = true;
-    if (m_differenceBuffer != nullptr)
+    if (m_differenceBuffer->capacity() > 0)
     {
         logBenchmarkResults();
+        m_fileLogger->logMessage("ConnectionManagerThread | "
+                                 "stopProviderAndConsumerThreads | Benchmark "
+                                 "results logged");
+    }
+    else
+    {
+        m_fileLogger->logMessage(
+            "ConnectionManagerThread | "
+            "stopProviderAndConsumerThreads | No benchmark "
+            "results to log");
     }
 }
 

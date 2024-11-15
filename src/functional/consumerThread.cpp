@@ -125,24 +125,18 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
     std::uint64_t timestamp;
     std::memcpy(&timestamp, buffer.data(), sizeof(timestamp));
 
-    if (m_differenceBuffer != nullptr)
+    if (m_differenceBuffer->capacity() > 0)
     {
-
-
-        std::uint64_t currentTimestamp =
+        std::uint64_t latency = calculateLatency(timestamp);
+        saveLatencyToBuffer(latency);
+        saveLatencyToBuffer(timestamp);
+        saveLatencyToBuffer(
             std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock::now().time_since_epoch())
-                .count();
-
-        std::uint64_t difference = currentTimestamp - timestamp;
+                .count());
 
 
-        // 1. add difference to m_differenceBuffer
-
-        m_differenceBuffer->push_back(difference);
-
-        // 2. check if m_differenceBuffer is full, which means the benchmark is finished
-        if (m_differenceBuffer->size() == 1000)
+        if (benchmarkFinishedCollectingData(1000))
         {
             signalThreadShouldExit();
         }
@@ -157,6 +151,29 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
     m_receivedData = false; //reset m_receivedData flag
     return true;
 };
+
+// ------------------------------ bachelor
+std::uint64_t ConsumerThread::calculateLatency(std::uint64_t timestamp)
+{
+    std::uint64_t currentTimestamp =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch())
+            .count();
+    return currentTimestamp - timestamp;
+};
+
+
+void ConsumerThread::saveLatencyToBuffer(std::uint64_t timestamp)
+{
+    m_differenceBuffer->push_back(timestamp);
+};
+
+bool ConsumerThread::benchmarkFinishedCollectingData(int numValues)
+{
+    return m_differenceBuffer->size() == numValues;
+};
+
+// ------------------------------ bachelor
 
 bool ConsumerThread::timeOut(
     std::chrono::milliseconds timeout,
