@@ -9,12 +9,14 @@ ConnectionManagerThread::ConnectionManagerThread(
     RingBuffer &outputRingBuffer,
     std::atomic<bool> &startConnection,
     std::atomic<bool> &stopConnection,
+    std::shared_ptr<Benchmark> &benchmark,
     const std::string threadName)
     : juce::Thread(threadName), m_guiMessenger(guiMessenger),
       m_cmtMessenger(cmtMessenger),
       m_localConfigurationData(localConfigurationData),
       m_inputRingBuffer(inputRingBuffer), m_outputRingBuffer(outputRingBuffer),
-      m_startConnection(startConnection), m_stopConnection(stopConnection)
+      m_startConnection(startConnection), m_stopConnection(stopConnection),
+      m_benchmark(benchmark)
 {
     m_fileLogger = std::make_unique<FileLogger>("ConnectDAWs", threadName);
     m_currentTask =

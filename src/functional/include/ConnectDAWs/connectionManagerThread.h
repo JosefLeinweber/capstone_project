@@ -1,4 +1,6 @@
 #pragma once
+
+#include "benchmark.h"
 #include "consumerThread.h"
 #include "datagram.pb.h"
 #include "logger.h"
@@ -20,6 +22,7 @@ public:
         RingBuffer &outputRingBuffer,
         std::atomic<bool> &startConnection,
         std::atomic<bool> &stopConnection,
+        std::shared_ptr<Benchmark> &benchmark,
         const std::string threadName = "ConnectionManagerThread");
 
     ~ConnectionManagerThread() override;
@@ -103,6 +106,8 @@ private:
     std::unique_ptr<TcpHost> m_host;
 
     //------------------------------ bachelor
+
+    std::shared_ptr<Benchmark> &m_benchmark;
 
     std::shared_ptr<std::vector<std::uint64_t>> m_differenceBuffer;
 

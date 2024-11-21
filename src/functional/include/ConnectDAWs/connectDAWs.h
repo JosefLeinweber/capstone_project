@@ -7,6 +7,7 @@
 #include "datagram.pb.h"
 #include "ringBuffer.h"
 
+#include "benchmark.h"
 #include "messenger.h"
 
 
@@ -32,6 +33,8 @@ public:
     std::shared_ptr<Messenger> m_guiMessenger;
     std::shared_ptr<Messenger> m_cmtMessenger;
     std::unique_ptr<ConnectionManagerThread> m_connectionManagerThread;
+
+    std::shared_ptr<Benchmark> m_benchmark;
 
 private:
     void initRingBuffers(int numInputChannels,

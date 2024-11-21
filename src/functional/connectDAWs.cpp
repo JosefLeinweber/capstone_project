@@ -106,7 +106,8 @@ void ConnectDAWs::startUpConnectionManagerThread(double sampleRate,
                                                   *m_inputRingBuffer,
                                                   *m_outputRingBuffer,
                                                   m_startConnection,
-                                                  m_stopConnection);
+                                                  m_stopConnection,
+                                                  m_benchmark);
     m_connectionManagerThread->startThread(juce::Thread::Priority::high);
 }
 

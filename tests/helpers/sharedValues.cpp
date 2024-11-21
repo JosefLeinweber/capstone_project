@@ -72,6 +72,9 @@ std::shared_ptr<Messenger> guiMessenger2 =
     std::make_shared<Messenger>(placeHolderHandler);
 std::shared_ptr<Messenger> cmtMessenger2;
 
+std::shared_ptr<Benchmark> benchmark1 = std::make_shared<Benchmark>();
+std::shared_ptr<Benchmark> benchmark2 = std::make_shared<Benchmark>();
+
 
 ConnectionManagerThread remoteConnectionManagerThread(guiMessenger1,
                                                       cmtMessenger1,
@@ -80,6 +83,7 @@ ConnectionManagerThread remoteConnectionManagerThread(guiMessenger1,
                                                       remoteOutputRingBuffer,
                                                       startConnection,
                                                       stopConnection,
+                                                      benchmark1,
                                                       "RemoteCMT");
 
 ConnectionManagerThread connectionManagerThread(guiMessenger2,
@@ -89,6 +93,7 @@ ConnectionManagerThread connectionManagerThread(guiMessenger2,
                                                 outputRingBuffer,
                                                 startConnection,
                                                 stopConnection,
+                                                benchmark2,
                                                 "LocalCMT");
 
 std::shared_ptr<std::vector<std::uint64_t>> differenceBuffer =

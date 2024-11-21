@@ -56,6 +56,10 @@ target_sources(${PROJECT_NAME}
 
         utility/logger/logger.cpp
         utility/logger/logger.h
+        utility/benchmark/benchmark.cpp
+        utility/benchmark/benchmark.h
+        utility/benchmark/networkLatency.cpp
+        utility/benchmark/networkLatency.h
 )
 
 # Sets the include directories of the plugin project.
@@ -64,6 +68,7 @@ target_include_directories(${PROJECT_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/functional/include
     ${CMAKE_CURRENT_SOURCE_DIR}/ui/include
     ${CMAKE_CURRENT_SOURCE_DIR}/utility/logger
+    ${CMAKE_CURRENT_SOURCE_DIR}/utility/benchmark
 )
 
 
