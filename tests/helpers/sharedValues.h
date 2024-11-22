@@ -4,6 +4,7 @@
 #include "ConnectDAWs/ringBuffer.h"
 #include "benchmark.h"
 #include "datagram.pb.h"
+#include "logger.h"
 #include <juce_audio_basics/juce_audio_basics.h>
 
 
@@ -45,3 +46,5 @@ extern std::shared_ptr<std::vector<std::int64_t>> differenceBuffer;
 
 extern std::shared_ptr<Benchmark> benchmark1;
 extern std::shared_ptr<Benchmark> benchmark2;
+
+extern std::shared_ptr<FileLogger> fileLogger;

@@ -18,7 +18,7 @@ ConnectionManagerThread::ConnectionManagerThread(
       m_startConnection(startConnection), m_stopConnection(stopConnection),
       m_benchmark(benchmark)
 {
-    m_fileLogger = std::make_unique<FileLogger>("ConnectDAWs", threadName);
+    m_fileLogger = generateFileLogger("ConnectDAWs");
     m_currentTask =
         std::bind(&ConnectionManagerThread::establishConnection, this);
 }
@@ -111,7 +111,6 @@ void ConnectionManagerThread::streamAudio()
     }
 
     sendMessageToGUI("status", "Started stream");
-
     while (m_providerThread->isThreadRunning() &&
            m_consumerThread->isThreadRunning() && !m_stopConnection &&
            !threadShouldExit())

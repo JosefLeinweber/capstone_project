@@ -75,6 +75,8 @@ std::shared_ptr<Messenger> cmtMessenger2;
 std::shared_ptr<Benchmark> benchmark1 = std::make_shared<Benchmark>();
 std::shared_ptr<Benchmark> benchmark2 = std::make_shared<Benchmark>();
 
+std::shared_ptr<FileLogger> fileLogger = std::make_shared<FileLogger>();
+
 
 ConnectionManagerThread remoteConnectionManagerThread(guiMessenger1,
                                                       cmtMessenger1,

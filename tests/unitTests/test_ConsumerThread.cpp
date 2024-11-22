@@ -13,7 +13,8 @@ TEST_CASE("ConsumerThread | Constructor", "[ConsumerThread]")
         ConsumerThread consumerThread(remoteConfigurationData,
                                       localConfigurationData,
                                       inputRingBuffer,
-                                      benchmark1);
+                                      benchmark1,
+                                      fileLogger);
     }
     catch (std::exception &e)
     {
@@ -29,7 +30,8 @@ TEST_CASE("ConsumerThread | setupHost")
     ConsumerThread consumerThread(remoteConfigurationData,
                                   localConfigurationData,
                                   inputRingBuffer,
-                                  benchmark1);
+                                  benchmark1,
+                                  fileLogger);
     REQUIRE_NOTHROW(consumerThread.setupHost());
 }
 
@@ -40,7 +42,8 @@ TEST_CASE("ConsumerThread | writeToRingBuffer")
     ConsumerThread consumerThread(remoteConfigurationData,
                                   localConfigurationData,
                                   inputRingBuffer,
-                                  benchmark1);
+                                  benchmark1,
+                                  fileLogger);
 
     fillBuffer(consumerThread.m_inputBuffer, 1.0f);
     REQUIRE_NOTHROW(consumerThread.writeToRingBuffer());
@@ -54,7 +57,8 @@ TEST_CASE("ConsumerThread | receiveAudioFromRemoteProvider")
     ConsumerThread consumerThread(remoteConfigurationData,
                                   localConfigurationData,
                                   inputRingBuffer,
-                                  benchmark1);
+                                  benchmark1,
+                                  fileLogger);
     consumerThread.setupHost();
     REQUIRE_FALSE(consumerThread.receiveAudioFromRemoteProvider(
         std::chrono::milliseconds(10)));
@@ -66,7 +70,8 @@ TEST_CASE("ConsumerThread | timeOut")
     ConsumerThread consumerThread(remoteConfigurationData,
                                   localConfigurationData,
                                   inputRingBuffer,
-                                  benchmark1);
+                                  benchmark1,
+                                  fileLogger);
     auto start = std::chrono::high_resolution_clock::now();
 
     //WHEN: timeOut is called with a timeout of 10ms THEN: it should return false as the time has not passed
@@ -82,7 +87,8 @@ TEST_CASE("ConsumerThread | saveTimestamps")
     ConsumerThread consumerThread(remoteConfigurationData,
                                   localConfigurationData,
                                   inputRingBuffer,
-                                  benchmark1);
+                                  benchmark1,
+                                  fileLogger);
     consumerThread.saveTimestamps(1);
     REQUIRE(benchmark1->m_networkLatencyBenchmarkData.startTimestamps.size() ==
             1);
@@ -96,7 +102,8 @@ TEST_CASE("ConsumerThread | benchmark finished")
     ConsumerThread consumerThread(remoteConfigurationData,
                                   localConfigurationData,
                                   inputRingBuffer,
-                                  benchmark1);
+                                  benchmark1,
+                                  fileLogger);
     for (int i = 0; i < 100; i++)
     {
         benchmark1->m_networkLatencyBenchmarkData.startTimestamps.push_back(1);

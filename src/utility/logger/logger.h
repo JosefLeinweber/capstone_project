@@ -4,18 +4,18 @@
 class FileLogger
 {
 public:
-    FileLogger(const juce::String &logName, std::string threadName);
+    FileLogger();
     ~FileLogger();
 
     void logMessage(const juce::String &message);
 
+    void createLogger(const juce::String &logName);
+
 private:
     juce::String generateLogFileDirectory();
-    std::unique_ptr<juce::FileLogger> createLogger(const juce::String &logName);
 
-    std::unique_ptr<juce::FileLogger> m_fileLogger;
+    std::shared_ptr<juce::FileLogger> m_fileLogger;
     juce::String m_logName;
-    std::string m_threadName;
 };
 
-std::unique_ptr<FileLogger> getFileLogger();
+std::shared_ptr<FileLogger> generateFileLogger(const juce::String &logName);

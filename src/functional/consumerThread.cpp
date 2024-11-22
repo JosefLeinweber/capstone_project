@@ -51,8 +51,9 @@ void ConsumerThread::run()
     m_fileLogger->logMessage("ConsumerThread | run | entering while loop");
     while (!threadShouldExit())
     {
-        m_fileLogger->logMessage(
-            "ConsumerThread | run | check if audio received");
+        //!For some reason loggin is this while loop makes the test run for ever, but only when executing all tests
+        // m_fileLogger->logMessage(
+        //     "ConsumerThread | run | check if audio received");
         if (receiveAudioFromRemoteProvider(m_timeout))
         {
 

@@ -29,7 +29,8 @@ TEST_CASE(
     ConsumerThread consumerThread(providerConfigurationData,
                                   consumerConfigurationData,
                                   inputRingBuffer,
-                                  benchmark1);
+                                  benchmark1,
+                                  fileLogger);
 
     consumerThread.startThread();
     providerThread.startThread();
