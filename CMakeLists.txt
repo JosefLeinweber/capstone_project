@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 
-option(ENABLE_TESTING "Enable building tests, will be disabled automatically in release mode" ON)
+option(ENABLE_TESTING "Enable building tests, will be disabled automatically in release mode" OFF)
 option(ENABLE_WARNINGS "Enable compiler warnings" ON)
 option(ENABLE_WARNINGS_AS_ERRORS "Enable compiler warnings as errors" ON)
 option(ENABLE_SANITIZERS "Enable sanitizers" ON)

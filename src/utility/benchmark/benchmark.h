@@ -6,11 +6,13 @@
 #include <string>
 #include <vector>
 
+#include "logger.h"
+
 struct BenchmarkData
 {
     std::string name;
-    std::vector<std::chrono::high_resolution_clock::time_point> startTimestamps;
-    std::vector<std::chrono::high_resolution_clock::time_point> endTimestamps;
+    std::vector<std::int64_t> startTimestamps;
+    std::vector<std::int64_t> endTimestamps;
 };
 
 class Benchmark
@@ -21,7 +23,10 @@ public:
 
     void startBenchmark(std::string name);
     void endBenchmark(std::string name);
-    void printBenchmark(std::string name);
+    void logBenchmark(BenchmarkData benchmarkData,
+                      std::shared_ptr<FileLogger> &fileLogger);
+
+    bool finished();
 
     BenchmarkData m_networkLatencyBenchmarkData;
     BenchmarkData m_outgoingAudioBenchmarkData;

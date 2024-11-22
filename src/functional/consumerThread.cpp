@@ -1,18 +1,19 @@
 #include "ConnectDAWs/consumerThread.h"
 
 
-ConsumerThread::ConsumerThread(
-    ConfigurationData remoteConfigurationData,
-    ConfigurationData localConfigurationData,
-    RingBuffer &inputRingBuffer,
-    std::shared_ptr<std::vector<std::uint64_t>> &differenceBuffer,
-    std::chrono::milliseconds timeout,
-    const std::string threadName)
+ConsumerThread::ConsumerThread(ConfigurationData remoteConfigurationData,
+                               ConfigurationData localConfigurationData,
+                               RingBuffer &inputRingBuffer,
+                               std::shared_ptr<Benchmark> &benchmark,
+                               std::shared_ptr<FileLogger> &fileLogger,
+                               std::chrono::milliseconds timeout,
+                               const std::string threadName)
 
     : juce::Thread(threadName), m_timeout(timeout),
       m_remoteConfigurationData(remoteConfigurationData),
       m_localConfigurationData(localConfigurationData),
-      m_inputRingBuffer(inputRingBuffer), m_differenceBuffer(differenceBuffer)
+      m_inputRingBuffer(inputRingBuffer), m_benchmark(benchmark),
+      m_fileLogger(fileLogger)
 {
     m_inputBuffer.setSize(localConfigurationData.num_input_channels(),
                           localConfigurationData.samples_per_block());
@@ -45,15 +46,20 @@ ConsumerThread::~ConsumerThread()
 
 void ConsumerThread::run()
 {
+    m_fileLogger->logMessage("ConsumerThread | run | start");
     setupHost();
+    m_fileLogger->logMessage("ConsumerThread | run | entering while loop");
     while (!threadShouldExit())
     {
+        m_fileLogger->logMessage(
+            "ConsumerThread | run | check if audio received");
         if (receiveAudioFromRemoteProvider(m_timeout))
         {
 
             writeToRingBuffer();
         }
     }
+    m_fileLogger->logMessage("ConsumerThread | run | exit");
 };
 
 void ConsumerThread::setupHost()
@@ -89,7 +95,7 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
     std::vector<uint8_t> buffer(
         (m_inputBuffer.getNumChannels() * m_inputBuffer.getNumSamples() *
          sizeof(float)) +
-        sizeof(uint64_t));
+        sizeof(int64_t));
     m_udpHost->asyncReceiveAudioBuffer(
         buffer,
         std::bind(&ConsumerThread::receiveHandler,
@@ -98,6 +104,9 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
                   std::placeholders::_2));
 
     auto startTime = std::chrono::high_resolution_clock::now();
+
+    m_fileLogger->logMessage("ConsumerThread | ready to receive data ");
+
     while (!m_receivedData)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -106,6 +115,9 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
             std::cout << "ConsumerThread | receiveAudioFromRemoteProvider | "
                          "Thread should exit"
                       << std::endl;
+            m_fileLogger->logMessage(
+                "ConsumerThread | receiveAudioFromRemoteProvider "
+                "| Thread should exit");
             m_udpHost->cancelReceive();
             return false;
         }
@@ -114,66 +126,61 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
             std::cout << "ConsumerThread | receiveAudioFromRemoteProvider | "
                          "Timeout"
                       << std::endl;
+            m_fileLogger->logMessage(
+                "ConsumerThread | receiveAudioFromRemoteProvider | "
+                "Timeout");
             signalThreadShouldExit();
             m_udpHost->cancelReceive();
             return false;
         }
     }
 
+    m_fileLogger->logMessage(
+        "ConsumerThread | receiveAudioFromRemoteProvider | received audio!");
     //TODO: Implement correct version, move this code somewhere else
-
-    std::uint64_t timestamp;
+    std::int64_t timestamp;
     std::memcpy(&timestamp, buffer.data(), sizeof(timestamp));
 
-    if (m_differenceBuffer->capacity() > 0)
+    //TODO: change to dynamic
+    if (true)
     {
-        std::uint64_t latency = calculateLatency(timestamp);
-        saveLatencyToBuffer(latency);
-        saveLatencyToBuffer(timestamp);
-        saveLatencyToBuffer(
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::now().time_since_epoch())
-                .count());
+        saveTimestamps(timestamp);
 
 
-        if (benchmarkFinishedCollectingData(1000))
+        if (m_benchmark->finished())
         {
+            m_fileLogger->logMessage(
+                "ConsumerTHread | receiveAudioFromRemoteProvider | benchmark "
+                "finished");
+
             signalThreadShouldExit();
         }
     }
+
+    m_fileLogger->logMessage("ConsumerTHread | receiveAFRP | before copying");
 
     std::memcpy(m_inputBuffer.getWritePointer(0),
                 buffer.data() + sizeof(timestamp),
                 m_inputBuffer.getNumChannels() * m_inputBuffer.getNumSamples() *
                     sizeof(float));
 
+    m_fileLogger->logMessage("ConsumerTHread | receiveAFRP | after copying");
 
     m_receivedData = false; //reset m_receivedData flag
     return true;
 };
 
-// ------------------------------ bachelor
-std::uint64_t ConsumerThread::calculateLatency(std::uint64_t timestamp)
+void ConsumerThread::saveTimestamps(int64_t timestamp)
 {
-    std::uint64_t currentTimestamp =
+    m_fileLogger->logMessage("ConsumerTHread | saveTimestamps | started");
+    m_benchmark->m_networkLatencyBenchmarkData.startTimestamps.push_back(
+        timestamp);
+    m_benchmark->m_networkLatencyBenchmarkData.endTimestamps.push_back(
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch())
-            .count();
-    return currentTimestamp - timestamp;
+            .count());
+    m_fileLogger->logMessage("ConsumerTHread | saveTimestamps | finished");
 };
-
-
-void ConsumerThread::saveLatencyToBuffer(std::uint64_t timestamp)
-{
-    m_differenceBuffer->push_back(timestamp);
-};
-
-bool ConsumerThread::benchmarkFinishedCollectingData(int numValues)
-{
-    return m_differenceBuffer->size() == numValues;
-};
-
-// ------------------------------ bachelor
 
 bool ConsumerThread::timeOut(
     std::chrono::milliseconds timeout,

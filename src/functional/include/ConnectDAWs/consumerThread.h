@@ -1,4 +1,6 @@
 #pragma once
+#include "benchmark.h"
+#include "logger.h"
 #include "ringBuffer.h"
 #include "udpHost.h"
 #include <boost/asio.hpp>
@@ -12,7 +14,8 @@ public:
         ConfigurationData remoteConfigurationData,
         ConfigurationData localConfigurationData,
         RingBuffer &inputRingBuffer,
-        std::shared_ptr<std::vector<std::uint64_t>> &differenceBuffer,
+        std::shared_ptr<Benchmark> &benchmark,
+        std::shared_ptr<FileLogger> &fileLogger,
         std::chrono::milliseconds timeout = std::chrono::milliseconds(2000),
         const std::string threadName = "ConsumerThread");
 
@@ -31,9 +34,7 @@ public:
         std::chrono::milliseconds timeout,
         std::chrono::time_point<std::chrono::high_resolution_clock> start);
 
-    std::uint64_t calculateLatency(std::uint64_t timestamp);
-    void saveLatencyToBuffer(std::uint64_t timestamp);
-    bool benchmarkFinishedCollectingData(int numValues);
+    void saveTimestamps(int64_t timestamp);
 
     juce::AudioBuffer<float> m_inputBuffer;
     RingBuffer &m_inputRingBuffer;
@@ -51,5 +52,6 @@ private:
     std::chrono::milliseconds m_timeout;
     ConfigurationData m_remoteConfigurationData;
     ConfigurationData m_localConfigurationData;
-    std::shared_ptr<std::vector<std::uint64_t>> &m_differenceBuffer;
+    std::shared_ptr<Benchmark> &m_benchmark;
+    std::shared_ptr<FileLogger> &m_fileLogger;
 };

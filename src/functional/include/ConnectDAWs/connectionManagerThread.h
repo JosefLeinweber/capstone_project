@@ -100,7 +100,7 @@ private:
     std::atomic<bool> m_incomingConnection = false;
     std::atomic<bool> m_readyForNextConnection = false;
 
-    std::unique_ptr<FileLogger> m_fileLogger;
+    std::shared_ptr<FileLogger> m_fileLogger;
     std::unique_ptr<ProviderThread> m_providerThread;
     std::unique_ptr<ConsumerThread> m_consumerThread;
     std::unique_ptr<TcpHost> m_host;
@@ -109,9 +109,7 @@ private:
 
     std::shared_ptr<Benchmark> &m_benchmark;
 
-    std::shared_ptr<std::vector<std::uint64_t>> m_differenceBuffer;
-
-    // ------------------------------ bachelor
+    //----------------------------------------
 
     std::shared_ptr<Messenger> &m_guiMessenger;
     std::shared_ptr<Messenger> &m_cmtMessenger;

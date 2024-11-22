@@ -27,7 +27,7 @@ public:
 
     void cancelReceive();
 
-    uint64_t getTimestamp();
+    int64_t getTimestamp();
 
     std::vector<uint8_t> concatenateBytes(const std::vector<uint8_t> &a,
                                           const std::vector<uint8_t> &b);
@@ -35,7 +35,7 @@ public:
     std::vector<uint8_t> audioBufferToBytes(
         const juce::AudioBuffer<float> &buffer);
 
-    std::vector<uint8_t> timestampToBytes(uint64_t timestamp);
+    std::vector<uint8_t> timestampToBytes(int64_t timestamp);
 
 private:
     ConfigurationData m_configurationData;

@@ -4,7 +4,7 @@
 
 // test initalization of ConnectDAWs
 
-TEST_CASE("ConnectDAWs::ConnectDAWs()", "[ConnectDAWs]")
+TEST_CASE("ConnectDAWs | Constructor", "[ConnectDAWs]")
 {
     // Validate that the ConnectDAWs object is initialized correctly
     try

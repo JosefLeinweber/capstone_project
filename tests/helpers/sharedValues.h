@@ -41,7 +41,7 @@ extern std::atomic<bool> stopConnection;
 extern ConnectionManagerThread remoteConnectionManagerThread;
 extern ConnectionManagerThread connectionManagerThread;
 
-extern std::shared_ptr<std::vector<std::uint64_t>> differenceBuffer;
+extern std::shared_ptr<std::vector<std::int64_t>> differenceBuffer;
 
 extern std::shared_ptr<Benchmark> benchmark1;
 extern std::shared_ptr<Benchmark> benchmark2;

@@ -96,5 +96,5 @@ ConnectionManagerThread connectionManagerThread(guiMessenger2,
                                                 benchmark2,
                                                 "LocalCMT");
 
-std::shared_ptr<std::vector<std::uint64_t>> differenceBuffer =
-    std::make_shared<std::vector<std::uint64_t>>();
+std::shared_ptr<std::vector<std::int64_t>> differenceBuffer =
+    std::make_shared<std::vector<std::int64_t>>();

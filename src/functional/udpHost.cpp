@@ -37,14 +37,14 @@ void UdpHost::setupSocket(boost::asio::io_context &ioContext, int32_t port)
     }
 };
 
-uint64_t UdpHost::getTimestamp()
+int64_t UdpHost::getTimestamp()
 {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
                std::chrono::system_clock::now().time_since_epoch())
         .count();
 };
 
-std::vector<uint8_t> UdpHost::timestampToBytes(uint64_t timestamp)
+std::vector<uint8_t> UdpHost::timestampToBytes(int64_t timestamp)
 {
     std::vector<uint8_t> bytes(sizeof(timestamp));
     std::memcpy(bytes.data(), &timestamp, sizeof(timestamp));
@@ -88,7 +88,7 @@ void UdpHost::sendAudioBuffer(juce::AudioBuffer<float> buffer,
     std::size_t length =
         buffer.getNumSamples() * sizeof(float) * buffer.getNumChannels();
 
-    std::uint64_t timestamp = getTimestamp();
+    std::int64_t timestamp = getTimestamp();
     std::vector<uint8_t> timestampBytes = timestampToBytes(timestamp);
     std::vector<uint8_t> audioBufferBytes = audioBufferToBytes(buffer);
     std::vector<uint8_t> sendBuffer =

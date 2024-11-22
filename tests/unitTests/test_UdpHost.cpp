@@ -40,7 +40,7 @@ TEST_CASE("UdpHost | getTimestamp")
 {
     boost::asio::io_context ioContext;
     UdpHost udpHost;
-    uint64_t timestamp = udpHost.getTimestamp();
+    int64_t timestamp = udpHost.getTimestamp();
     std::cout << "Timestamp: " << timestamp << std::endl;
     REQUIRE(std::to_string(timestamp).length() == 13);
 }
@@ -49,7 +49,7 @@ TEST_CASE("UdpHost | timestamptToBytes")
 {
     boost::asio::io_context ioContext;
     UdpHost udpHost;
-    uint64_t timestamp = udpHost.getTimestamp();
+    int64_t timestamp = udpHost.getTimestamp();
     std::vector<uint8_t> bytes = udpHost.timestampToBytes(timestamp);
     std::cout << "Timestamp: " << timestamp << std::endl;
     std::cout << "Bytes: ";
@@ -59,7 +59,7 @@ TEST_CASE("UdpHost | timestamptToBytes")
     }
     std::cout << std::dec << std::endl;
     REQUIRE(bytes.size() == sizeof(timestamp));
-    uint64_t newTimestamp;
+    int64_t newTimestamp;
     std::memcpy(&newTimestamp, bytes.data(), sizeof(timestamp));
     REQUIRE(newTimestamp == timestamp);
 }
@@ -114,7 +114,7 @@ TEST_CASE("UdpHost | timestampToBytes, audioBufferToBytes and concatenateBytes")
     fillBuffer(buffer, 0.5);
     boost::asio::io_context ioContext;
     UdpHost udpHost;
-    uint64_t timestamp = udpHost.getTimestamp();
+    int64_t timestamp = udpHost.getTimestamp();
     std::vector<uint8_t> timestampBytes = udpHost.timestampToBytes(timestamp);
     std::vector<uint8_t> audioBufferBytes = udpHost.audioBufferToBytes(buffer);
     std::vector<uint8_t> result =
@@ -126,7 +126,7 @@ TEST_CASE("UdpHost | timestampToBytes, audioBufferToBytes and concatenateBytes")
     }
     std::cout << std::dec << std::endl;
     REQUIRE(result.size() == timestampBytes.size() + audioBufferBytes.size());
-    uint64_t newTimestamp;
+    int64_t newTimestamp;
     std::memcpy(&newTimestamp, result.data(), sizeof(timestamp));
     REQUIRE(newTimestamp == timestamp);
     juce::AudioBuffer<float> newBuffer(2, 10);
@@ -154,7 +154,7 @@ TEST_CASE("UdpHost | sendAudioBuffer and receive")
     });
 
     juce::AudioBuffer<float> buffer(2, 10);
-    uint64_t timestamp = 1234567891234;
+    int64_t timestamp = 1234567891234;
     std::vector<uint8_t> recvBuffer(
         (buffer.getNumChannels() * buffer.getNumSamples() * sizeof(float)) +
         sizeof(timestamp));
@@ -223,7 +223,7 @@ TEST_CASE("UdpHost | sendAudioBuffer and receive")
 //     bool success = false;
 //     auto receiveCallback = [&success](const boost::system::error_code &error,
 //                                       std::size_t bytes_transferred,
-//                                       std::uint64_t timestamp) {
+//                                       std::int64_t timestamp) {
 //         std::cout << "Something received" << std::endl;
 //         std::cout << "Timestamp: " << timestamp << std::endl;
 //         if (error)
