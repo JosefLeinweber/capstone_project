@@ -513,7 +513,7 @@ void ConnectionManagerThread::stopProviderAndConsumerThreads(
         "Provider and Consumer threads stopped");
     //TODO: make gui show continue button when threads are stoped and set m_readyForNextConnection on continue button press
     //m_readyForNextConnection = true;
-    if (m_benchmark->finished())
+    if (m_benchmark != nullptr)
     {
         logBenchmarkResults();
         m_fileLogger->logMessage("ConnectionManagerThread | "
@@ -531,6 +531,13 @@ void ConnectionManagerThread::stopProviderAndConsumerThreads(
 
 void ConnectionManagerThread::logBenchmarkResults()
 {
+    m_fileLogger->logMessage("ConnectionManagerThread | logBenchmarkResults");
+    m_benchmark->logBenchmark(m_benchmark->m_startTimestamps,
+                              m_benchmark->m_endTimestamps,
+                              "Network Benchmark",
+                              m_fileLogger);
+    m_fileLogger->logMessage("ConnectionManagerThread | logBenchmarkResults | "
+                             "Benchmark results logged");
 }
 
 void ConnectionManagerThread::resetToStartState()
