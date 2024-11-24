@@ -147,7 +147,9 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
     {
         saveTimestamps(timestamp);
 
-
+        m_fileLogger->logMessage(
+            "ConsumerTHread | receiveAudioFromRemoteProvider | before "
+            "m_benchmark->finished()");
         if (m_benchmark->finished())
         {
             m_fileLogger->logMessage(
@@ -174,12 +176,32 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
 void ConsumerThread::saveTimestamps(int64_t timestamp)
 {
     m_fileLogger->logMessage("ConsumerTHread | saveTimestamps | started");
-    m_benchmark->m_networkLatencyBenchmarkData.startTimestamps.push_back(
-        timestamp);
-    m_benchmark->m_networkLatencyBenchmarkData.endTimestamps.push_back(
+    // std::vector<int64_t> timestamps;
+    // timestamps.push_back(timestamp);
+    // m_benchmark->debugFunction(timestamps);
+    // m_fileLogger->logMessage("ConsumerTHread | saveTimestamps | finished");
+    try
+    {
+        std::vector<int64_t> timestamps;
+        timestamps.push_back(timestamp);
+        m_benchmark->copyFrom(timestamps);
+        m_fileLogger->logMessage(
+            "ConsumerTHread | saveTimestamps | start timestamp "
+            "saved");
+    }
+    catch (const std::exception &e)
+    {
+        m_fileLogger->logMessage(
+            "ConsumerTHread | saveTimestamps | failed to save start "
+            "timestamp");
+        m_fileLogger->logMessage(e.what());
+    }
+    std::vector<int64_t> currentTimestamps;
+    currentTimestamps.push_back(
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch())
             .count());
+    m_benchmark->copyFrom(currentTimestamps);
     m_fileLogger->logMessage("ConsumerTHread | saveTimestamps | finished");
 };
 

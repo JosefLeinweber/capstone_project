@@ -107,7 +107,7 @@ private:
 
     //------------------------------ bachelor
 
-    std::shared_ptr<Benchmark> &m_benchmark;
+    std::shared_ptr<Benchmark> m_benchmark;
 
     //----------------------------------------
 

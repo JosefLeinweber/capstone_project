@@ -99,6 +99,7 @@ void ConnectDAWs::startUpConnectionManagerThread(double sampleRate,
                               numInputChannels,
                               numOutputChannels);
 
+    initBenchmark();
     m_connectionManagerThread =
         std::make_unique<ConnectionManagerThread>(m_guiMessenger,
                                                   m_cmtMessenger,
@@ -111,6 +112,10 @@ void ConnectDAWs::startUpConnectionManagerThread(double sampleRate,
     m_connectionManagerThread->startThread(juce::Thread::Priority::high);
 }
 
+void ConnectDAWs::initBenchmark()
+{
+    m_benchmark = std::make_shared<Benchmark>();
+}
 
 void ConnectDAWs::releaseResources()
 {

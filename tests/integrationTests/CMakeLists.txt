@@ -6,6 +6,7 @@ set(TESTS_SOURCES
 integrationTest_ConnectionManagerThread.cpp
 #integrationTest_Host_AudioBuffer.cpp
 integrationTest_Provider_Consumer.cpp
+integrationTest_Benchmark.cpp
 )
 
 add_executable(${TEST_NAME} ${TESTS_SOURCES})

@@ -81,33 +81,3 @@ TEST_CASE("ConsumerThread | timeOut")
     //WHEN: timeOut is called with a timeout of 0ms after waiting for 10ms from start THEN: it should return true as the time has passed
     REQUIRE(consumerThread.timeOut(std::chrono::milliseconds(0), start));
 }
-
-TEST_CASE("ConsumerThread | saveTimestamps")
-{
-    ConsumerThread consumerThread(remoteConfigurationData,
-                                  localConfigurationData,
-                                  inputRingBuffer,
-                                  benchmark1,
-                                  fileLogger);
-    consumerThread.saveTimestamps(1);
-    REQUIRE(benchmark1->m_networkLatencyBenchmarkData.startTimestamps.size() ==
-            1);
-    REQUIRE(benchmark1->m_networkLatencyBenchmarkData.endTimestamps.size() ==
-            1);
-    REQUIRE(benchmark1->m_networkLatencyBenchmarkData.startTimestamps[0] == 1);
-}
-
-TEST_CASE("ConsumerThread | benchmark finished")
-{
-    ConsumerThread consumerThread(remoteConfigurationData,
-                                  localConfigurationData,
-                                  inputRingBuffer,
-                                  benchmark1,
-                                  fileLogger);
-    for (int i = 0; i < 100; i++)
-    {
-        benchmark1->m_networkLatencyBenchmarkData.startTimestamps.push_back(1);
-        benchmark1->m_networkLatencyBenchmarkData.endTimestamps.push_back(2);
-    }
-    REQUIRE(benchmark1->finished());
-}

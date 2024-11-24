@@ -15,23 +15,38 @@ TEST_CASE("Benchmark | Constructor", "[Benchmark]")
     }
 }
 
-TEST_CASE("Benchmark | add value to benchmark")
+
+TEST_CASE("Benchmark | copyFrom ")
 {
     Benchmark benchmark;
-    benchmark.m_networkLatencyBenchmarkData.startTimestamps.push_back(1);
-    benchmark.m_networkLatencyBenchmarkData.endTimestamps.push_back(2);
-    REQUIRE(benchmark.m_networkLatencyBenchmarkData.startTimestamps.size() ==
-            1);
-    REQUIRE(benchmark.m_networkLatencyBenchmarkData.endTimestamps.size() == 1);
+    std::vector<std::int64_t> source(100, 0);
+    benchmark.copyFrom(source);
+    REQUIRE(benchmark.m_fifo.getNumReady() == 99);
+    REQUIRE(benchmark.m_buffer[0] == 0);
 }
 
-TEST_CASE("Benchmark | finished")
+TEST_CASE("Benchmark | copyTo ")
 {
+    // GIVEN: Benchmark object with 100 elements in the buffer
     Benchmark benchmark;
-    for (int i = 0; i < 100; i++)
-    {
-        benchmark.m_networkLatencyBenchmarkData.startTimestamps.push_back(1);
-        benchmark.m_networkLatencyBenchmarkData.endTimestamps.push_back(2);
-    }
-    REQUIRE(benchmark.finished());
+    std::vector<std::int64_t> source(100, 1);
+    benchmark.copyFrom(source);
+    // WHEN: copyTo is called
+    std::vector<std::int64_t> destination(100, 0);
+    benchmark.copyTo(destination);
+    // THEN: destination should be equal to source
+    REQUIRE(benchmark.m_fifo.getNumReady() == 0);
+    REQUIRE(destination[0] == 1);
+}
+
+TEST_CASE("Benchmark | finished ")
+{
+    // GIVEN: Benchmark object with 100 elements in the buffer
+    Benchmark benchmark;
+    std::vector<std::int64_t> source(100, 1);
+    benchmark.copyFrom(source);
+    // WHEN: finished is called
+    bool result = benchmark.finished();
+    // THEN: result should be true
+    REQUIRE(result == true);
 }

@@ -531,8 +531,6 @@ void ConnectionManagerThread::stopProviderAndConsumerThreads(
 
 void ConnectionManagerThread::logBenchmarkResults()
 {
-    m_benchmark->logBenchmark(m_benchmark->m_networkLatencyBenchmarkData,
-                              m_fileLogger);
 }
 
 void ConnectionManagerThread::resetToStartState()

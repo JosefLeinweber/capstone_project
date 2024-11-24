@@ -37,6 +37,9 @@ public:
     std::shared_ptr<Benchmark> m_benchmark;
 
 private:
+    void initBenchmark();
+
+
     void initRingBuffers(int numInputChannels,
                          int numOutputChannels,
                          int samplesPerBlock);
