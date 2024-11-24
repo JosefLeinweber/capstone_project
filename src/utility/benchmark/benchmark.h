@@ -13,8 +13,8 @@
 struct BenchmarkData
 {
     std::string name;
-    std::vector<std::int64_t> startTimestamps;
-    std::vector<std::int64_t> endTimestamps;
+    std::vector<std::int64_t> m_startTimestamps;
+    std::vector<std::int64_t> m_endTimestamps;
 };
 
 class Benchmark
@@ -56,6 +56,8 @@ public:
 
     std::vector<std::int64_t> m_startTimestamps;
     std::vector<std::int64_t> m_endTimestamps;
+
+    BenchmarkData m_networkBenchmark;
 
 private:
 };

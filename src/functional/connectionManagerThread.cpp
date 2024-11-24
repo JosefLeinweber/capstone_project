@@ -532,8 +532,8 @@ void ConnectionManagerThread::stopProviderAndConsumerThreads(
 void ConnectionManagerThread::logBenchmarkResults()
 {
     m_fileLogger->logMessage("ConnectionManagerThread | logBenchmarkResults");
-    m_benchmark->logBenchmark(m_benchmark->m_startTimestamps,
-                              m_benchmark->m_endTimestamps,
+    m_benchmark->logBenchmark(m_benchmark->m_networkBenchmark.m_startTimestamps,
+                              m_benchmark->m_networkBenchmark.m_endTimestamps,
                               "Network Benchmark",
                               m_fileLogger);
     m_fileLogger->logMessage("ConnectionManagerThread | logBenchmarkResults | "

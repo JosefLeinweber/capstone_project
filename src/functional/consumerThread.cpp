@@ -183,7 +183,7 @@ void ConsumerThread::saveTimestamps(int64_t timestamp)
     // m_fileLogger->logMessage("ConsumerTHread | saveTimestamps | finished");
     try
     {
-        m_benchmark->m_startTimestamps.push_back(timestamp);
+        m_benchmark->m_networkBenchmark.m_startTimestamps.push_back(timestamp);
         // std::vector<int64_t> timestamps;
         // timestamps.push_back(timestamp);
         // m_benchmark->copyFrom(timestamps);
@@ -198,7 +198,7 @@ void ConsumerThread::saveTimestamps(int64_t timestamp)
             "timestamp");
         m_fileLogger->logMessage(e.what());
     }
-    m_benchmark->m_endTimestamps.push_back(
+    m_benchmark->m_networkBenchmark.m_endTimestamps.push_back(
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch())
             .count());
