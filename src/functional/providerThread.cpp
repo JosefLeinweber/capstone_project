@@ -4,12 +4,13 @@
 ProviderThread::ProviderThread(ConfigurationData remoteConfigurationData,
                                ConfigurationData localConfigurationData,
                                RingBuffer &outputRingBuffer,
+                               std::shared_ptr<Benchmark> &benchmark,
                                std::chrono::milliseconds timeout,
                                const std::string threadName)
     : juce::Thread(threadName), m_timeout(timeout),
       m_remoteConfigurationData(remoteConfigurationData),
       m_localConfigurationData(localConfigurationData),
-      m_outputRingBuffer(outputRingBuffer)
+      m_outputRingBuffer(outputRingBuffer), m_benchmark(benchmark)
 {
     m_outputBuffer.setSize(m_localConfigurationData.num_output_channels(),
                            m_localConfigurationData.samples_per_block());
@@ -76,6 +77,10 @@ bool ProviderThread::sendAudioToRemoteConsumer()
                     m_remoteConfigurationData.ip()),
                 static_cast<unsigned short>(
                     m_remoteConfigurationData.consumer_port())));
+        m_benchmark->m_pluginOutgoingBenchmark.m_endTimestamps.push_back(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now().time_since_epoch())
+                .count());
         return true;
     }
     catch (...)

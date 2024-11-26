@@ -26,7 +26,7 @@ void FileLogger::createLogger(const juce::String &logName)
             "ConnectDAWs File Logger | only the ConnectionManagerThread will "
             "write to this file to avoid blocking calls inside the audio "
             "thread.",
-            128 * 1024));
+            128 * 1024 * 2));
 }
 
 void FileLogger::logMessage(const juce::String &message)

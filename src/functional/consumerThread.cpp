@@ -106,7 +106,7 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
 
     auto startTime = std::chrono::high_resolution_clock::now();
 
-    m_fileLogger->logMessage("ConsumerThread | ready to receive data ");
+    // m_fileLogger->logMessage("ConsumerThread | ready to receive data ");
 
     while (!m_receivedData)
     {
@@ -116,9 +116,9 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
             std::cout << "ConsumerThread | receiveAudioFromRemoteProvider | "
                          "Thread should exit"
                       << std::endl;
-            m_fileLogger->logMessage(
-                "ConsumerThread | receiveAudioFromRemoteProvider "
-                "| Thread should exit");
+            // m_fileLogger->logMessage(
+            //     "ConsumerThread | receiveAudioFromRemoteProvider "
+            //     "| Thread should exit");
             m_udpHost->cancelReceive();
             return false;
         }
@@ -127,17 +127,21 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
             std::cout << "ConsumerThread | receiveAudioFromRemoteProvider | "
                          "Timeout"
                       << std::endl;
-            m_fileLogger->logMessage(
-                "ConsumerThread | receiveAudioFromRemoteProvider | "
-                "Timeout");
+            // m_fileLogger->logMessage(
+            //     "ConsumerThread | receiveAudioFromRemoteProvider | "
+            //     "Timeout");
             signalThreadShouldExit();
             m_udpHost->cancelReceive();
             return false;
         }
     }
+    m_benchmark->m_pluginIncomingBenchmark.m_startTimestamps.push_back(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch())
+            .count());
 
-    m_fileLogger->logMessage(
-        "ConsumerThread | receiveAudioFromRemoteProvider | received audio!");
+    // m_fileLogger->logMessage(
+    //     "ConsumerThread | receiveAudioFromRemoteProvider | received audio!");
     //TODO: Implement correct version, move this code somewhere else
     std::int64_t timestamp;
     std::memcpy(&timestamp, buffer.data(), sizeof(timestamp));
@@ -147,27 +151,27 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
     {
         saveTimestamps(timestamp);
 
-        m_fileLogger->logMessage(
-            "ConsumerTHread | receiveAudioFromRemoteProvider | before "
-            "m_benchmark->finished()");
+        // m_fileLogger->logMessage(
+        //     "ConsumerTHread | receiveAudioFromRemoteProvider | before "
+        //     "m_benchmark->finished()");
         if (m_benchmark->finished())
         {
-            m_fileLogger->logMessage(
-                "ConsumerTHread | receiveAudioFromRemoteProvider | benchmark "
-                "finished");
+            // m_fileLogger->logMessage(
+            //     "ConsumerTHread | receiveAudioFromRemoteProvider | benchmark "
+            //     "finished");
 
             signalThreadShouldExit();
         }
     }
 
-    m_fileLogger->logMessage("ConsumerTHread | receiveAFRP | before copying");
+    // m_fileLogger->logMessage("ConsumerTHread | receiveAFRP | before copying");
 
     std::memcpy(m_inputBuffer.getWritePointer(0),
                 buffer.data() + sizeof(timestamp),
                 m_inputBuffer.getNumChannels() * m_inputBuffer.getNumSamples() *
                     sizeof(float));
 
-    m_fileLogger->logMessage("ConsumerTHread | receiveAFRP | after copying");
+    // m_fileLogger->logMessage("ConsumerTHread | receiveAFRP | after copying");
 
     m_receivedData = false; //reset m_receivedData flag
     return true;
@@ -176,7 +180,7 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
 void ConsumerThread::saveTimestamps(int64_t timestamp)
 {
     //TODO: remove commented out code
-    m_fileLogger->logMessage("ConsumerTHread | saveTimestamps | started");
+    // m_fileLogger->logMessage("ConsumerTHread | saveTimestamps | started");
     // std::vector<int64_t> timestamps;
     // timestamps.push_back(timestamp);
     // m_benchmark->debugFunction(timestamps);
@@ -208,7 +212,7 @@ void ConsumerThread::saveTimestamps(int64_t timestamp)
     //         std::chrono::system_clock::now().time_since_epoch())
     //         .count());
     // m_benchmark->copyFrom(currentTimestamps);
-    m_fileLogger->logMessage("ConsumerTHread | saveTimestamps | finished");
+    // m_fileLogger->logMessage("ConsumerTHread | saveTimestamps | finished");
 };
 
 bool ConsumerThread::timeOut(

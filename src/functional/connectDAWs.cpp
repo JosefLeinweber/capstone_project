@@ -108,7 +108,8 @@ void ConnectDAWs::startUpConnectionManagerThread(double sampleRate,
                                                   *m_outputRingBuffer,
                                                   m_startConnection,
                                                   m_stopConnection,
-                                                  m_benchmark);
+                                                  m_benchmark,
+                                                  m_streaming);
     m_connectionManagerThread->startThread(juce::Thread::Priority::high);
 }
 
@@ -129,9 +130,21 @@ void ConnectDAWs::releaseResources()
 
 void ConnectDAWs::processBlock(juce::AudioBuffer<float> &buffer)
 {
-    m_outputRingBuffer->copyFrom(buffer);
+    if (m_streaming)
+    {
+        m_benchmark->m_pluginOutgoingBenchmark.m_startTimestamps.push_back(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now().time_since_epoch())
+                .count());
 
-    buffer.clear();
+        m_outputRingBuffer->copyFrom(buffer);
 
-    m_inputRingBuffer->copyTo(buffer);
+        buffer.clear();
+
+        m_inputRingBuffer->copyTo(buffer);
+        m_benchmark->m_pluginIncomingBenchmark.m_endTimestamps.push_back(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now().time_since_epoch())
+                .count());
+    }
 }

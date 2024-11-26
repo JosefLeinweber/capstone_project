@@ -1,9 +1,8 @@
 #include "benchmark.h"
 
 
-Benchmark::Benchmark() : m_fifo(100)
+Benchmark::Benchmark()
 {
-    m_buffer.resize(100);
 }
 
 Benchmark::~Benchmark()
@@ -13,8 +12,14 @@ Benchmark::~Benchmark()
 //TODO: change form hardcoded to dynamic
 bool Benchmark::finished()
 {
-    //! Dumpy implementation for debugging
-    return false;
+    if (m_outgoingBenchmark.m_startTimestamp.size() > 100)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 void Benchmark::logBenchmark(const std::vector<std::int64_t> &startTimestamps,
@@ -25,50 +30,17 @@ void Benchmark::logBenchmark(const std::vector<std::int64_t> &startTimestamps,
     fileLogger->logMessage("Benchmark | " + name);
     for (size_t i = 0; i < startTimestamps.size(); i++)
     {
+        if (i >= endTimestamps.size())
+        {
+            break;
+        }
         fileLogger->logMessage(
             "Benchmark | " + name + " | " + std::to_string(i) + " | " +
             std::to_string(endTimestamps[i] - startTimestamps[i]) + " ms");
     }
-}
-void Benchmark::copyFrom(const std::vector<std::int64_t> &source)
-{
-    auto writeHandle = m_fifo.write(source.size());
-
-    if (writeHandle.blockSize1 > 0)
-    {
-        std::copy(source.begin(),
-                  source.begin() + writeHandle.blockSize1,
-                  m_buffer.begin() + writeHandle.startIndex1);
-    }
-    if (writeHandle.blockSize2 > 0)
-    {
-        std::copy(source.begin() + writeHandle.blockSize1,
-                  source.end(),
-                  m_buffer.begin() + writeHandle.startIndex2);
-    }
-}
-
-void Benchmark::copyTo(std::vector<std::int64_t> &destination)
-{
-    auto readHandle = m_fifo.read(destination.size());
-
-    if (readHandle.blockSize1 > 0)
-    {
-        std::copy(m_buffer.begin() + readHandle.startIndex1,
-                  m_buffer.begin() + readHandle.startIndex1 +
-                      readHandle.blockSize1,
-                  destination.begin());
-    }
-    if (readHandle.blockSize2 > 0)
-    {
-        std::copy(m_buffer.begin() + readHandle.startIndex2,
-                  m_buffer.begin() + readHandle.startIndex2 +
-                      readHandle.blockSize2,
-                  destination.begin() + readHandle.blockSize1);
-    }
-}
-
-void Benchmark::debugFunction(std::vector<int64_t> &source)
-{
-    std::cout << "Benchmark | debugFunction | " << std::endl;
+    // log size of vectors
+    fileLogger->logMessage("Benchmark | " + name + " | startTimestamps size: " +
+                           std::to_string(startTimestamps.size()));
+    fileLogger->logMessage("Benchmark | " + name + " | endTimestamps size: " +
+                           std::to_string(endTimestamps.size()));
 }

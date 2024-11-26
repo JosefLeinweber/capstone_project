@@ -10,13 +10,14 @@ ConnectionManagerThread::ConnectionManagerThread(
     std::atomic<bool> &startConnection,
     std::atomic<bool> &stopConnection,
     std::shared_ptr<Benchmark> &benchmark,
+    std::atomic<bool> &streaming,
     const std::string threadName)
     : juce::Thread(threadName), m_guiMessenger(guiMessenger),
       m_cmtMessenger(cmtMessenger),
       m_localConfigurationData(localConfigurationData),
       m_inputRingBuffer(inputRingBuffer), m_outputRingBuffer(outputRingBuffer),
       m_startConnection(startConnection), m_stopConnection(stopConnection),
-      m_benchmark(benchmark)
+      m_benchmark(benchmark), m_streaming(streaming)
 {
     m_fileLogger = generateFileLogger("ConnectDAWs");
     m_currentTask =
@@ -452,6 +453,7 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
     ConfigurationData remoteConfigurationData,
     std::chrono::milliseconds timeout)
 {
+
     sendMessageToGUI("status", "Starting audio streams...");
     m_fileLogger->logMessage(
         "ConnectionManagerThread | startUpProviderAndConsumerThreads");
@@ -461,6 +463,7 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
         std::make_unique<ProviderThread>(remoteConfigurationData,
                                          localConfigurationData,
                                          m_outputRingBuffer,
+                                         m_benchmark,
                                          timeoutForProviderAndConsumerThreads);
     m_consumerThread =
         std::make_unique<ConsumerThread>(remoteConfigurationData,
@@ -493,6 +496,7 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
     m_fileLogger->logMessage(
         "ConnectionManagerThread | startUpProviderAndConsumerThreads | "
         "Provider and Consumer threads started");
+    m_streaming = true;
     return true;
 }
 
@@ -513,6 +517,7 @@ void ConnectionManagerThread::stopProviderAndConsumerThreads(
         "Provider and Consumer threads stopped");
     //TODO: make gui show continue button when threads are stoped and set m_readyForNextConnection on continue button press
     //m_readyForNextConnection = true;
+    m_streaming = false;
     if (m_benchmark != nullptr)
     {
         logBenchmarkResults();
@@ -536,6 +541,16 @@ void ConnectionManagerThread::logBenchmarkResults()
                               m_benchmark->m_networkBenchmark.m_endTimestamps,
                               "Network Benchmark",
                               m_fileLogger);
+    m_benchmark->logBenchmark(
+        m_benchmark->m_pluginOutgoingBenchmark.m_startTimestamps,
+        m_benchmark->m_pluginOutgoingBenchmark.m_endTimestamps,
+        "Plugin Outgoing Benchmark",
+        m_fileLogger);
+    m_benchmark->logBenchmark(
+        m_benchmark->m_pluginIncomingBenchmark.m_startTimestamps,
+        m_benchmark->m_pluginIncomingBenchmark.m_endTimestamps,
+        "Plugin Incoming Benchmark",
+        m_fileLogger);
     m_fileLogger->logMessage("ConnectionManagerThread | logBenchmarkResults | "
                              "Benchmark results logged");
 }

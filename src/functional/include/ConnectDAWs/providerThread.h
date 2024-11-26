@@ -1,4 +1,5 @@
 #pragma once
+#include "benchmark.h"
 #include "datagram.pb.h"
 #include "ringBuffer.h"
 #include "udpHost.h"
@@ -12,6 +13,7 @@ public:
         ConfigurationData remoteConfigurationData,
         ConfigurationData localConfigurationData,
         RingBuffer &outputRingBuffer,
+        std::shared_ptr<Benchmark> &benchmark,
         std::chrono::milliseconds timeout = std::chrono::milliseconds(2000),
         const std::string threadName = "ProviderThread");
 
@@ -36,4 +38,5 @@ private:
     std::chrono::milliseconds m_timeout;
     ConfigurationData m_remoteConfigurationData;
     ConfigurationData m_localConfigurationData;
+    std::shared_ptr<Benchmark> m_benchmark;
 };

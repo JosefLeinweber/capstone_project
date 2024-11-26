@@ -23,6 +23,7 @@ public:
         std::atomic<bool> &startConnection,
         std::atomic<bool> &stopConnection,
         std::shared_ptr<Benchmark> &benchmark,
+        std::atomic<bool> &streaming,
         const std::string threadName = "ConnectionManagerThread");
 
     ~ConnectionManagerThread() override;
@@ -86,6 +87,7 @@ public:
     std::jthread m_ioContextThread;
     std::atomic<bool> &m_startConnection;
     std::atomic<bool> &m_stopConnection;
+    std::atomic<bool> &m_streaming;
     ConfigurationData m_remoteConfigurationData;
 
 
