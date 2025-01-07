@@ -504,12 +504,16 @@ bool ConnectionManagerThread::startUpProviderAndConsumerThreads(
 void ConnectionManagerThread::stopProviderAndConsumerThreads(
     std::chrono::seconds timeout)
 {
+    m_streaming = false;
     if (m_providerThread->isThreadRunning())
+    {
         m_providerThread->signalThreadShouldExit();
+    }
 
     if (m_consumerThread->isThreadRunning())
+    {
         m_consumerThread->signalThreadShouldExit();
-
+    }
     m_providerThread->waitForThreadToExit(static_cast<int>(timeout.count()));
     m_consumerThread->waitForThreadToExit(static_cast<int>(timeout.count()));
     m_fileLogger->logMessage(
@@ -517,10 +521,9 @@ void ConnectionManagerThread::stopProviderAndConsumerThreads(
         "Provider and Consumer threads stopped");
     //TODO: make gui show continue button when threads are stoped and set m_readyForNextConnection on continue button press
     //m_readyForNextConnection = true;
-    m_streaming = false;
     if (m_benchmark != nullptr)
     {
-        logBenchmarkResults();
+        saveMeasurementResults();
         m_fileLogger->logMessage("ConnectionManagerThread | "
                                  "stopProviderAndConsumerThreads | Benchmark "
                                  "results logged");
@@ -534,25 +537,29 @@ void ConnectionManagerThread::stopProviderAndConsumerThreads(
     }
 }
 
-void ConnectionManagerThread::logBenchmarkResults()
+void ConnectionManagerThread::saveMeasurementResults()
 {
-    m_fileLogger->logMessage("ConnectionManagerThread | logBenchmarkResults");
+
+    std::string timestamp =
+        std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
+                           std::chrono::system_clock::now().time_since_epoch())
+                           .count());
+    std::shared_ptr<FileLogger> measurement_logger =
+        generateFileLogger("measurement_logger" + timestamp);
     m_benchmark->logBenchmark(m_benchmark->m_networkBenchmark.m_startTimestamps,
                               m_benchmark->m_networkBenchmark.m_endTimestamps,
                               "Network Benchmark",
-                              m_fileLogger);
+                              measurement_logger);
     m_benchmark->logBenchmark(
         m_benchmark->m_pluginOutgoingBenchmark.m_startTimestamps,
         m_benchmark->m_pluginOutgoingBenchmark.m_endTimestamps,
         "Plugin Outgoing Benchmark",
-        m_fileLogger);
+        measurement_logger);
     m_benchmark->logBenchmark(
         m_benchmark->m_pluginIncomingBenchmark.m_startTimestamps,
         m_benchmark->m_pluginIncomingBenchmark.m_endTimestamps,
         "Plugin Incoming Benchmark",
-        m_fileLogger);
-    m_fileLogger->logMessage("ConnectionManagerThread | logBenchmarkResults | "
-                             "Benchmark results logged");
+        measurement_logger);
 }
 
 void ConnectionManagerThread::resetToStartState()

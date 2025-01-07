@@ -10,7 +10,7 @@ RingBuffer::RingBuffer(int numChannels, int bufferSize)
     m_buffer.clear();
 };
 
-void RingBuffer::copyFrom(const juce::AudioBuffer<float> &source)
+bool RingBuffer::copyFrom(const juce::AudioBuffer<float> &source)
 {
     auto writeHandle = m_fifo.write(source.getNumSamples());
 
@@ -24,6 +24,7 @@ void RingBuffer::copyFrom(const juce::AudioBuffer<float> &source)
                               channel,
                               0,
                               writeHandle.blockSize1);
+            m_copiedData = true;
         }
         if (writeHandle.blockSize2 > 0)
         {
@@ -33,11 +34,22 @@ void RingBuffer::copyFrom(const juce::AudioBuffer<float> &source)
                               channel,
                               writeHandle.blockSize1,
                               writeHandle.blockSize2);
+            m_copiedData = true;
         }
+    }
+
+    if (m_copiedData)
+    {
+        m_copiedData = false;
+        return true;
+    }
+    else
+    {
+        return false;
     }
 };
 
-void RingBuffer::copyTo(juce::AudioBuffer<float> &destination)
+bool RingBuffer::copyTo(juce::AudioBuffer<float> &destination)
 {
 
     auto readHandle = m_fifo.read(destination.getNumSamples());
@@ -52,6 +64,7 @@ void RingBuffer::copyTo(juce::AudioBuffer<float> &destination)
                                  channel,
                                  readHandle.startIndex1,
                                  readHandle.blockSize1);
+            m_copiedData = true;
         }
         if (readHandle.blockSize2 > 0)
         {
@@ -61,6 +74,7 @@ void RingBuffer::copyTo(juce::AudioBuffer<float> &destination)
                                  channel,
                                  readHandle.startIndex2,
                                  readHandle.blockSize2);
+            m_copiedData = true;
         }
     }
 };

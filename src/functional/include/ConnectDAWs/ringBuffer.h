@@ -9,10 +9,10 @@ public:
     RingBuffer(int numChannels, int bufferSize);
 
     // Function to copy data from source buffer to the ring buffer
-    void copyFrom(const juce::AudioBuffer<float> &source);
+    bool copyFrom(const juce::AudioBuffer<float> &source);
 
     // Function to copy data from the ring buffer to the destination buffer
-    void copyTo(juce::AudioBuffer<float> &destination);
+    bool copyTo(juce::AudioBuffer<float> &destination);
 
     int getNumReadyToRead() const
     {
@@ -28,4 +28,5 @@ public:
 
 private:
     juce::AbstractFifo m_fifo;
+    bool m_copiedData = false;
 };

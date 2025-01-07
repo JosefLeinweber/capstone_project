@@ -79,7 +79,7 @@ public:
 
     bool validatePluginConfiguration();
 
-    void logBenchmarkResults();
+    void saveMeasurementResults();
 
     void encounteredError(std::string errorString);
 

@@ -77,10 +77,9 @@ bool ProviderThread::sendAudioToRemoteConsumer()
                     m_remoteConfigurationData.ip()),
                 static_cast<unsigned short>(
                     m_remoteConfigurationData.consumer_port())));
-        m_benchmark->m_pluginOutgoingBenchmark.m_endTimestamps.push_back(
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::now().time_since_epoch())
-                .count());
+        // adding approximatly +250ms delay
+        m_benchmark->addDelay(38);
+        m_benchmark->m_pluginOutgoingBenchmark.recordEndTimestamp();
         return true;
     }
     catch (...)

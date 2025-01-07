@@ -132,19 +132,18 @@ void ConnectDAWs::processBlock(juce::AudioBuffer<float> &buffer)
 {
     if (m_streaming)
     {
-        m_benchmark->m_pluginOutgoingBenchmark.m_startTimestamps.push_back(
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::now().time_since_epoch())
-                .count());
 
-        m_outputRingBuffer->copyFrom(buffer);
+
+        if (m_outputRingBuffer->copyFrom(buffer))
+        {
+            m_benchmark->m_pluginOutgoingBenchmark.recordStartTimestamp();
+        }
 
         buffer.clear();
 
-        m_inputRingBuffer->copyTo(buffer);
-        m_benchmark->m_pluginIncomingBenchmark.m_endTimestamps.push_back(
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::now().time_since_epoch())
-                .count());
+        if (m_inputRingBuffer->copyTo(buffer))
+        {
+            m_benchmark->m_pluginIncomingBenchmark.recordEndTimestamp();
+        }
     }
 }

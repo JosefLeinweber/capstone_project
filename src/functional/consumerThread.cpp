@@ -135,11 +135,9 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
             return false;
         }
     }
-    m_benchmark->m_pluginIncomingBenchmark.m_startTimestamps.push_back(
-        std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch())
-            .count());
-
+    m_benchmark->m_pluginIncomingBenchmark.recordStartTimestamp();
+    // adding approximatly +250ms delay
+    m_benchmark->addDelay(38);
     // m_fileLogger->logMessage(
     //     "ConsumerThread | receiveAudioFromRemoteProvider | received audio!");
     //TODO: Implement correct version, move this code somewhere else
@@ -156,9 +154,9 @@ bool ConsumerThread::receiveAudioFromRemoteProvider(
         //     "m_benchmark->finished()");
         if (m_benchmark->finished())
         {
-            // m_fileLogger->logMessage(
-            //     "ConsumerTHread | receiveAudioFromRemoteProvider | benchmark "
-            //     "finished");
+            m_fileLogger->logMessage(
+                "ConsumerTHread | receiveAudioFromRemoteProvider | benchmark "
+                "finished");
 
             signalThreadShouldExit();
         }
@@ -241,5 +239,5 @@ void ConsumerThread::receiveHandler(const boost::system::error_code &error,
 
 void ConsumerThread::writeToRingBuffer()
 {
-    return m_inputRingBuffer.copyFrom(m_inputBuffer);
+    m_inputRingBuffer.copyFrom(m_inputBuffer);
 };
