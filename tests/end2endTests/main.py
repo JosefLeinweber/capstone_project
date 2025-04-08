@@ -20,17 +20,17 @@ def create_configuration(
     num_input_channels,
     num_output_channels,
 ):
-    """Create a configuration dictionary to exchange with ConnectDAWs."""
-    return {
-        "ip": ip,
-        "provider_port": provider_port,
-        "consumer_port": consumer_port,
-        "host_port": host_port,
-        "sample_rate": sample_rate,
-        "samples_per_block": samples_per_block,
-        "num_input_channels": num_input_channels,
-        "num_output_channels": num_output_channels,
-    }
+    """Create a Configuration Protobuf message."""
+    config = datagram_pb2.ConfigurationData()
+    config.ip = ip
+    config.provider_port = provider_port
+    config.consumer_port = consumer_port
+    config.host_port = host_port
+    config.sample_rate = sample_rate
+    config.samples_per_block = samples_per_block
+    config.num_input_channels = num_input_channels
+    config.num_output_channels = num_output_channels
+    return config
 
 
 def connect_to_connect_daws(ip, port, configuration):
@@ -42,14 +42,14 @@ def connect_to_connect_daws(ip, port, configuration):
             client_socket.connect((ip, port))
             print("Connected!")
 
-            # Send configuration as JSON
-            config_json = json.dumps(configuration)
-            client_socket.sendall(config_json.encode("utf-8"))
+            # Serialize configuration using Protobuf
+            config_bytes = configuration.SerializeToString()
+            client_socket.sendall(config_bytes)
             print("Configuration sent.")
 
             # Wait for acknowledgment or response
-            response = client_socket.recv(1024).decode("utf-8")
-            print(f"Response from ConnectDAWs: {response}")
+            response = client_socket.recv(1024)
+            print(f"Response from ConnectDAWs: {response.decode('utf-8')}")
 
     except Exception as e:
         print(f"An error occurred: {e}")
