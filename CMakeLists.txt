@@ -52,6 +52,8 @@ if (ENABLE_TESTING)
 
     include(CTest)
     include(Catch)
+    include(PythonRequirements)
+
     enable_testing()
 
     add_subdirectory(tests)
@@ -80,5 +82,7 @@ if (ENABLE_DOCS)
 else()
     message(STATUS "Docs disabled")
 endif()
+
+
 
 message(STATUS "Finished CMake configuration")

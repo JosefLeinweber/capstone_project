@@ -60,6 +60,7 @@ std::string ConnectDAWs::getIp()
 }
 
 
+//TODO: add an extrea configurationData class
 void ConnectDAWs::setLocalConfigurationData(double sampleRate,
                                             int samplesPerBlock,
                                             int numInputChannels,

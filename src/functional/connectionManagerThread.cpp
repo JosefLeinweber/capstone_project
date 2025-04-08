@@ -17,6 +17,8 @@ ConnectionManagerThread::ConnectionManagerThread(
       m_startConnection(startConnection), m_stopConnection(stopConnection)
 {
     m_fileLogger = std::make_unique<FileLogger>("ConnectDAWs", threadName);
+
+    //TODO: m_currentTask is unsude?
     m_currentTask =
         std::bind(&ConnectionManagerThread::establishConnection, this);
 }
@@ -66,8 +68,12 @@ bool ConnectionManagerThread::establishConnection()
 {
     //TODO: Move setup out of the while loop
     setup();
+
+    //TODO: what am I passing to this function? why am I doing that?
     asyncWaitForConnection(std::chrono::milliseconds(0));
 
+
+    //TODO: change to notConnected && !m_initalizeConnection
     while (!isConnected() && !m_startConnection)
     {
         if (threadShouldExit())
@@ -83,6 +89,7 @@ bool ConnectionManagerThread::establishConnection()
         initializeConnection(m_remoteConfigurationData);
     }
 
+    //TODO: use notConnected()
     if (!isConnected())
     {
         encounteredError("Failed to connect");
