@@ -38,8 +38,9 @@ else()
     message(STATUS "Successfully upgraded pip in the virtual environment.")
 endif()
 
+# Install required pip packages
 execute_process(
-    COMMAND ${VENV_PYTHON} -m pip install protobuf google3
+    COMMAND ${VENV_PYTHON} -m pip install protobuf google3 numpy
     RESULT_VARIABLE PIP_INSTALL_RESULT
 )
 
