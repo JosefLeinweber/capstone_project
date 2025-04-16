@@ -56,8 +56,8 @@ The plugin is still in development. The current version is a prototype with basi
 1. Clone the repository --recursively to get the submodules:
 
 ```bash
-$ git clone --recursive https://github.com/JosefLeinweber/capstone_project.git
-$ cd capstone_project
+$ git clone --recursive https://github.com/JosefLeinweber/ConnectDAWs-VSTPlugin.git
+$ cd ConnectDAWs-VSTPlugin
 ```
 
 2. Create a build directory and run CMake:
