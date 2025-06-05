@@ -4,6 +4,8 @@
 BenchmarkData::BenchmarkData()
 {
     m_measurmentRunning = false;
+
+    //TODO: change form
     m_startTimestamps.reserve(2300);
     m_endTimestamps.reserve(2300);
 }
@@ -25,6 +27,10 @@ void BenchmarkData::recordStartTimestamp()
     //             .count());
     //     m_measurmentRunning = true;
     // }
+
+    //TODO: save timestamps with indexing instead of push_back
+    // use atomic counter for giving index for next write
+    // use tagging for it
 
     m_startTimestamps.push_back(
         std::chrono::duration_cast<std::chrono::milliseconds>(

@@ -132,9 +132,9 @@ void ConnectDAWs::processBlock(juce::AudioBuffer<float> &buffer)
 {
     if (m_streaming)
     {
+        recordTimestamp()
 
-
-        if (m_outputRingBuffer->copyFrom(buffer))
+            if (m_outputRingBuffer->copyFrom(buffer))
         {
             m_benchmark->m_pluginOutgoingBenchmark.recordStartTimestamp();
         }
